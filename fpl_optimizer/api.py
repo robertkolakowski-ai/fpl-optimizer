@@ -78,6 +78,20 @@ def parse_players(data: dict) -> list[Player]:
             cost_change_event=e.get("cost_change_event", 0),
             news=e.get("news", ""),
             chance_of_playing=e.get("chance_of_playing_next_round"),
+            # Opta / BPS fields
+            influence=float(e.get("influence", 0)),
+            creativity=float(e.get("creativity", 0)),
+            threat=float(e.get("threat", 0)),
+            expected_goal_involvements=float(e.get("expected_goal_involvements", 0)),
+            expected_goals_conceded=float(e.get("expected_goals_conceded", 0)),
+            bps=e.get("bps", 0),
+            saves=e.get("saves", 0),
+            penalties_saved=e.get("penalties_saved", 0),
+            penalties_missed=e.get("penalties_missed", 0),
+            yellow_cards=e.get("yellow_cards", 0),
+            red_cards=e.get("red_cards", 0),
+            own_goals=e.get("own_goals", 0),
+            starts=e.get("starts", 0),
         )
         players.append(p)
     return players

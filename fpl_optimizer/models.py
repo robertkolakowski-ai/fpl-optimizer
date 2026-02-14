@@ -66,6 +66,20 @@ class Player:
     cost_change_event: int = 0
     news: str = ""
     chance_of_playing: int | None = None
+    # Opta / BPS fields
+    influence: float = 0.0
+    creativity: float = 0.0
+    threat: float = 0.0
+    expected_goal_involvements: float = 0.0
+    expected_goals_conceded: float = 0.0
+    bps: int = 0
+    saves: int = 0
+    penalties_saved: int = 0
+    penalties_missed: int = 0
+    yellow_cards: int = 0
+    red_cards: int = 0
+    own_goals: int = 0
+    starts: int = 0
 
     @property
     def position_name(self) -> str:

@@ -274,6 +274,10 @@ def api_live(user_id):
                 "goals": stats.get("goals_scored", 0),
                 "assists": stats.get("assists", 0),
                 "bonus": stats.get("bonus", 0),
+                "bps": stats.get("bps", 0),
+                "saves": stats.get("saves", 0),
+                "yellow_cards": stats.get("yellow_cards", 0),
+                "red_cards": stats.get("red_cards", 0),
                 "news": p.news if p else "",
                 "chance_of_playing": p.chance_of_playing if p else None,
                 "upcoming": team_upcoming.get(p.team, [])[:3] if p else [],
@@ -587,6 +591,95 @@ def api_rival(rival_id):
         if e.response.status_code == 404:
             return jsonify({"error": "User not found"}), 404
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+OPTA_SORT_FIELDS = {
+    "bps", "influence", "creativity", "threat", "ict_index",
+    "expected_goal_involvements", "expected_goals_conceded",
+    "saves", "penalties_saved", "yellow_cards", "red_cards",
+    "own_goals", "starts", "clean_sheets", "bonus", "total_points",
+    "form", "xG", "xA", "minutes", "goals", "assists", "cost",
+}
+
+
+@app.route("/api/opta-stats")
+def api_opta_stats():
+    """Returns players with full Opta/BPS statistics."""
+    try:
+        players, teams, _, _ = _get_cached_data()
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        result = list(players)
+
+        # Filter by position
+        pos_filter = request.args.get("position", "").upper()
+        if pos_filter and pos_filter in POS_MAP:
+            result = [p for p in result if p.position == POS_MAP[pos_filter]]
+
+        # Filter by team
+        team_filter = request.args.get("team", "")
+        if team_filter:
+            try:
+                team_id = int(team_filter)
+                result = [p for p in result if p.team == team_id]
+            except ValueError:
+                pass
+
+        # Search
+        search = request.args.get("search", "").strip().lower()
+        if search:
+            result = [p for p in result if search in p.name.lower()]
+
+        # Sort
+        sort_by = request.args.get("sort", "bps")
+        if sort_by not in OPTA_SORT_FIELDS:
+            sort_by = "bps"
+        sort_dir = request.args.get("dir", "desc")
+        reverse = sort_dir != "asc"
+        result.sort(key=lambda p: getattr(p, sort_by, 0), reverse=reverse)
+
+        # Limit
+        limit = min(int(request.args.get("limit", 100)), 200)
+        result = result[:limit]
+
+        players_out = []
+        for p in result:
+            players_out.append({
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "total_points": p.total_points,
+                "form": p.form,
+                "minutes": p.minutes,
+                "starts": p.starts,
+                "goals": p.goals,
+                "assists": p.assists,
+                "clean_sheets": p.clean_sheets,
+                "goals_conceded": p.goals_conceded,
+                "bonus": p.bonus,
+                "bps": p.bps,
+                "influence": p.influence,
+                "creativity": p.creativity,
+                "threat": p.threat,
+                "ict_index": p.ict_index,
+                "xG": p.xG,
+                "xA": p.xA,
+                "expected_goal_involvements": p.expected_goal_involvements,
+                "expected_goals_conceded": p.expected_goals_conceded,
+                "saves": p.saves,
+                "penalties_saved": p.penalties_saved,
+                "penalties_missed": p.penalties_missed,
+                "yellow_cards": p.yellow_cards,
+                "red_cards": p.red_cards,
+                "own_goals": p.own_goals,
+                "selected_by_percent": p.selected_by_percent,
+            })
+
+        return jsonify({"players": players_out})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

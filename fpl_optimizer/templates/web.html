@@ -483,6 +483,26 @@
   .tp-modal .tp-modal-row.total { border-top: 1px solid #2a2f3e; margin-top: 0.3rem; padding-top: 0.4rem; font-weight: 600; }
   .tp-modal .tp-modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
   .tp-modal .tp-modal-actions .btn-cancel { background: #2a2f3e; color: #e6e6e6; border: none; border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.85rem; }
+
+  /* BPS badge on live cards */
+  .live-card .lp-bps { position: absolute; bottom: 2px; left: 4px; font-size: 0.55rem; background: #4da6ff; color: #fff; border-radius: 3px; padding: 0.05rem 0.25rem; font-weight: 600; }
+
+  /* BPS ranking section */
+  .bps-ranking { margin-top: 1rem; }
+  .bps-ranking-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-bottom: 1px solid #1a1f2e; font-size: 0.82rem; }
+  .bps-ranking-item .bps-rank { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; flex-shrink: 0; }
+  .bps-ranking-item .bps-rank.gold { background: #ffd700; color: #0e1117; }
+  .bps-ranking-item .bps-rank.silver { background: #c0c0c0; color: #0e1117; }
+  .bps-ranking-item .bps-rank.bronze { background: #cd7f32; color: #fff; }
+  .bps-ranking-item .bps-rank.none { background: #2a2f3e; color: #888; }
+  .bps-ranking-item .bps-name { flex: 1; }
+  .bps-ranking-item .bps-score { color: #4da6ff; font-weight: 600; min-width: 40px; text-align: right; }
+  .bps-ranking-item .bps-bonus { color: #ffd700; font-weight: bold; min-width: 24px; text-align: right; }
+
+  /* Opta stat highlight colors */
+  .opta-high { color: #00ff87; font-weight: 600; }
+  .opta-mid { color: #4da6ff; }
+  .opta-low { color: #888; }
 </style>
 </head>
 <body>
@@ -563,6 +583,7 @@
       </div>
       <div class="sidebar-sub" id="sub-playerstats">
         <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
         <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare</div>
       </div>
 
@@ -755,6 +776,7 @@
               <span id="live-save-indicator" class="live-save-indicator">Saved</span>
             </div>
             <div class="pitch" id="live-pitch"></div>
+            <div class="bps-ranking" id="live-bps-ranking"></div>
           </div>
           <div class="loader" id="live-loader"><div class="spinner"></div><div class="loader-text">Loading live data...</div></div>
         </div>
@@ -1087,6 +1109,46 @@
         </div>
       </div>
 
+      <!-- ==================== PLAYER STATS: OPTA & BPS ==================== -->
+      <div class="nav-panel" id="nav-playerstats-opta">
+        <div class="section">
+          <div class="section-title">Opta Statistics & BPS</div>
+          <div class="filters" style="margin-bottom:0.8rem;">
+            <div class="field" style="flex:2">
+              <label>Search</label>
+              <input type="text" id="opta-search" placeholder="Player name..." oninput="debouncedLoadOpta()">
+            </div>
+            <div class="field">
+              <label>Position</label>
+              <select id="opta-pos" onchange="loadOptaStats()">
+                <option value="">All</option>
+                <option value="GK">GK</option>
+                <option value="DEF">DEF</option>
+                <option value="MID">MID</option>
+                <option value="FWD">FWD</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>View</label>
+              <select id="opta-view" onchange="loadOptaStats()">
+                <option value="bps">BPS Leaders</option>
+                <option value="ict">ICT Breakdown</option>
+                <option value="expected">Expected Stats (xG/xA/xGI)</option>
+                <option value="defensive">Defensive</option>
+                <option value="discipline">Discipline</option>
+              </select>
+            </div>
+          </div>
+          <div class="loader" id="opta-loader"><div class="spinner"></div><div class="loader-text">Loading Opta stats...</div></div>
+          <div class="table-wrap">
+            <table id="opta-table" class="hidden">
+              <thead id="opta-thead"></thead>
+              <tbody id="opta-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- ==================== NEWS: CAPTAIN ==================== -->
       <div class="nav-panel" id="nav-news-captain">
         <div class="section">
@@ -1276,6 +1338,7 @@ function switchNav(panelId) {
   if (panelId === 'nav-news-differentials') loadDifferentials();
   if (panelId === 'nav-team-live') loadLive();
   if (panelId === 'nav-transfers-planner') loadTransferPlanner();
+  if (panelId === 'nav-playerstats-opta') loadOptaStats();
   if (panelId === 'nav-dashboard') loadDashboard();
 }
 
@@ -1792,6 +1855,31 @@ async function loadLive() {
     $('live-pitch').innerHTML = pitchHtml;
     initLiveDragDrop();
     validateFormation();
+
+    // BPS Ranking
+    const allPicks = [...data.picks].sort((a, b) => (b.bps || 0) - (a.bps || 0));
+    const hasBps = allPicks.some(p => p.bps > 0);
+    if (hasBps) {
+      let bpsHtml = '<div class="section" style="margin-top:1rem;"><div class="section-title blue">BPS Ranking (Projected Bonus)</div>';
+      allPicks.forEach((p, i) => {
+        let rankClass = 'none';
+        let bonusPts = '';
+        if (i === 0 && p.bps > 0) { rankClass = 'gold'; bonusPts = '+3'; }
+        else if (i === 1 && p.bps > 0) { rankClass = 'silver'; bonusPts = '+2'; }
+        else if (i === 2 && p.bps > 0) { rankClass = 'bronze'; bonusPts = '+1'; }
+        bpsHtml += `<div class="bps-ranking-item">
+          <div class="bps-rank ${rankClass}">${i + 1}</div>
+          <span class="bps-name">${p.name} <span style="color:#888;font-size:0.72rem;">${p.position_name}</span></span>
+          <span class="bps-score">${p.bps || 0}</span>
+          <span class="bps-bonus">${bonusPts}</span>
+        </div>`;
+      });
+      bpsHtml += '</div>';
+      $('live-bps-ranking').innerHTML = bpsHtml;
+    } else {
+      $('live-bps-ranking').innerHTML = '';
+    }
+
     $('live-content').classList.remove('hidden');
     liveLoaded = true;
   } catch (err) {
@@ -1851,6 +1939,7 @@ function liveCard(p, isBench, benchOrder) {
     <div class="lp-pts${p.live_points === 0 ? ' zero' : ''}">${p.live_points}</div>
     ${details.length ? `<div class="lp-detail">${details.join(' &middot; ')}</div>` : ''}
     ${upcomingHtml}${benchBadge}
+    ${p.bps ? `<div class="lp-bps">${p.bps}</div>` : ''}
   </div>`;
 }
 
@@ -2982,6 +3071,147 @@ function confirmTransfers() {
 
   // Show confirmation message
   $('tp-transfer-summary').innerHTML += `<div style="color:#51cf66;font-size:0.82rem;margin-top:0.5rem;padding:0.5rem;background:#1a2a1a;border-radius:6px;">Transfer plan saved! Go to the FPL website to make these transfers.</div>`;
+}
+
+// ==================== OPTA STATS & BPS ====================
+let optaTimer = null;
+let optaLoaded = false;
+
+function debouncedLoadOpta() {
+  clearTimeout(optaTimer);
+  optaTimer = setTimeout(loadOptaStats, 300);
+}
+
+async function loadOptaStats() {
+  const loader = $('opta-loader');
+  const table = $('opta-table');
+  loader.classList.add('active');
+  table.classList.add('hidden');
+
+  const view = $('opta-view').value;
+  const pos = $('opta-pos').value;
+  const search = $('opta-search').value.trim();
+
+  // Determine sort field based on view
+  let sortField = 'bps';
+  if (view === 'ict') sortField = 'ict_index';
+  else if (view === 'expected') sortField = 'expected_goal_involvements';
+  else if (view === 'defensive') sortField = 'saves';
+  else if (view === 'discipline') sortField = 'yellow_cards';
+
+  const params = new URLSearchParams({ sort: sortField, dir: 'desc', limit: '100' });
+  if (pos) params.set('position', pos);
+  if (search) params.set('search', search);
+
+  try {
+    const resp = await fetch('/api/opta-stats?' + params.toString());
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    renderOptaTable(data.players, view);
+    table.classList.remove('hidden');
+    optaLoaded = true;
+  } catch (err) {
+    $('opta-body').innerHTML = `<tr><td colspan="12" style="text-align:center;color:#ff6b6b">${err.message}</td></tr>`;
+    table.classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function renderOptaTable(players, view) {
+  const thead = $('opta-thead');
+  const tbody = $('opta-body');
+
+  // Define columns per view
+  const views = {
+    bps: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'BPS', 'Bonus', 'Pts', 'Form', 'Minutes', 'Starts'],
+      row: (p, i) => `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#4da6ff;font-weight:bold">${p.bps}</td>
+        <td class="right" style="color:#ffd700;font-weight:bold">${p.bonus}</td>
+        <td class="right score">${p.total_points}</td>
+        <td class="right">${p.form}</td>
+        <td class="right">${p.minutes}</td>
+        <td class="right">${p.starts}</td>
+      </tr>`,
+    },
+    ict: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'ICT', 'Influence', 'Creativity', 'Threat', 'Form', 'Cost'],
+      row: (p, i) => `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#00ff87;font-weight:bold">${p.ict_index.toFixed(1)}</td>
+        <td class="right" style="color:#ff6b6b">${p.influence.toFixed(1)}</td>
+        <td class="right" style="color:#4da6ff">${p.creativity.toFixed(1)}</td>
+        <td class="right" style="color:#ffd700">${p.threat.toFixed(1)}</td>
+        <td class="right">${p.form}</td>
+        <td class="right cost">${p.cost.toFixed(1)}</td>
+      </tr>`,
+    },
+    expected: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'xGI', 'xG', 'xA', 'xGC', 'Goals', 'Assists', 'Cost'],
+      row: (p, i) => {
+        const xgi = p.expected_goal_involvements;
+        const actualGI = p.goals + p.assists;
+        const overPerform = actualGI > xgi;
+        return `<tr>
+          <td>${i + 1}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.team_name}</td>
+          <td class="pos">${p.position_name}</td>
+          <td class="right" style="color:#00ff87;font-weight:bold">${xgi.toFixed(2)}</td>
+          <td class="right">${p.xG.toFixed(2)}</td>
+          <td class="right">${p.xA.toFixed(2)}</td>
+          <td class="right" style="color:#ff6b6b">${p.expected_goals_conceded.toFixed(2)}</td>
+          <td class="right">${p.goals} ${overPerform ? '<span style="color:#51cf66;font-size:0.65rem;">&#9650;</span>' : p.goals < Math.round(p.xG) ? '<span style="color:#ff6b6b;font-size:0.65rem;">&#9660;</span>' : ''}</td>
+          <td class="right">${p.assists}</td>
+          <td class="right cost">${p.cost.toFixed(1)}</td>
+        </tr>`;
+      },
+    },
+    defensive: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'Saves', 'CS', 'GC', 'xGC', 'Pen Saved', 'Own Goals', 'Pts'],
+      row: (p, i) => `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#4da6ff;font-weight:bold">${p.saves}</td>
+        <td class="right" style="color:#00ff87">${p.clean_sheets}</td>
+        <td class="right" style="color:#ff6b6b">${p.goals_conceded}</td>
+        <td class="right">${p.expected_goals_conceded.toFixed(2)}</td>
+        <td class="right" style="color:#ffd700">${p.penalties_saved}</td>
+        <td class="right" style="color:#ff6b6b">${p.own_goals}</td>
+        <td class="right score">${p.total_points}</td>
+      </tr>`,
+    },
+    discipline: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'Yellow', 'Red', 'Pen Missed', 'Own Goals', 'Minutes', 'Starts'],
+      row: (p, i) => `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#ffd700;font-weight:bold">${p.yellow_cards}</td>
+        <td class="right" style="color:#ff6b6b;font-weight:bold">${p.red_cards}</td>
+        <td class="right">${p.penalties_missed}</td>
+        <td class="right">${p.own_goals}</td>
+        <td class="right">${p.minutes}</td>
+        <td class="right">${p.starts}</td>
+      </tr>`,
+    },
+  };
+
+  const config = views[view] || views.bps;
+  thead.innerHTML = `<tr>${config.headers.map((h, i) => `<th${i >= 4 ? ' class="right"' : ''}>${h}</th>`).join('')}</tr>`;
+  tbody.innerHTML = players.map((p, i) => config.row(p, i)).join('');
 }
 </script>
 </body>
