@@ -6,15 +6,53 @@
 <title>FPL Optimizer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0e1117; color: #e6e6e6; min-height: 100vh; padding-bottom: 70px; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0e1117; color: #e6e6e6; min-height: 100vh; overflow-x: hidden; }
 
-  /* Header */
-  .header { text-align: center; padding: 1.2rem 0 0.5rem; }
-  .header h1 { color: #00ff87; font-size: 1.6rem; margin-bottom: 0.2rem; }
-  .header .subtitle { color: #888; font-size: 0.85rem; }
+  /* ==================== APP SHELL ==================== */
+  .app-shell { display: flex; min-height: 100vh; }
 
-  /* Utility */
+  /* Sidebar */
+  .sidebar { width: 260px; background: #13161f; border-right: 1px solid #2a2f3e; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; display: flex; flex-direction: column; overflow-y: auto; transition: transform 0.25s ease; }
+  .sidebar-brand { padding: 1.2rem 1.2rem 0.8rem; border-bottom: 1px solid #2a2f3e; }
+  .sidebar-brand h1 { color: #00ff87; font-size: 1.3rem; margin-bottom: 0.1rem; }
+  .sidebar-brand .subtitle { color: #555; font-size: 0.72rem; }
+
+  .sidebar-nav { flex: 1; padding: 0.6rem 0; }
+  .sidebar-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 1.2rem; color: #888; font-size: 0.88rem; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; user-select: none; }
+  .sidebar-item:hover { color: #e6e6e6; background: rgba(255,255,255,0.03); }
+  .sidebar-item.active { color: #00ff87; border-left-color: #00ff87; background: rgba(0,255,135,0.05); }
+  .sidebar-item .si-icon { font-size: 1.1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+  .sidebar-item .si-label { flex: 1; }
+  .sidebar-item .si-arrow { font-size: 0.65rem; transition: transform 0.2s; }
+  .sidebar-item .si-arrow.open { transform: rotate(90deg); }
+
+  .sidebar-sub { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+  .sidebar-sub.open { max-height: 300px; }
+  .sidebar-sub-item { display: block; padding: 0.45rem 1.2rem 0.45rem 3.3rem; color: #666; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+  .sidebar-sub-item:hover { color: #e6e6e6; background: rgba(255,255,255,0.02); }
+  .sidebar-sub-item.active { color: #00ff87; border-left-color: #00ff87; }
+
+  .sidebar-divider { height: 1px; background: #2a2f3e; margin: 0.4rem 1.2rem; }
+
+  /* Main content area */
+  .main-content { margin-left: 260px; flex: 1; min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.2rem 1.2rem 2rem; }
+
+  /* Mobile topbar & hamburger */
+  .mobile-topbar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 50px; background: #13161f; border-bottom: 1px solid #2a2f3e; z-index: 150; align-items: center; padding: 0 1rem; }
+  .hamburger { background: none; border: none; color: #e6e6e6; font-size: 1.5rem; cursor: pointer; padding: 0.3rem; }
+  .mobile-topbar .brand { color: #00ff87; font-weight: 700; font-size: 1.1rem; margin-left: 0.7rem; }
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 190; }
+  .sidebar-overlay.active { display: block; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; padding-top: 50px; }
+    .mobile-topbar { display: flex; }
+  }
+
+  /* ==================== UTILITY ==================== */
   .hidden { display: none !important; }
   .right { text-align: right; }
   .pos { font-weight: bold; color: #4da6ff; }
@@ -41,7 +79,7 @@
   .btn-outline { background: transparent; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
   .btn-outline:hover { border-color: #4da6ff; color: #4da6ff; }
 
-  /* User bar */
+  /* User bar (reused in settings) */
   .user-bar { background: #13161f; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
   .user-bar-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; }
   .user-bar-header .title { color: #4da6ff; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -71,23 +109,9 @@
   .league-standings.active { display: block; }
   .league-standings .league-title { color: #4da6ff; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 
-  /* Nav tabs */
-  .nav-tabs { display: flex; gap: 0; border-bottom: 2px solid #2a2f3e; margin-bottom: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .nav-tab { padding: 0.6rem 1rem; cursor: pointer; color: #888; font-size: 0.85rem; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
-  .nav-tab:hover { color: #e6e6e6; }
-  .nav-tab.active { color: #00ff87; border-bottom-color: #00ff87; }
+  /* Nav panels */
   .nav-panel { display: none; }
   .nav-panel.active { display: block; }
-
-  /* Mobile bottom nav */
-  .bottom-nav { display: none; }
-  @media (max-width: 768px) {
-    .nav-tabs { display: none; }
-    .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #13161f; border-top: 1px solid #2a2f3e; z-index: 100; }
-    .bottom-nav .bnav-item { flex: 1; text-align: center; padding: 0.6rem 0.2rem; font-size: 0.7rem; color: #888; cursor: pointer; transition: color 0.15s; }
-    .bottom-nav .bnav-item.active { color: #00ff87; }
-    .bottom-nav .bnav-icon { font-size: 1.2rem; display: block; margin-bottom: 0.1rem; }
-  }
 
   /* Sections & cards */
   .section { background: #13161f; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
@@ -111,7 +135,7 @@
   th.sortable.sort-asc::after { content: " \u25B2"; font-size: 0.65rem; }
   th.sortable.sort-desc::after { content: " \u25BC"; font-size: 0.65rem; }
 
-  /* Sub-tabs */
+  /* Sub-tabs (used in optimizer) */
   .tabs { display: flex; gap: 0; border-bottom: 2px solid #2a2f3e; margin-bottom: 0.8rem; overflow-x: auto; }
   .tab { padding: 0.5rem 1rem; cursor: pointer; color: #888; font-size: 0.82rem; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
   .tab:hover { color: #e6e6e6; }
@@ -133,7 +157,7 @@
   .filters .field { flex: 1; min-width: 120px; }
   .filters select, .filters input[type="text"] { width: 100%; background: #0e1117; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.9rem; }
 
-  /* Settings */
+  /* Settings panel */
   .settings { background: #1a1f2e; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
   .settings-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
 
@@ -174,16 +198,71 @@
   .price-card .net-positive { color: #51cf66; font-weight: bold; }
   .price-card .net-negative { color: #ff6b6b; font-weight: bold; }
 
-  /* Live points */
-  .live-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-top: 0.8rem; }
-  .live-card { background: #1a1f2e; border-radius: 8px; padding: 0.6rem; text-align: center; position: relative; }
-  .live-card.bench { opacity: 0.5; }
-  .live-card .lp-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.15rem; }
-  .live-card .lp-team { color: #888; font-size: 0.72rem; }
-  .live-card .lp-pts { font-size: 1.3rem; font-weight: bold; color: #00ff87; margin-top: 0.3rem; }
-  .live-card .lp-captain { position: absolute; top: 4px; right: 6px; font-size: 0.7rem; background: #ffd700; color: #0e1117; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; font-weight: bold; }
-  .live-card .lp-vice { position: absolute; top: 4px; right: 6px; font-size: 0.7rem; background: #888; color: #0e1117; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; font-weight: bold; }
-  .live-card .lp-detail { font-size: 0.7rem; color: #888; margin-top: 0.2rem; }
+  /* Pitch layout */
+  .pitch { background: linear-gradient(180deg, #1a5c2a 0%, #1e6b31 10%, #1a5c2a 10%, #1a5c2a 20%, #1e6b31 20%, #1e6b31 30%, #1a5c2a 30%, #1a5c2a 40%, #1e6b31 40%, #1e6b31 50%, #1a5c2a 50%, #1a5c2a 60%, #1e6b31 60%, #1e6b31 70%, #1a5c2a 70%, #1a5c2a 80%, #1e6b31 80%, #1e6b31 90%, #1a5c2a 90%); border-radius: 10px; padding: 1.5rem 0.5rem; position: relative; overflow: hidden; }
+  .pitch::before { content: ''; position: absolute; top: 50%; left: 10%; right: 10%; height: 1px; background: rgba(255,255,255,0.15); }
+  .pitch::after { content: ''; position: absolute; top: 42%; left: 35%; right: 35%; bottom: 42%; border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; }
+  .pitch-row { display: flex; justify-content: center; gap: 0.3rem; padding: 0.6rem 0; position: relative; z-index: 1; }
+  .pitch-row.bench-row { background: #13161f; border-radius: 0 0 10px 10px; margin: 0.8rem -0.5rem -1.5rem; padding: 0.8rem 0.5rem 0.6rem; }
+  .pitch-row .bench-label { position: absolute; top: 0.2rem; left: 0.8rem; font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .live-card { background: rgba(14,17,23,0.85); border-radius: 8px; padding: 0.3rem; text-align: center; position: relative; width: 80px; flex-shrink: 0; cursor: grab; transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s; border-top: 3px solid var(--team-color, #333); overflow: visible; }
+  .live-card.bench { opacity: 0.7; }
+  .live-card.dragging { opacity: 0.3; transform: scale(0.95); }
+  .live-card.drag-over { box-shadow: 0 0 0 2px #00ff87, 0 0 12px rgba(0,255,135,0.4); transform: scale(1.05); }
+  .live-card .lp-photo { width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 0.2rem; overflow: hidden; background: #2a2f3e; display: flex; align-items: center; justify-content: center; }
+  .live-card .lp-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .live-card .lp-photo .lp-placeholder { font-size: 1.2rem; color: #555; }
+  .live-card .lp-name { font-weight: 600; font-size: 0.7rem; margin-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .live-card .lp-team { color: #aaa; font-size: 0.6rem; }
+  .live-card .lp-pts { font-size: 1.1rem; font-weight: bold; color: #00ff87; margin-top: 0.15rem; }
+  .live-card .lp-pts.zero { color: #888; }
+  .live-card .lp-captain { position: absolute; top: 2px; right: 4px; font-size: 0.6rem; background: #ffd700; color: #0e1117; border-radius: 50%; width: 16px; height: 16px; line-height: 16px; font-weight: bold; }
+  .live-card .lp-vice { position: absolute; top: 2px; right: 4px; font-size: 0.6rem; background: #888; color: #0e1117; border-radius: 50%; width: 16px; height: 16px; line-height: 16px; font-weight: bold; }
+  .live-card .lp-detail { font-size: 0.6rem; color: #aaa; margin-top: 0.1rem; }
+
+  /* Injury flag */
+  .live-card .lp-injury { position: absolute; top: 3px; left: 4px; width: 10px; height: 10px; border-radius: 50%; z-index: 2; cursor: help; }
+  .live-card .lp-injury.injury-red { background: #ff4444; box-shadow: 0 0 4px rgba(255,68,68,0.6); }
+  .live-card .lp-injury.injury-yellow { background: #ffaa00; box-shadow: 0 0 4px rgba(255,170,0,0.6); }
+
+  /* Bench order badge */
+  .live-card .bench-order { position: absolute; bottom: 2px; right: 4px; font-size: 0.55rem; background: #444; color: #ccc; border-radius: 50%; width: 14px; height: 14px; line-height: 14px; text-align: center; font-weight: bold; }
+
+  /* Captain selection mode */
+  .live-card.captain-selectable { cursor: pointer; }
+  .live-card.captain-selectable:hover { box-shadow: 0 0 0 2px #ffd700, 0 0 10px rgba(255,215,0,0.3); }
+  .live-card.vice-selectable:hover { box-shadow: 0 0 0 2px #aaa, 0 0 10px rgba(170,170,170,0.3); }
+
+  /* Captain mode bar */
+  .captain-mode-bar { background: linear-gradient(135deg, #1a1f2e, #252b3b); border: 1px solid #ffd700; border-radius: 8px; padding: 0.5rem 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: #ffd700; }
+  .captain-mode-bar.vice-mode { border-color: #aaa; color: #aaa; }
+  .captain-mode-bar button { background: #333; border: 1px solid #555; color: #ccc; border-radius: 6px; padding: 0.3rem 0.8rem; cursor: pointer; font-size: 0.75rem; }
+  .captain-mode-bar button:hover { background: #444; }
+
+  /* Formation badge */
+  .formation-badge { display: inline-block; background: #1a1f2e; border: 1px solid #333; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 600; color: #00ff87; margin-left: 0.5rem; }
+  .formation-badge.formation-invalid { border-color: #ff4444; color: #ff4444; }
+
+  /* Action bar */
+  .live-action-bar { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; align-items: center; flex-wrap: wrap; }
+  .live-action-bar button { background: #1a1f2e; border: 1px solid #333; color: #ccc; border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.75rem; transition: background 0.2s, border-color 0.2s; }
+  .live-action-bar button:hover { background: #252b3b; border-color: #555; }
+  .live-action-bar .btn-captain { border-color: #ffd700; color: #ffd700; }
+  .live-action-bar .btn-vice { border-color: #888; color: #aaa; }
+  .live-save-indicator { font-size: 0.7rem; color: #00ff87; opacity: 0; transition: opacity 0.3s; margin-left: auto; }
+  .live-save-indicator.visible { opacity: 1; }
+
+  .live-card .lp-upcoming { margin-top: 0.2rem; display: flex; justify-content: center; gap: 1px; flex-wrap: nowrap; }
+  .bench-grid { display: flex; justify-content: center; gap: 0.3rem; margin-top: 0.8rem; }
+
+  @media (max-width: 480px) {
+    .live-card { width: 68px; }
+    .live-card .lp-photo { width: 40px; height: 40px; }
+    .live-card .lp-name { font-size: 0.62rem; }
+    .live-card .lp-pts { font-size: 0.95rem; }
+    .pitch { padding: 1rem 0.3rem; }
+  }
 
   /* Rival comparison */
   .rival-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.8rem; }
@@ -207,6 +286,117 @@
   .gw-badge { font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-weight: 500; }
   .gw-badge.current { background: #00ff87; color: #0e1117; } .gw-badge.next { background: #4da6ff; color: #0e1117; } .gw-badge.finished { background: #2a2f3e; color: #888; }
 
+  /* Dashboard */
+  .dash-welcome { margin-bottom: 1rem; }
+  .dash-welcome h2 { color: #00ff87; font-size: 1.3rem; margin-bottom: 0.2rem; }
+  .dash-welcome p { color: #888; font-size: 0.85rem; }
+
+  /* Top stats bar */
+  .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1.2rem; }
+  .dash-stat { background: #13161f; border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid #2a2f3e; position: relative; overflow: hidden; }
+  .dash-stat .ds-value { font-size: 1.6rem; font-weight: bold; color: #00ff87; }
+  .dash-stat .ds-value.blue { color: #4da6ff; }
+  .dash-stat .ds-label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 0.2rem; letter-spacing: 0.03em; }
+  .dash-stat .ds-sub { font-size: 0.68rem; color: #555; margin-top: 0.15rem; }
+  @media (max-width: 600px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } }
+
+  /* Dashboard main layout: 2-col on desktop */
+  .dash-body { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 900px) { .dash-body { grid-template-columns: 1fr; } }
+
+  /* Mid section: pitch + captain */
+  .dash-mid { display: flex; flex-direction: column; gap: 1rem; }
+  .dash-section { background: #13161f; border-radius: 10px; padding: 1rem 1.2rem; border: 1px solid #2a2f3e; }
+  .dash-section-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: #00ff87; margin-bottom: 0.7rem; letter-spacing: 0.03em; display: flex; align-items: center; justify-content: space-between; }
+  .dash-section-title .ds-link { font-size: 0.72rem; color: #4da6ff; cursor: pointer; text-transform: none; font-weight: 500; }
+  .dash-section-title .ds-link:hover { text-decoration: underline; }
+
+  /* Captain highlight */
+  .dash-captain { display: flex; align-items: center; gap: 1rem; padding: 0.6rem; background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,215,0,0.02)); border-radius: 8px; border: 1px solid rgba(255,215,0,0.15); }
+  .dash-captain .dc-badge { width: 48px; height: 48px; border-radius: 50%; background: #ffd700; color: #0e1117; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; flex-shrink: 0; }
+  .dash-captain .dc-info { flex: 1; }
+  .dash-captain .dc-name { font-weight: 600; font-size: 0.95rem; }
+  .dash-captain .dc-meta { color: #888; font-size: 0.78rem; }
+  .dash-captain .dc-pts { font-size: 1.3rem; font-weight: bold; color: #ffd700; text-align: right; min-width: 50px; }
+
+  /* Bonus tracker */
+  .dash-bonus { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .bonus-item { background: #1a1f2e; border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; }
+  .bonus-item .bi-pts { color: #ffd700; font-weight: bold; }
+
+  /* Right rail */
+  .dash-rail { display: flex; flex-direction: column; gap: 1rem; }
+  .dash-rail-list { max-height: 240px; overflow-y: auto; }
+  .dash-rail-list::-webkit-scrollbar { width: 4px; }
+  .dash-rail-list::-webkit-scrollbar-thumb { background: #2a2f3e; border-radius: 2px; }
+
+  /* News/injury items */
+  .dash-news-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0; border-bottom: 1px solid #1a1f2e; font-size: 0.8rem; }
+  .dash-news-item:last-child { border-bottom: none; }
+  .dash-news-item .ni-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dash-news-item .ni-status.red { background: #ff6b6b; }
+  .dash-news-item .ni-status.yellow { background: #ffd700; }
+  .dash-news-item .ni-status.green { background: #51cf66; }
+  .dash-news-item .ni-info { flex: 1; min-width: 0; }
+  .dash-news-item .ni-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dash-news-item .ni-text { color: #888; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dash-news-item .ni-chance { font-size: 0.72rem; font-weight: 600; flex-shrink: 0; min-width: 32px; text-align: right; }
+
+  /* Price change items in rail */
+  .dash-price-item { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 0; border-bottom: 1px solid #1a1f2e; font-size: 0.8rem; }
+  .dash-price-item:last-child { border-bottom: none; }
+  .dash-price-item .pi-name { font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 0.5rem; }
+  .dash-price-item .pi-change { font-weight: 600; font-size: 0.78rem; flex-shrink: 0; }
+  .dash-price-item .pi-change.up { color: #51cf66; }
+  .dash-price-item .pi-change.down { color: #ff6b6b; }
+
+  /* Bottom section */
+  .dash-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 700px) { .dash-bottom { grid-template-columns: 1fr; } }
+
+  /* Bench mini cards */
+  .dash-bench { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .bench-mini { background: #1a1f2e; border-radius: 8px; padding: 0.5rem 0.7rem; flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem; }
+  .bench-mini .bm-name { font-size: 0.8rem; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bench-mini .bm-pts { font-size: 0.9rem; font-weight: bold; color: #888; }
+  .bench-mini .bm-pos { font-size: 0.68rem; color: #4da6ff; font-weight: 600; min-width: 26px; }
+
+  /* Fixture mini cards */
+  .dash-fixture { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; background: #1a1f2e; border-radius: 6px; margin-bottom: 0.3rem; font-size: 0.8rem; }
+  .dash-fixture .df-teams { flex: 1; }
+  .dash-fixture .df-time { color: #888; font-size: 0.72rem; flex-shrink: 0; }
+  .dash-fixture .df-score { color: #00ff87; font-weight: bold; flex-shrink: 0; min-width: 40px; text-align: center; }
+
+  /* Mini pitch on dashboard */
+  .dash-pitch { position: relative; }
+  .dash-pitch .pitch { padding: 1rem 0.3rem; }
+  .dash-pitch .live-card { width: 66px; }
+  .dash-pitch .live-card .lp-photo { width: 36px; height: 36px; }
+  .dash-pitch .live-card .lp-name { font-size: 0.6rem; }
+  .dash-pitch .live-card .lp-pts { font-size: 0.9rem; }
+  .dash-pitch .live-card .lp-detail { display: none; }
+  .dash-pitch .live-card .lp-upcoming { display: none; }
+  .dash-pitch .pitch-row.bench-row { display: none; }
+
+  /* Dash empty state */
+  .dash-empty { text-align: center; padding: 2rem 1rem; color: #555; }
+  .dash-empty .de-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .dash-empty .de-text { font-size: 0.85rem; margin-bottom: 0.8rem; }
+
+  /* Quick links grid (shown when no user) */
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .dash-card { background: #13161f; border-radius: 10px; padding: 1.2rem; cursor: pointer; transition: all 0.15s; border: 1px solid #2a2f3e; }
+  .dash-card:hover { border-color: #00ff87; background: #161b24; }
+  .dash-card .dc-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .dash-card .dc-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .dash-card .dc-desc { color: #888; font-size: 0.78rem; }
+
+  /* Coming soon placeholder */
+  .coming-soon { text-align: center; padding: 3rem 1rem; }
+  .coming-soon .cs-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .coming-soon .cs-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .coming-soon .cs-text { color: #888; font-size: 0.85rem; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .container { padding: 0.5rem 0.5rem 2rem; }
@@ -216,330 +406,634 @@
     td { font-size: 0.78rem; padding: 0.35rem 0.4rem; }
     th { font-size: 0.68rem; padding: 0.4rem; }
     .section { padding: 0.8rem; }
-    .user-bar { padding: 0.8rem; }
-    .live-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   }
   @media (max-width: 480px) {
     .settings-grid { grid-template-columns: 1fr; }
-    .header h1 { font-size: 1.3rem; }
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>FPL Optimizer</h1>
-    <p class="subtitle">Fantasy Premier League analytics & squad optimization</p>
-  </div>
-
-  <!-- User Bar -->
-  <div class="user-bar">
-    <div class="user-bar-header">
-      <span class="title">My FPL Account</span>
-      <span class="inline-spinner" id="user-spinner"></span>
-    </div>
-    <div class="user-bar-row">
-      <div class="field">
-        <label>FPL User ID</label>
-        <input type="text" id="user-id" placeholder="e.g. 1234567" onkeydown="if(event.key==='Enter')loadUser()">
-        <div class="help-text">Find your ID in the FPL website URL</div>
-      </div>
-      <button class="btn-blue" id="load-user-btn" onclick="loadUser()">Load</button>
-    </div>
-    <div class="user-error" id="user-error"></div>
-    <div class="user-info" id="user-info">
-      <div class="mgr">Manager: <span id="manager-name"></span></div>
-      <div class="tm">Team: <span id="team-name"></span></div>
-    </div>
-    <div class="leagues-section" id="leagues-section">
-      <div class="sec-title">Leagues</div>
-      <div class="league-list" id="league-list"></div>
-    </div>
-    <div class="league-standings" id="league-standings">
-      <div class="league-title"><span id="league-title-text"></span> <span class="inline-spinner" id="league-spinner"></span></div>
-      <div class="table-wrap">
-        <table id="league-table" class="hidden">
-          <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="right">GW</th><th class="right">Total</th><th></th></tr></thead>
-          <tbody id="league-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top-level nav (desktop) -->
-  <div class="nav-tabs" id="desktop-nav">
-    <div class="nav-tab active" data-nav="optimizer" onclick="switchNav('optimizer')">Optimizer</div>
-    <div class="nav-tab" data-nav="live" onclick="switchNav('live')">Live GW</div>
-    <div class="nav-tab" data-nav="players" onclick="switchNav('players')">Players</div>
-    <div class="nav-tab" data-nav="fdr" onclick="switchNav('fdr')">FDR</div>
-    <div class="nav-tab" data-nav="captain" onclick="switchNav('captain')">Captain</div>
-    <div class="nav-tab" data-nav="prices" onclick="switchNav('prices')">Prices</div>
-    <div class="nav-tab" data-nav="differentials" onclick="switchNav('differentials')">Differentials</div>
-    <div class="nav-tab" data-nav="compare" onclick="switchNav('compare')">Compare</div>
-    <div class="nav-tab" data-nav="fixtures" onclick="switchNav('fixtures')">Fixtures</div>
-  </div>
-
-  <!-- ==================== OPTIMIZER ==================== -->
-  <div class="nav-panel active" id="nav-optimizer">
-    <div class="settings">
-      <div class="section-title">Optimizer Settings</div>
-      <div class="settings-grid">
-        <div class="field">
-          <label>Budget: <span class="slider-value" id="budget-display">100.0</span>M</label>
-          <input type="range" id="budget" min="80" max="105" step="0.5" value="100">
-        </div>
-        <div class="field">
-          <label>Fixture Lookahead</label>
-          <select id="lookahead">
-            <option value="3">3 GWs</option>
-            <option value="5" selected>5 GWs</option>
-            <option value="8">8 GWs</option>
-            <option value="10">10 GWs</option>
-          </select>
-        </div>
-        <button class="btn" id="run-btn" onclick="runOptimizer()">Optimize</button>
-      </div>
-    </div>
-
-    <div class="loader" id="loader">
-      <div class="spinner"></div>
-      <div class="loader-text">Fetching data & optimizing squad...</div>
-    </div>
-    <div id="error"></div>
-
-    <div id="results" class="hidden">
-      <div class="tabs" id="tab-bar">
-        <div class="tab active" data-tab="optimal" onclick="switchTab('optimal')">Optimal Squad</div>
-        <div class="tab" data-tab="top-players" onclick="switchTab('top-players')">Top Players</div>
-      </div>
-
-      <div class="tab-content active" id="tab-optimal">
-        <div class="stat-row" id="summary"></div>
-        <div class="section">
-          <div class="section-title">Starting XI</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
-            <tbody id="starting-body"></tbody></table>
-          </div>
-        </div>
-        <div class="section">
-          <div class="section-title">Bench</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
-            <tbody id="bench-body"></tbody></table>
-          </div>
-        </div>
-        <div class="section hidden" id="transfers-section">
-          <div class="section-title">Transfer Suggestions</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
-            <tbody id="transfers-body"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-my-team">
-        <div class="stat-row" id="user-summary"></div>
-        <div class="section">
-          <div class="section-title blue">My Starting XI</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
-            <tbody id="user-starting-body"></tbody></table>
-          </div>
-        </div>
-        <div class="section">
-          <div class="section-title blue">My Bench</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
-            <tbody id="user-bench-body"></tbody></table>
-          </div>
-        </div>
-        <div class="section hidden" id="user-transfers-section">
-          <div class="section-title blue">Suggested Transfers</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
-            <tbody id="user-transfers-body"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-top-players">
-        <div id="top-players-container"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== LIVE GW ==================== -->
-  <div class="nav-panel" id="nav-live">
-    <div class="section">
-      <div class="section-title blue">Live Gameweek Points</div>
-      <p id="live-no-user" style="color:#888;font-size:0.85rem;">Load your FPL User ID above to see live points.</p>
-      <div id="live-content" class="hidden">
-        <div class="stat-row" id="live-stats"></div>
-        <div class="section-title" style="margin-top:0.5rem">Starting XI</div>
-        <div class="live-grid" id="live-starting"></div>
-        <div class="section-title" style="margin-top:1rem;opacity:0.5">Bench</div>
-        <div class="live-grid" id="live-bench"></div>
-      </div>
-      <div class="loader" id="live-loader"><div class="spinner"></div><div class="loader-text">Loading live data...</div></div>
-    </div>
-  </div>
-
-  <!-- ==================== PLAYERS ==================== -->
-  <div class="nav-panel" id="nav-players">
-    <div class="section">
-      <div class="filters">
-        <div class="field" style="flex:2">
-          <label>Search</label>
-          <input type="text" id="player-search" placeholder="Player name..." oninput="debouncedLoadPlayers()">
-        </div>
-        <div class="field">
-          <label>Position</label>
-          <select id="player-pos-filter" onchange="loadPlayers()">
-            <option value="">All</option>
-            <option value="GK">GK</option>
-            <option value="DEF">DEF</option>
-            <option value="MID">MID</option>
-            <option value="FWD">FWD</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Team</label>
-          <select id="player-team-filter" onchange="loadPlayers()">
-            <option value="">All</option>
-          </select>
-        </div>
-      </div>
-      <div class="loader" id="players-loader"><div class="spinner"></div><div class="loader-text">Loading players...</div></div>
-      <div class="table-wrap">
-        <table id="players-table" class="hidden">
-          <thead><tr>
-            <th class="sortable sort-desc" data-sort="total_points" onclick="sortPlayers(this)">Pts</th>
-            <th>Pos</th>
-            <th class="sortable" data-sort="name" onclick="sortPlayers(this)">Player</th>
-            <th>Team</th>
-            <th class="sortable right" data-sort="cost" onclick="sortPlayers(this)">Cost</th>
-            <th class="sortable right" data-sort="form" onclick="sortPlayers(this)">Form</th>
-            <th class="sortable right" data-sort="points_per_game" onclick="sortPlayers(this)">PPG</th>
-            <th class="sortable right" data-sort="xG" onclick="sortPlayers(this)">xG</th>
-            <th class="sortable right" data-sort="xA" onclick="sortPlayers(this)">xA</th>
-            <th class="sortable right" data-sort="ict_index" onclick="sortPlayers(this)">ICT</th>
-            <th class="sortable right" data-sort="minutes" onclick="sortPlayers(this)">Min</th>
-          </tr></thead>
-          <tbody id="players-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== FDR HEATMAP ==================== -->
-  <div class="nav-panel" id="nav-fdr">
-    <div class="section">
-      <div class="section-title">Fixture Difficulty Rating</div>
-      <div style="margin-bottom:0.8rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-        <span style="font-size:0.75rem;color:#888;">KEY:</span>
-        <span class="fdr-cell fdr-1" style="padding:0.2rem 0.5rem;font-size:0.72rem;">1</span>
-        <span class="fdr-cell fdr-2" style="padding:0.2rem 0.5rem;font-size:0.72rem;">2</span>
-        <span class="fdr-cell fdr-3" style="padding:0.2rem 0.5rem;font-size:0.72rem;">3</span>
-        <span class="fdr-cell fdr-4" style="padding:0.2rem 0.5rem;font-size:0.72rem;">4</span>
-        <span class="fdr-cell fdr-5" style="padding:0.2rem 0.5rem;font-size:0.72rem;">5</span>
-        <span style="font-size:0.72rem;color:#888;margin-left:0.5rem;">(H) = Home</span>
-      </div>
-      <div class="loader" id="fdr-loader"><div class="spinner"></div><div class="loader-text">Loading FDR...</div></div>
-      <div class="fdr-grid" id="fdr-container"></div>
-    </div>
-  </div>
-
-  <!-- ==================== CAPTAIN PICKS ==================== -->
-  <div class="nav-panel" id="nav-captain">
-    <div class="section">
-      <div class="section-title">Captain Picks — Next GW</div>
-      <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
-      <div class="table-wrap">
-        <table id="captain-table" class="hidden">
-          <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
-          <tbody id="captain-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== PRICE CHANGES ==================== -->
-  <div class="nav-panel" id="nav-prices">
-    <div class="section">
-      <div class="section-title" style="color:#51cf66">Price Risers</div>
-      <div class="loader" id="prices-loader"><div class="spinner"></div><div class="loader-text">Loading transfer data...</div></div>
-      <div id="risers-container"></div>
-      <div class="section-title" style="color:#ff6b6b;margin-top:1.5rem;">Price Fallers</div>
-      <div id="fallers-container"></div>
-    </div>
-  </div>
-
-  <!-- ==================== DIFFERENTIALS ==================== -->
-  <div class="nav-panel" id="nav-differentials">
-    <div class="section">
-      <div class="section-title">Differential Finder</div>
-      <div style="margin-bottom:1rem;display:flex;gap:0.8rem;align-items:end;flex-wrap:wrap;">
-        <div class="field" style="max-width:160px;">
-          <label>Max Ownership %</label>
-          <select id="diff-ownership" onchange="loadDifferentials()">
-            <option value="5">5%</option>
-            <option value="10" selected>10%</option>
-            <option value="15">15%</option>
-            <option value="20">20%</option>
-          </select>
-        </div>
-      </div>
-      <div class="loader" id="diff-loader"><div class="spinner"></div><div class="loader-text">Finding differentials...</div></div>
-      <div class="table-wrap">
-        <table id="diff-table" class="hidden">
-          <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Cost</th><th class="right">Pts</th><th class="right">Form</th><th class="right">PPG</th><th class="right">Own%</th><th class="right">Score</th></tr></thead>
-          <tbody id="diff-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== COMPARE ==================== -->
-  <div class="nav-panel" id="nav-compare">
-    <div class="section">
-      <div class="section-title">Player Comparison</div>
-      <div class="compare-search">
-        <div class="field">
-          <label>Search player</label>
-          <input type="text" id="compare-input" placeholder="Type a name..." oninput="debouncedCompareSearch()">
-        </div>
-      </div>
-      <div class="compare-results" id="compare-results"></div>
-      <div class="compare-chips" id="compare-chips"></div>
-      <div id="compare-output"></div>
-    </div>
-  </div>
-
-  <!-- ==================== FIXTURES ==================== -->
-  <div class="nav-panel" id="nav-fixtures">
-    <div class="section">
-      <div style="margin-bottom:0.8rem;">
-        <label style="color:#888;font-size:0.75rem;text-transform:uppercase;margin-right:0.5rem;">Gameweek</label>
-        <select id="gw-filter" onchange="renderFixtures()" style="background:#0e1117;border:1px solid #2a2f3e;color:#e6e6e6;border-radius:6px;padding:0.5rem;font-size:0.9rem;min-width:180px;">
-          <option value="current">Current / Next</option>
-        </select>
-      </div>
-      <div class="loader" id="fixtures-loader"><div class="spinner"></div><div class="loader-text">Loading fixtures...</div></div>
-      <div id="fixtures-container"></div>
-    </div>
-  </div>
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+  <span class="brand">FPL Optimizer</span>
 </div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-<!-- Mobile bottom nav -->
-<div class="bottom-nav" id="bottom-nav">
-  <div class="bnav-item active" data-nav="optimizer" onclick="switchNav('optimizer')"><span class="bnav-icon">&#9889;</span>Optimize</div>
-  <div class="bnav-item" data-nav="live" onclick="switchNav('live')"><span class="bnav-icon">&#9654;</span>Live</div>
-  <div class="bnav-item" data-nav="fdr" onclick="switchNav('fdr')"><span class="bnav-icon">&#9632;</span>FDR</div>
-  <div class="bnav-item" data-nav="players" onclick="switchNav('players')"><span class="bnav-icon">&#9917;</span>Players</div>
-  <div class="bnav-item" data-nav="fixtures" onclick="switchNav('fixtures')"><span class="bnav-icon">&#128197;</span>More</div>
-</div>
+<div class="app-shell">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>FPL Optimizer</h1>
+      <div class="subtitle">Fantasy Premier League analytics</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <!-- Dashboard -->
+      <div class="sidebar-item active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
+        <span class="si-icon">&#9733;</span>
+        <span class="si-label">Dashboard</span>
+      </div>
+
+      <!-- Team Management -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-team', this)">
+        <span class="si-icon">&#9917;</span>
+        <span class="si-label">Team Management</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-team">
+        <div class="sidebar-sub-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">Live GW</div>
+        <div class="sidebar-sub-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">My Team</div>
+      </div>
+
+      <!-- Transfers -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-transfers', this)">
+        <span class="si-icon">&#8644;</span>
+        <span class="si-label">Transfers</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-transfers">
+        <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Suggestions</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
+      </div>
+
+      <!-- Leagues -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-leagues', this)">
+        <span class="si-icon">&#127942;</span>
+        <span class="si-label">Leagues</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-leagues">
+        <div class="sidebar-sub-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">Standings</div>
+        <div class="sidebar-sub-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">Rival Comparison</div>
+      </div>
+
+      <!-- Fixtures -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-fixtures', this)">
+        <span class="si-icon">&#128197;</span>
+        <span class="si-label">Fixtures</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-fixtures">
+        <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
+        <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
+      </div>
+
+      <!-- Player Stats -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-playerstats', this)">
+        <span class="si-icon">&#128202;</span>
+        <span class="si-label">Player Stats</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-playerstats">
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare</div>
+      </div>
+
+      <!-- News & Updates -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-news', this)">
+        <span class="si-icon">&#128240;</span>
+        <span class="si-label">News &amp; Updates</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-news">
+        <div class="sidebar-sub-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">Captain Picks</div>
+        <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
+        <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
+      </div>
+
+      <!-- Draft / Waivers -->
+      <div class="sidebar-item" data-nav="nav-draft" onclick="switchNav('nav-draft')">
+        <span class="si-icon">&#128221;</span>
+        <span class="si-label">Draft / Waivers</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Settings -->
+      <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
+        <span class="si-icon">&#9881;</span>
+        <span class="si-label">Settings</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <div class="main-content">
+    <div class="container">
+
+      <!-- ==================== DASHBOARD ==================== -->
+      <div class="nav-panel active" id="nav-dashboard">
+
+        <!-- Welcome -->
+        <div class="dash-welcome">
+          <h2 id="dash-title">Dashboard</h2>
+          <p id="dash-subtitle">Load your FPL ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see your live overview.</p>
+        </div>
+
+        <!-- Top stats -->
+        <div class="dash-stats" id="dash-stats">
+          <div class="dash-stat">
+            <div class="ds-value" id="dash-total">--</div>
+            <div class="ds-label">Total Points</div>
+            <div class="ds-sub" id="dash-total-sub"></div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-value blue" id="dash-gw-pts">--</div>
+            <div class="ds-label" id="dash-gw-label">GW Points</div>
+            <div class="ds-sub" id="dash-hits-sub"></div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-value" id="dash-rank">--</div>
+            <div class="ds-label">Overall Rank</div>
+            <div class="ds-sub" id="dash-rank-sub"></div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-value blue" id="dash-league-rank">--</div>
+            <div class="ds-label">League Rank</div>
+            <div class="ds-sub" id="dash-league-sub"></div>
+          </div>
+        </div>
+
+        <!-- Empty state: quick links (visible when no user loaded) -->
+        <div id="dash-empty-state">
+          <div class="dash-grid">
+            <div class="dash-card" onclick="switchNav('nav-transfers-optimizer')">
+              <div class="dc-icon">&#9889;</div>
+              <div class="dc-title">Squad Optimizer</div>
+              <div class="dc-desc">Find the optimal 15-man squad</div>
+            </div>
+            <div class="dash-card" onclick="switchNav('nav-news-captain')">
+              <div class="dc-icon">&#169;</div>
+              <div class="dc-title">Captain Picks</div>
+              <div class="dc-desc">Best captain choices for next GW</div>
+            </div>
+            <div class="dash-card" onclick="switchNav('nav-fixtures-fdr')">
+              <div class="dc-icon">&#128197;</div>
+              <div class="dc-title">FDR Heatmap</div>
+              <div class="dc-desc">Fixture difficulty at a glance</div>
+            </div>
+            <div class="dash-card" onclick="switchNav('nav-playerstats-table')">
+              <div class="dc-icon">&#128202;</div>
+              <div class="dc-title">Player Stats</div>
+              <div class="dc-desc">Search and filter all players</div>
+            </div>
+            <div class="dash-card" onclick="switchNav('nav-news-prices')">
+              <div class="dc-icon">&#128176;</div>
+              <div class="dc-title">Price Changes</div>
+              <div class="dc-desc">Track risers and fallers</div>
+            </div>
+            <div class="dash-card" onclick="switchNav('nav-settings')">
+              <div class="dc-icon">&#9881;</div>
+              <div class="dc-title">Settings</div>
+              <div class="dc-desc">Load your FPL ID to unlock all features</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live dashboard (hidden until user loaded) -->
+        <div id="dash-live" class="hidden">
+          <div class="loader" id="dash-loader"><div class="spinner"></div><div class="loader-text">Loading dashboard...</div></div>
+
+          <!-- Mid section: pitch + right rail -->
+          <div class="dash-body">
+            <div class="dash-mid">
+
+              <!-- Captain highlight -->
+              <div class="dash-section">
+                <div class="dash-section-title">Captain <span class="ds-link" onclick="switchNav('nav-news-captain')">Captain picks &#8250;</span></div>
+                <div id="dash-captain-slot">
+                  <div style="color:#555;font-size:0.82rem;">No captain data yet</div>
+                </div>
+              </div>
+
+              <!-- Starting XI mini pitch -->
+              <div class="dash-section">
+                <div class="dash-section-title">Starting XI <span class="ds-link" onclick="switchNav('nav-team-live')">Full view &#8250;</span></div>
+                <div class="dash-pitch" id="dash-pitch-slot"></div>
+              </div>
+
+              <!-- Bonus tracking -->
+              <div class="dash-section">
+                <div class="dash-section-title">Bonus Points</div>
+                <div class="dash-bonus" id="dash-bonus-slot">
+                  <div style="color:#555;font-size:0.82rem;">No bonus data yet</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right rail -->
+            <div class="dash-rail">
+
+              <!-- Injuries / Suspensions -->
+              <div class="dash-section">
+                <div class="dash-section-title" style="color:#ff6b6b;">Injuries &amp; News</div>
+                <div class="dash-rail-list" id="dash-injuries-slot">
+                  <div style="color:#555;font-size:0.82rem;">Loading...</div>
+                </div>
+              </div>
+
+              <!-- Price changes -->
+              <div class="dash-section">
+                <div class="dash-section-title" style="color:#51cf66;">Price Changes <span class="ds-link" onclick="switchNav('nav-news-prices')">All &#8250;</span></div>
+                <div class="dash-rail-list" id="dash-prices-slot">
+                  <div style="color:#555;font-size:0.82rem;">Loading...</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom: bench + fixtures -->
+          <div class="dash-bottom">
+            <div class="dash-section">
+              <div class="dash-section-title">Bench</div>
+              <div class="dash-bench" id="dash-bench-slot">
+                <div style="color:#555;font-size:0.82rem;">No bench data</div>
+              </div>
+            </div>
+            <div class="dash-section">
+              <div class="dash-section-title">Upcoming Fixtures <span class="ds-link" onclick="switchNav('nav-fixtures-list')">All &#8250;</span></div>
+              <div id="dash-fixtures-slot">
+                <div style="color:#555;font-size:0.82rem;">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== TEAM: LIVE GW ==================== -->
+      <div class="nav-panel" id="nav-team-live">
+        <div class="section">
+          <div class="section-title blue">Live Gameweek Points</div>
+          <p id="live-no-user" style="color:#888;font-size:0.85rem;">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see live points.</p>
+          <div id="live-content" class="hidden">
+            <div class="stat-row" id="live-stats"></div>
+            <div id="live-captain-bar"></div>
+            <div class="live-action-bar" id="live-action-bar">
+              <button class="btn-captain" onclick="enterCaptainMode('captain')">Set Captain</button>
+              <button class="btn-vice" onclick="enterCaptainMode('vice')">Set Vice</button>
+              <span id="live-formation-badge" class="formation-badge"></span>
+              <span id="live-save-indicator" class="live-save-indicator">Saved</span>
+            </div>
+            <div class="pitch" id="live-pitch"></div>
+          </div>
+          <div class="loader" id="live-loader"><div class="spinner"></div><div class="loader-text">Loading live data...</div></div>
+        </div>
+      </div>
+
+      <!-- ==================== TEAM: MY TEAM ==================== -->
+      <div class="nav-panel" id="nav-team-myteam">
+        <div id="myteam-no-data">
+          <div class="section">
+            <p style="color:#888;font-size:0.85rem;">Run the <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:#4da6ff">Squad Optimizer</a> with your FPL ID loaded to see your team here.</p>
+          </div>
+        </div>
+        <div id="myteam-content" class="hidden">
+          <div class="stat-row" id="user-summary"></div>
+          <div class="section">
+            <div class="section-title blue">My Starting XI</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+              <tbody id="user-starting-body"></tbody></table>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title blue">My Bench</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+              <tbody id="user-bench-body"></tbody></table>
+            </div>
+          </div>
+          <div class="section hidden" id="user-transfers-section">
+            <div class="section-title blue">Suggested Transfers</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
+              <tbody id="user-transfers-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: SUGGESTIONS ==================== -->
+      <div class="nav-panel" id="nav-transfers-suggestions">
+        <div id="suggestions-no-data">
+          <div class="section">
+            <p style="color:#888;font-size:0.85rem;">Run the <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:#4da6ff">Squad Optimizer</a> with your FPL ID to see transfer suggestions.</p>
+          </div>
+        </div>
+        <div id="suggestions-content" class="hidden">
+          <div class="section" id="transfers-section">
+            <div class="section-title">Transfer Suggestions</div>
+            <div class="table-wrap">
+              <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
+              <tbody id="transfers-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: OPTIMIZER ==================== -->
+      <div class="nav-panel" id="nav-transfers-optimizer">
+        <div class="settings">
+          <div class="section-title">Optimizer Settings</div>
+          <div class="settings-grid">
+            <div class="field">
+              <label>Budget: <span class="slider-value" id="budget-display">100.0</span>M</label>
+              <input type="range" id="budget" min="80" max="105" step="0.5" value="100">
+            </div>
+            <div class="field">
+              <label>Fixture Lookahead</label>
+              <select id="lookahead">
+                <option value="3">3 GWs</option>
+                <option value="5" selected>5 GWs</option>
+                <option value="8">8 GWs</option>
+                <option value="10">10 GWs</option>
+              </select>
+            </div>
+            <button class="btn" id="run-btn" onclick="runOptimizer()">Optimize</button>
+          </div>
+        </div>
+
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          <div class="loader-text">Fetching data & optimizing squad...</div>
+        </div>
+        <div id="error"></div>
+
+        <div id="results" class="hidden">
+          <div class="tabs" id="tab-bar">
+            <div class="tab active" data-tab="optimal" onclick="switchTab('optimal')">Optimal Squad</div>
+            <div class="tab" data-tab="top-players" onclick="switchTab('top-players')">Top Players</div>
+          </div>
+
+          <div class="tab-content active" id="tab-optimal">
+            <div class="stat-row" id="summary"></div>
+            <div class="section">
+              <div class="section-title">Starting XI</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+                <tbody id="starting-body"></tbody></table>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">Bench</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+                <tbody id="bench-body"></tbody></table>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-top-players">
+            <div id="top-players-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LEAGUES: STANDINGS ==================== -->
+      <div class="nav-panel" id="nav-leagues-standings">
+        <div class="section">
+          <div class="section-title blue">League Standings</div>
+          <div id="leagues-no-user" style="color:#888;font-size:0.85rem;">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see your leagues.</div>
+          <div class="leagues-section" id="leagues-section">
+            <div class="sec-title">Your Leagues</div>
+            <div class="league-list" id="league-list"></div>
+          </div>
+          <div class="league-standings" id="league-standings">
+            <div class="league-title"><span id="league-title-text"></span> <span class="inline-spinner" id="league-spinner"></span></div>
+            <div class="table-wrap">
+              <table id="league-table" class="hidden">
+                <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="right">GW</th><th class="right">Total</th><th></th></tr></thead>
+                <tbody id="league-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LEAGUES: RIVAL ==================== -->
+      <div class="nav-panel" id="nav-leagues-rival">
+        <div class="section">
+          <div class="section-title blue">Rival Comparison</div>
+          <p id="rival-no-user" style="color:#888;font-size:0.85rem;">Select a rival from <a href="#" onclick="switchNav('nav-leagues-standings');return false" style="color:#4da6ff">League Standings</a> to compare squads, or enter a rival ID below.</p>
+          <div style="display:flex;gap:0.6rem;align-items:end;flex-wrap:wrap;margin-top:1rem;">
+            <div class="field" style="flex:0 1 180px;">
+              <label>Rival FPL ID</label>
+              <input type="text" id="rival-id-input" placeholder="e.g. 1234567" onkeydown="if(event.key==='Enter')loadRivalDirect()">
+            </div>
+            <button class="btn-blue btn-sm" onclick="loadRivalDirect()">Compare</button>
+          </div>
+          <div id="rival-output" style="margin-top:1rem;"></div>
+        </div>
+      </div>
+
+      <!-- ==================== FIXTURES: FDR ==================== -->
+      <div class="nav-panel" id="nav-fixtures-fdr">
+        <div class="section">
+          <div class="section-title">Fixture Difficulty Rating</div>
+          <div style="margin-bottom:0.8rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:0.75rem;color:#888;">KEY:</span>
+            <span class="fdr-cell fdr-1" style="padding:0.2rem 0.5rem;font-size:0.72rem;">1</span>
+            <span class="fdr-cell fdr-2" style="padding:0.2rem 0.5rem;font-size:0.72rem;">2</span>
+            <span class="fdr-cell fdr-3" style="padding:0.2rem 0.5rem;font-size:0.72rem;">3</span>
+            <span class="fdr-cell fdr-4" style="padding:0.2rem 0.5rem;font-size:0.72rem;">4</span>
+            <span class="fdr-cell fdr-5" style="padding:0.2rem 0.5rem;font-size:0.72rem;">5</span>
+            <span style="font-size:0.72rem;color:#888;margin-left:0.5rem;">(H) = Home</span>
+          </div>
+          <div class="loader" id="fdr-loader"><div class="spinner"></div><div class="loader-text">Loading FDR...</div></div>
+          <div class="fdr-grid" id="fdr-container"></div>
+        </div>
+      </div>
+
+      <!-- ==================== FIXTURES: LIST ==================== -->
+      <div class="nav-panel" id="nav-fixtures-list">
+        <div class="section">
+          <div style="margin-bottom:0.8rem;">
+            <label style="color:#888;font-size:0.75rem;text-transform:uppercase;margin-right:0.5rem;">Gameweek</label>
+            <select id="gw-filter" onchange="renderFixtures()" style="background:#0e1117;border:1px solid #2a2f3e;color:#e6e6e6;border-radius:6px;padding:0.5rem;font-size:0.9rem;min-width:180px;">
+              <option value="current">Current / Next</option>
+            </select>
+          </div>
+          <div class="loader" id="fixtures-loader"><div class="spinner"></div><div class="loader-text">Loading fixtures...</div></div>
+          <div id="fixtures-container"></div>
+        </div>
+      </div>
+
+      <!-- ==================== PLAYER STATS: TABLE ==================== -->
+      <div class="nav-panel" id="nav-playerstats-table">
+        <div class="section">
+          <div class="filters">
+            <div class="field" style="flex:2">
+              <label>Search</label>
+              <input type="text" id="player-search" placeholder="Player name..." oninput="debouncedLoadPlayers()">
+            </div>
+            <div class="field">
+              <label>Position</label>
+              <select id="player-pos-filter" onchange="loadPlayers()">
+                <option value="">All</option>
+                <option value="GK">GK</option>
+                <option value="DEF">DEF</option>
+                <option value="MID">MID</option>
+                <option value="FWD">FWD</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Team</label>
+              <select id="player-team-filter" onchange="loadPlayers()">
+                <option value="">All</option>
+              </select>
+            </div>
+          </div>
+          <div class="loader" id="players-loader"><div class="spinner"></div><div class="loader-text">Loading players...</div></div>
+          <div class="table-wrap">
+            <table id="players-table" class="hidden">
+              <thead><tr>
+                <th class="sortable sort-desc" data-sort="total_points" onclick="sortPlayers(this)">Pts</th>
+                <th>Pos</th>
+                <th class="sortable" data-sort="name" onclick="sortPlayers(this)">Player</th>
+                <th>Team</th>
+                <th class="sortable right" data-sort="cost" onclick="sortPlayers(this)">Cost</th>
+                <th class="sortable right" data-sort="form" onclick="sortPlayers(this)">Form</th>
+                <th class="sortable right" data-sort="points_per_game" onclick="sortPlayers(this)">PPG</th>
+                <th class="sortable right" data-sort="xG" onclick="sortPlayers(this)">xG</th>
+                <th class="sortable right" data-sort="xA" onclick="sortPlayers(this)">xA</th>
+                <th class="sortable right" data-sort="ict_index" onclick="sortPlayers(this)">ICT</th>
+                <th class="sortable right" data-sort="minutes" onclick="sortPlayers(this)">Min</th>
+              </tr></thead>
+              <tbody id="players-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PLAYER STATS: COMPARE ==================== -->
+      <div class="nav-panel" id="nav-playerstats-compare">
+        <div class="section">
+          <div class="section-title">Player Comparison</div>
+          <div class="compare-search">
+            <div class="field">
+              <label>Search player</label>
+              <input type="text" id="compare-input" placeholder="Type a name..." oninput="debouncedCompareSearch()">
+            </div>
+          </div>
+          <div class="compare-results" id="compare-results"></div>
+          <div class="compare-chips" id="compare-chips"></div>
+          <div id="compare-output"></div>
+        </div>
+      </div>
+
+      <!-- ==================== NEWS: CAPTAIN ==================== -->
+      <div class="nav-panel" id="nav-news-captain">
+        <div class="section">
+          <div class="section-title">Captain Picks — Next GW</div>
+          <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
+          <div class="table-wrap">
+            <table id="captain-table" class="hidden">
+              <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
+              <tbody id="captain-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== NEWS: PRICES ==================== -->
+      <div class="nav-panel" id="nav-news-prices">
+        <div class="section">
+          <div class="section-title" style="color:#51cf66">Price Risers</div>
+          <div class="loader" id="prices-loader"><div class="spinner"></div><div class="loader-text">Loading transfer data...</div></div>
+          <div id="risers-container"></div>
+          <div class="section-title" style="color:#ff6b6b;margin-top:1.5rem;">Price Fallers</div>
+          <div id="fallers-container"></div>
+        </div>
+      </div>
+
+      <!-- ==================== NEWS: DIFFERENTIALS ==================== -->
+      <div class="nav-panel" id="nav-news-differentials">
+        <div class="section">
+          <div class="section-title">Differential Finder</div>
+          <div style="margin-bottom:1rem;display:flex;gap:0.8rem;align-items:end;flex-wrap:wrap;">
+            <div class="field" style="max-width:160px;">
+              <label>Max Ownership %</label>
+              <select id="diff-ownership" onchange="loadDifferentials()">
+                <option value="5">5%</option>
+                <option value="10" selected>10%</option>
+                <option value="15">15%</option>
+                <option value="20">20%</option>
+              </select>
+            </div>
+          </div>
+          <div class="loader" id="diff-loader"><div class="spinner"></div><div class="loader-text">Finding differentials...</div></div>
+          <div class="table-wrap">
+            <table id="diff-table" class="hidden">
+              <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Cost</th><th class="right">Pts</th><th class="right">Form</th><th class="right">PPG</th><th class="right">Own%</th><th class="right">Score</th></tr></thead>
+              <tbody id="diff-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DRAFT / WAIVERS ==================== -->
+      <div class="nav-panel" id="nav-draft">
+        <div class="coming-soon">
+          <div class="cs-icon">&#128221;</div>
+          <div class="cs-title">Draft &amp; Waivers</div>
+          <div class="cs-text">Draft league support is coming soon.<br>Stay tuned for waiver wire tools and draft rankings.</div>
+        </div>
+      </div>
+
+      <!-- ==================== SETTINGS ==================== -->
+      <div class="nav-panel" id="nav-settings">
+        <h2 style="color:#00ff87;margin-bottom:1rem;font-size:1.2rem;">Settings</h2>
+
+        <!-- FPL Account -->
+        <div class="user-bar">
+          <div class="user-bar-header">
+            <span class="title">FPL Account</span>
+            <span class="inline-spinner" id="user-spinner"></span>
+          </div>
+          <div class="user-bar-row">
+            <div class="field">
+              <label>FPL User ID</label>
+              <input type="text" id="user-id" placeholder="e.g. 1234567" onkeydown="if(event.key==='Enter')loadUser()">
+              <div class="help-text">Find your ID in the FPL website URL</div>
+            </div>
+            <button class="btn-blue" id="load-user-btn" onclick="loadUser()">Load</button>
+          </div>
+          <div class="user-error" id="user-error"></div>
+          <div class="user-info" id="user-info">
+            <div class="mgr">Manager: <span id="manager-name"></span></div>
+            <div class="tm">Team: <span id="team-name"></span></div>
+          </div>
+        </div>
+
+        <!-- Optimizer defaults -->
+        <div class="section">
+          <div class="section-title">Optimizer Defaults</div>
+          <p style="color:#888;font-size:0.82rem;margin-bottom:0.8rem;">These are also configurable on the Squad Optimizer page.</p>
+          <div class="settings-grid">
+            <div class="field">
+              <label>Default Budget</label>
+              <input type="text" id="settings-budget" value="100.0" style="max-width:120px;" readonly>
+              <div class="help-text">Adjust on Optimizer page</div>
+            </div>
+            <div class="field">
+              <label>Default Lookahead</label>
+              <input type="text" id="settings-lookahead" value="5 GWs" style="max-width:120px;" readonly>
+              <div class="help-text">Adjust on Optimizer page</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /container -->
+  </div><!-- /main-content -->
+
+</div><!-- /app-shell -->
 
 <script>
 const $ = id => document.getElementById(id);
@@ -554,12 +1048,277 @@ let loadedUserId = null;
 let compareIds = [];
 let allPlayersCache = null;
 
+// ==================== SIDEBAR NAV ====================
+function toggleSidebar() {
+  const sidebar = $('sidebar');
+  const overlay = $('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('active');
+}
+
+function toggleSidebarSub(subId, parentItem) {
+  const sub = $(subId);
+  const arrow = parentItem.querySelector('.si-arrow');
+  const isOpen = sub.classList.contains('open');
+
+  // Close all other subs
+  document.querySelectorAll('.sidebar-sub').forEach(s => s.classList.remove('open'));
+  document.querySelectorAll('.si-arrow').forEach(a => a.classList.remove('open'));
+
+  if (!isOpen) {
+    sub.classList.add('open');
+    if (arrow) arrow.classList.add('open');
+  }
+}
+
+function switchNav(panelId) {
+  // Hide all panels
+  document.querySelectorAll('.nav-panel').forEach(p => p.classList.remove('active'));
+
+  // Show target panel
+  const panel = $(panelId);
+  if (panel) panel.classList.add('active');
+
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.sidebar-sub-item').forEach(i => i.classList.remove('active'));
+
+  // Activate the matching sidebar item or sub-item
+  const subItem = document.querySelector(`.sidebar-sub-item[data-nav="${panelId}"]`);
+  if (subItem) {
+    subItem.classList.add('active');
+    // Also highlight parent group and ensure sub is open
+    const subContainer = subItem.closest('.sidebar-sub');
+    if (subContainer) {
+      subContainer.classList.add('open');
+      const parentItem = subContainer.previousElementSibling;
+      if (parentItem && parentItem.classList.contains('sidebar-item')) {
+        parentItem.classList.add('active');
+        const arrow = parentItem.querySelector('.si-arrow');
+        if (arrow) arrow.classList.add('open');
+      }
+    }
+  } else {
+    const sidebarItem = document.querySelector(`.sidebar-item[data-nav="${panelId}"]`);
+    if (sidebarItem) sidebarItem.classList.add('active');
+  }
+
+  // Close mobile sidebar
+  $('sidebar').classList.remove('open');
+  $('sidebar-overlay').classList.remove('active');
+
+  // Lazy load data
+  if (panelId === 'nav-playerstats-table' && !playersLoaded) loadMetadata().then(() => loadPlayers());
+  if (panelId === 'nav-fixtures-list' && !fixturesLoaded) loadMetadata().then(() => loadFixtures());
+  if (panelId === 'nav-fixtures-fdr') loadFDR();
+  if (panelId === 'nav-news-captain') loadCaptainPicks();
+  if (panelId === 'nav-news-prices') loadPriceChanges();
+  if (panelId === 'nav-news-differentials') loadDifferentials();
+  if (panelId === 'nav-team-live') loadLive();
+  if (panelId === 'nav-dashboard') loadDashboard();
+}
+
+// ==================== DASHBOARD ====================
+let dashLoaded = false;
+
+function loadDashboard() {
+  if (!loadedUserId) return;
+
+  // Show live dash, hide empty state
+  $('dash-empty-state').classList.add('hidden');
+  $('dash-live').classList.remove('hidden');
+
+  // Avoid re-fetching if already loaded this session
+  if (dashLoaded) return;
+
+  const loader = $('dash-loader');
+  loader.classList.add('active');
+
+  // Fire all requests in parallel
+  Promise.all([
+    fetch(`/api/live/${loadedUserId}`).then(r => r.json()),
+    fetch('/api/price-changes').then(r => r.json()),
+    fetch('/api/players?sort=total_points&dir=desc').then(r => r.json()),
+    fetch('/api/fixtures').then(r => r.json()),
+  ]).then(([liveData, priceData, playersData, fixturesResp]) => {
+
+    // ---- TOP STATS ----
+    if (!liveData.error) {
+      $('dash-gw-pts').textContent = liveData.total_live_points ?? '--';
+      $('dash-gw-label').textContent = liveData.gameweek_name || 'GW Points';
+      $('dash-hits-sub').textContent = liveData.hits ? `(-${liveData.hits} hits)` : '';
+      $('dash-rank').textContent = liveData.overall_rank ? liveData.overall_rank.toLocaleString() : '--';
+      $('dash-total').textContent = liveData.total_points ? liveData.total_points.toLocaleString() : '--';
+      $('dash-total-sub').textContent = liveData.team_value ? `Value: ${(liveData.team_value / 10).toFixed(1)}M` : '';
+      $('dash-rank-sub').textContent = liveData.points_on_bench ? `${liveData.points_on_bench} on bench` : '';
+
+      // ---- CAPTAIN ----
+      const captain = liveData.picks.find(p => p.is_captain);
+      if (captain) {
+        const photoUrl = captain.photo ? `${PHOTO_BASE}${captain.photo}.png` : '';
+        const photoHtml = photoUrl
+          ? `<img src="${photoUrl}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:50%;" onerror="this.parentElement.innerHTML='C'">`
+          : 'C';
+        $('dash-captain-slot').innerHTML = `<div class="dash-captain">
+          <div class="dc-badge">${photoHtml}</div>
+          <div class="dc-info">
+            <div class="dc-name">${captain.name}</div>
+            <div class="dc-meta">${captain.team_name} &middot; ${captain.position_name} &middot; ${captain.multiplier}x</div>
+          </div>
+          <div class="dc-pts">${captain.live_points}</div>
+        </div>`;
+      }
+
+      // ---- STARTING XI MINI PITCH ----
+      const starting = liveData.picks.filter(p => p.multiplier > 0);
+      const bench = liveData.picks.filter(p => p.multiplier === 0);
+      const byPos = { 4: [], 3: [], 2: [], 1: [] };
+      starting.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
+
+      let pitchHtml = '<div class="pitch">';
+      for (const pos of [4, 3, 2, 1]) {
+        if (byPos[pos].length === 0) continue;
+        pitchHtml += `<div class="pitch-row">${byPos[pos].map(p => liveCard(p, false)).join('')}</div>`;
+      }
+      pitchHtml += '</div>';
+      $('dash-pitch-slot').innerHTML = pitchHtml;
+
+      // ---- BONUS TRACKING ----
+      const withBonus = liveData.picks.filter(p => p.bonus > 0).sort((a, b) => b.bonus - a.bonus);
+      if (withBonus.length > 0) {
+        $('dash-bonus-slot').innerHTML = withBonus.map(p =>
+          `<div class="bonus-item"><span class="bi-pts">${p.bonus}B</span> ${p.name}</div>`
+        ).join('');
+      } else {
+        $('dash-bonus-slot').innerHTML = '<div style="color:#555;font-size:0.82rem;">No bonus points yet this GW</div>';
+      }
+
+      // ---- BENCH ----
+      if (bench.length > 0) {
+        $('dash-bench-slot').innerHTML = bench.map(p => `<div class="bench-mini">
+          <span class="bm-pos">${p.position_name}</span>
+          <span class="bm-name">${p.name}</span>
+          <span class="bm-pts">${p.live_points}</span>
+        </div>`).join('');
+      }
+    }
+
+    // ---- LEAGUE RANK ----
+    // Fetch first league if available
+    loadDashLeagueRank();
+
+    // ---- INJURIES & NEWS (from players in user's squad) ----
+    if (!liveData.error && playersData.players) {
+      const myPlayerIds = new Set(liveData.picks.map(p => p.id));
+      const injuredPlayers = playersData.players.filter(p =>
+        myPlayerIds.has(p.id) && p.news && p.news.trim() !== ''
+      );
+
+      // Also show top flagged players not in squad
+      const otherFlagged = playersData.players.filter(p =>
+        !myPlayerIds.has(p.id) && p.news && p.news.trim() !== '' && p.chance_of_playing !== null && p.chance_of_playing < 100
+      ).slice(0, 5);
+
+      const allNews = [...injuredPlayers, ...otherFlagged].slice(0, 10);
+
+      if (allNews.length > 0) {
+        $('dash-injuries-slot').innerHTML = allNews.map(p => {
+          const chance = p.chance_of_playing;
+          let statusClass = 'red';
+          let chanceText = '0%';
+          if (chance === null || chance === undefined) { statusClass = 'yellow'; chanceText = '?'; }
+          else if (chance >= 75) { statusClass = 'green'; chanceText = chance + '%'; }
+          else if (chance >= 25) { statusClass = 'yellow'; chanceText = chance + '%'; }
+          else { statusClass = 'red'; chanceText = chance + '%'; }
+          const inSquad = myPlayerIds.has(p.id);
+          return `<div class="dash-news-item">
+            <div class="ni-status ${statusClass}"></div>
+            <div class="ni-info">
+              <div class="ni-name">${p.name}${inSquad ? ' <span style="color:#4da6ff;font-size:0.65rem;">MY TEAM</span>' : ''}</div>
+              <div class="ni-text">${p.news}</div>
+            </div>
+            <div class="ni-chance" style="color:${statusClass === 'red' ? '#ff6b6b' : statusClass === 'yellow' ? '#ffd700' : '#51cf66'}">${chanceText}</div>
+          </div>`;
+        }).join('');
+      } else {
+        $('dash-injuries-slot').innerHTML = '<div style="color:#555;font-size:0.82rem;">No injuries in your squad</div>';
+      }
+    }
+
+    // ---- PRICE CHANGES (top 5 risers + fallers) ----
+    if (!priceData.error) {
+      const topRisers = (priceData.risers || []).slice(0, 4);
+      const topFallers = (priceData.fallers || []).slice(0, 4);
+      let priceHtml = '';
+      topRisers.forEach(p => {
+        const change = p.cost_change_event !== 0 ? (p.cost_change_event / 10).toFixed(1) : '+?';
+        priceHtml += `<div class="dash-price-item">
+          <span class="pi-name">${p.name}</span>
+          <span class="pi-change up">${change > 0 ? '+' : ''}${change}</span>
+        </div>`;
+      });
+      topFallers.forEach(p => {
+        const change = p.cost_change_event !== 0 ? (p.cost_change_event / 10).toFixed(1) : '-?';
+        priceHtml += `<div class="dash-price-item">
+          <span class="pi-name">${p.name}</span>
+          <span class="pi-change down">${change}</span>
+        </div>`;
+      });
+      $('dash-prices-slot').innerHTML = priceHtml || '<div style="color:#555;font-size:0.82rem;">No price changes</div>';
+    }
+
+    // ---- UPCOMING FIXTURES ----
+    if (!fixturesResp.error && fixturesResp.gameweeks) {
+      const upcoming = fixturesResp.gameweeks.filter(gw => gw.is_current || gw.is_next);
+      const gw = upcoming[0];
+      if (gw && gw.fixtures) {
+        const fxHtml = gw.fixtures.slice(0, 6).map(f => {
+          const mid = f.finished && f.home_score !== null
+            ? `<span class="df-score">${f.home_score}-${f.away_score}</span>`
+            : `<span class="df-time">vs</span>`;
+          return `<div class="dash-fixture">
+            <span class="df-teams">${f.home_team_name} ${mid} ${f.away_team_name}</span>
+          </div>`;
+        }).join('');
+        $('dash-fixtures-slot').innerHTML = fxHtml;
+      } else {
+        $('dash-fixtures-slot').innerHTML = '<div style="color:#555;font-size:0.82rem;">No upcoming fixtures</div>';
+      }
+    }
+
+    dashLoaded = true;
+  }).catch(err => {
+    console.error('Dashboard load error:', err);
+  }).finally(() => {
+    loader.classList.remove('active');
+  });
+}
+
+function loadDashLeagueRank() {
+  if (!loadedUserId) return;
+  fetch(`/api/user/${loadedUserId}`).then(r => r.json()).then(data => {
+    if (data.error || !data.leagues || data.leagues.length === 0) return;
+    const league = data.leagues[0];
+    $('dash-league-sub').textContent = league.name;
+    fetch(`/api/league/${league.id}`).then(r => r.json()).then(lg => {
+      if (lg.error) return;
+      // Match user by entry ID
+      const me = lg.standings.find(s => s.entry === loadedUserId);
+      if (me) {
+        $('dash-league-rank').textContent = '#' + me.rank;
+      } else if (lg.standings.length > 0) {
+        // Fallback: show '--' if user not found in top results
+        $('dash-league-rank').textContent = '--';
+      }
+    }).catch(() => {});
+  }).catch(() => {});
+}
+
 // ==================== PERSIST USER ID ====================
 (function restoreUser() {
   const saved = localStorage.getItem('fpl_user_id');
   if (saved) {
     $('user-id').value = saved;
-    // Auto-load on page load
     setTimeout(() => loadUser(), 100);
   }
 })();
@@ -590,10 +1349,15 @@ async function loadUser() {
     if (!resp.ok) { showUserError(data.error || 'Failed to load user'); return; }
 
     loadedUserId = uid;
+    dashLoaded = false; // Reset so dashboard reloads with new user
     localStorage.setItem('fpl_user_id', String(uid));
     $('manager-name').textContent = data.manager_name;
     $('team-name').textContent = data.team_name;
     $('user-info').classList.add('active');
+
+    // Update dashboard welcome
+    $('dash-title').textContent = `Welcome, ${data.manager_name}`;
+    $('dash-subtitle').textContent = data.team_name;
 
     if (data.leagues && data.leagues.length > 0) {
       $('league-list').innerHTML = data.leagues.map(lg =>
@@ -602,8 +1366,13 @@ async function loadUser() {
       $('leagues-section').classList.add('active');
     }
 
-    // Show live tab hint
+    // Hide "no user" messages
     $('live-no-user').classList.add('hidden');
+    const leaguesNoUser = $('leagues-no-user');
+    if (leaguesNoUser) leaguesNoUser.classList.add('hidden');
+
+    // Load dashboard stats
+    loadDashboard();
   } catch (err) {
     showUserError('Network error: ' + err.message);
   } finally {
@@ -649,28 +1418,6 @@ async function loadLeague(leagueId, chipEl) {
   }
 }
 
-// ==================== NAV ====================
-function switchNav(panel) {
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
-
-  const dt = document.querySelector(`.nav-tab[data-nav="${panel}"]`);
-  if (dt) dt.classList.add('active');
-  const bn = document.querySelector(`.bnav-item[data-nav="${panel}"]`);
-  if (bn) bn.classList.add('active');
-  $('nav-' + panel).classList.add('active');
-
-  // Lazy load
-  if (panel === 'players' && !playersLoaded) loadMetadata().then(() => loadPlayers());
-  if (panel === 'fixtures' && !fixturesLoaded) loadMetadata().then(() => loadFixtures());
-  if (panel === 'fdr') loadFDR();
-  if (panel === 'captain') loadCaptainPicks();
-  if (panel === 'prices') loadPriceChanges();
-  if (panel === 'differentials') loadDifferentials();
-  if (panel === 'live') loadLive();
-}
-
 // ==================== METADATA ====================
 let metadataLoaded = false, metadataPromise = null;
 function loadMetadata() {
@@ -688,6 +1435,159 @@ function loadMetadata() {
 
 // ==================== LIVE GW ====================
 let liveLoaded = false;
+let livePicksData = []; // Store picks data for captain/vice changes
+let liveGameweek = null;
+let captainMode = null; // null, 'captain', or 'vice'
+const PHOTO_BASE = 'https://resources.premierleague.com/premierleague/photos/players/110x140/p';
+
+const TEAM_COLORS = {
+  'ARS': '#EF0107', 'AVL': '#670E36', 'BOU': '#DA291C', 'BRE': '#e30613',
+  'BHA': '#0057B8', 'CHE': '#034694', 'CRY': '#1B458F', 'EVE': '#003399',
+  'FUL': '#000000', 'IPS': '#0044AA', 'LEI': '#003090', 'LIV': '#C8102E',
+  'MCI': '#6CABDD', 'MUN': '#DA291C', 'NEW': '#241F20', 'NFO': '#E53233',
+  'SOU': '#D71920', 'TOT': '#132257', 'WHU': '#7A263A', 'WOL': '#FDB913',
+};
+
+const VALID_FORMATIONS = ['3-4-3','3-5-2','4-3-3','4-4-2','4-5-1','5-3-2','5-4-1','5-2-3','3-3-4','4-2-4'];
+
+function getFormation() {
+  const cards = document.querySelectorAll('#live-pitch .live-card:not(.bench)');
+  let def = 0, mid = 0, fwd = 0;
+  cards.forEach(c => {
+    const pos = parseInt(c.dataset.position);
+    if (pos === 2) def++;
+    else if (pos === 3) mid++;
+    else if (pos === 4) fwd++;
+  });
+  return `${def}-${mid}-${fwd}`;
+}
+
+function validateFormation() {
+  const formation = getFormation();
+  const badge = $('live-formation-badge');
+  if (!badge) return;
+  badge.textContent = formation;
+  if (VALID_FORMATIONS.includes(formation)) {
+    badge.classList.remove('formation-invalid');
+  } else {
+    badge.classList.add('formation-invalid');
+  }
+}
+
+function saveLineup() {
+  if (!loadedUserId || !liveGameweek) return;
+  const cards = document.querySelectorAll('#live-pitch .live-card');
+  const lineup = [];
+  let benchIdx = 0;
+  cards.forEach(c => {
+    const isBench = c.dataset.isBench === 'true';
+    lineup.push({
+      id: parseInt(c.dataset.playerId),
+      isBench: isBench,
+      benchOrder: isBench ? ++benchIdx : 0,
+      isCaptain: c.dataset.isCaptain === 'true',
+      isVice: c.dataset.isVice === 'true',
+    });
+  });
+  localStorage.setItem(`fpl_lineup_${loadedUserId}_${liveGameweek}`, JSON.stringify(lineup));
+  // Flash saved indicator
+  const ind = $('live-save-indicator');
+  if (ind) { ind.classList.add('visible'); setTimeout(() => ind.classList.remove('visible'), 1500); }
+}
+
+function loadSavedLineup(picks) {
+  if (!loadedUserId || !liveGameweek) return picks;
+  const saved = localStorage.getItem(`fpl_lineup_${loadedUserId}_${liveGameweek}`);
+  if (!saved) return picks;
+  try {
+    const lineup = JSON.parse(saved);
+    const lineupMap = {};
+    lineup.forEach(l => { lineupMap[l.id] = l; });
+    // Only apply if all pick IDs match
+    const pickIds = new Set(picks.map(p => p.id));
+    const savedIds = new Set(lineup.map(l => l.id));
+    if (pickIds.size !== savedIds.size || ![...pickIds].every(id => savedIds.has(id))) return picks;
+    // Apply saved state
+    picks.forEach(p => {
+      const s = lineupMap[p.id];
+      if (s) {
+        p.multiplier = s.isBench ? 0 : (s.isCaptain ? 2 : 1);
+        p.is_captain = s.isCaptain;
+        p.is_vice_captain = s.isVice;
+        p._benchOrder = s.benchOrder;
+      }
+    });
+    // Sort bench by saved order
+    const starting = picks.filter(p => p.multiplier > 0);
+    const bench = picks.filter(p => p.multiplier === 0);
+    bench.sort((a, b) => (a._benchOrder || 0) - (b._benchOrder || 0));
+    return [...starting, ...bench];
+  } catch { return picks; }
+}
+
+function enterCaptainMode(type) {
+  if (captainMode) { exitCaptainMode(); return; }
+  captainMode = type;
+  const bar = $('live-captain-bar');
+  const isVice = type === 'vice';
+  bar.innerHTML = `<div class="captain-mode-bar${isVice ? ' vice-mode' : ''}">
+    <span>Tap a starting player to set as ${isVice ? 'Vice Captain' : 'Captain'}</span>
+    <button onclick="exitCaptainMode()">Cancel</button>
+  </div>`;
+  // Make starting cards clickable
+  const cards = document.querySelectorAll('#live-pitch .live-card:not(.bench)');
+  cards.forEach(c => {
+    c.classList.add(isVice ? 'vice-selectable' : 'captain-selectable');
+    c.setAttribute('draggable', 'false');
+  });
+}
+
+function exitCaptainMode() {
+  captainMode = null;
+  $('live-captain-bar').innerHTML = '';
+  const cards = document.querySelectorAll('#live-pitch .live-card');
+  cards.forEach(c => {
+    c.classList.remove('captain-selectable', 'vice-selectable');
+    c.setAttribute('draggable', 'true');
+  });
+}
+
+function handleCaptainClick(playerId) {
+  if (!captainMode) return;
+  const type = captainMode;
+  const cards = document.querySelectorAll('#live-pitch .live-card');
+  cards.forEach(c => {
+    const pid = parseInt(c.dataset.playerId);
+    if (type === 'captain') {
+      if (pid === playerId) {
+        c.dataset.isCaptain = 'true';
+        // If this was vice captain, remove vice
+        if (c.dataset.isVice === 'true') c.dataset.isVice = 'false';
+      } else {
+        c.dataset.isCaptain = 'false';
+      }
+    } else {
+      if (pid === playerId) {
+        c.dataset.isVice = 'true';
+        // If this was captain, remove captain
+        if (c.dataset.isCaptain === 'true') c.dataset.isCaptain = 'false';
+      } else {
+        c.dataset.isVice = 'false';
+      }
+    }
+    // Update badge display
+    const oldBadge = c.querySelector('.lp-captain, .lp-vice');
+    if (oldBadge) oldBadge.remove();
+    if (c.dataset.isCaptain === 'true') {
+      c.insertAdjacentHTML('afterbegin', '<div class="lp-captain">C</div>');
+    } else if (c.dataset.isVice === 'true') {
+      c.insertAdjacentHTML('afterbegin', '<div class="lp-vice">V</div>');
+    }
+  });
+  exitCaptainMode();
+  saveLineup();
+}
+
 async function loadLive() {
   if (!loadedUserId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
   $('live-no-user').classList.add('hidden');
@@ -700,17 +1600,37 @@ async function loadLive() {
     const data = await resp.json();
     if (!resp.ok) { $('live-content').innerHTML = `<div class="error-msg">${data.error}</div>`; $('live-content').classList.remove('hidden'); return; }
 
+    liveGameweek = data.gameweek;
+    // Apply saved lineup if any
+    data.picks = loadSavedLineup(data.picks);
+    livePicksData = data.picks;
+
+    // Recalculate bench points after applying saved lineup
+    const benchPts = data.picks.filter(p => p.multiplier === 0).reduce((s, p) => s + p.raw_points, 0);
+    const startPts = data.picks.filter(p => p.multiplier > 0).reduce((s, p) => s + p.raw_points * p.multiplier, 0);
+
     $('live-stats').innerHTML = `
-      <div class="stat-card"><div class="label">${data.gameweek_name}</div><div class="value blue">${data.total_live_points}${data.hits ? `<span style="font-size:0.7rem;color:#ff6b6b"> (-${data.hits})</span>` : ''}</div></div>
-      <div class="stat-card"><div class="label">On Bench</div><div class="value red">${data.points_on_bench}</div></div>
+      <div class="stat-card"><div class="label">${data.gameweek_name}</div><div class="value blue">${startPts}${data.hits ? `<span style="font-size:0.7rem;color:#ff6b6b"> (-${data.hits})</span>` : ''}</div></div>
+      <div class="stat-card"><div class="label">On Bench</div><div class="value red">${benchPts}</div></div>
       ${data.overall_rank ? `<div class="stat-card"><div class="label">Overall Rank</div><div class="value">${data.overall_rank.toLocaleString()}</div></div>` : ''}
     `;
 
     const starting = data.picks.filter(p => p.multiplier > 0);
     const bench = data.picks.filter(p => p.multiplier === 0);
 
-    $('live-starting').innerHTML = starting.map(p => liveCard(p, false)).join('');
-    $('live-bench').innerHTML = bench.map(p => liveCard(p, true)).join('');
+    const byPos = { 4: [], 3: [], 2: [], 1: [] };
+    starting.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
+
+    let pitchHtml = '';
+    for (const pos of [4, 3, 2, 1]) {
+      if (byPos[pos].length === 0) continue;
+      pitchHtml += `<div class="pitch-row">${byPos[pos].map(p => liveCard(p, false)).join('')}</div>`;
+    }
+    pitchHtml += `<div class="pitch-row bench-row"><span class="bench-label">Bench</span>${bench.map((p, i) => liveCard(p, true, i + 1)).join('')}</div>`;
+
+    $('live-pitch').innerHTML = pitchHtml;
+    initLiveDragDrop();
+    validateFormation();
     $('live-content').classList.remove('hidden');
     liveLoaded = true;
   } catch (err) {
@@ -721,7 +1641,7 @@ async function loadLive() {
   }
 }
 
-function liveCard(p, isBench) {
+function liveCard(p, isBench, benchOrder) {
   let badge = '';
   if (p.is_captain) badge = '<div class="lp-captain">C</div>';
   else if (p.is_vice_captain) badge = '<div class="lp-vice">V</div>';
@@ -730,13 +1650,219 @@ function liveCard(p, isBench) {
   if (p.goals > 0) details.push(`${p.goals}G`);
   if (p.assists > 0) details.push(`${p.assists}A`);
   if (p.bonus > 0) details.push(`${p.bonus}B`);
-  return `<div class="live-card${isBench ? ' bench' : ''}">
-    ${badge}
+
+  const photoUrl = p.photo ? `${PHOTO_BASE}${p.photo}.png` : '';
+  const photoHtml = photoUrl
+    ? `<img src="${photoUrl}" alt="${p.name}" onerror="this.parentElement.innerHTML='<span class=\\'lp-placeholder\\'>&#9917;</span>'">`
+    : '<span class="lp-placeholder">&#9917;</span>';
+
+  let upcomingHtml = '';
+  if (p.upcoming && p.upcoming.length > 0) {
+    upcomingHtml = '<div class="lp-upcoming">' + p.upcoming.map(fx =>
+      `<span class="fdr-cell fdr-${fx.difficulty}" style="font-size:0.55rem;padding:0.1rem 0.2rem;margin:0 1px;" title="GW${fx.gw}: ${fx.opponent}${fx.is_home ? ' (H)' : ' (A)'}">${fx.opponent}</span>`
+    ).join('') + '</div>';
+  }
+
+  // Injury flag
+  let injuryHtml = '';
+  const cop = p.chance_of_playing;
+  if (p.news || (cop !== null && cop !== undefined && cop < 100)) {
+    let injuryClass = 'injury-yellow';
+    if (cop !== null && cop !== undefined && cop <= 25) injuryClass = 'injury-red';
+    else if (p.news && (cop === null || cop === undefined)) injuryClass = 'injury-red';
+    const tooltip = p.news || `${cop}% chance of playing`;
+    injuryHtml = `<div class="lp-injury ${injuryClass}" title="${tooltip}"></div>`;
+  }
+
+  // Team color
+  const teamColor = TEAM_COLORS[p.team_name] || '#333';
+
+  // Bench order badge
+  const benchBadge = isBench && benchOrder ? `<div class="bench-order">${benchOrder}</div>` : '';
+
+  // Position name map for data attribute
+  const posNames = {1:'GK', 2:'DEF', 3:'MID', 4:'FWD'};
+
+  return `<div class="live-card${isBench ? ' bench' : ''}" draggable="true" data-player-id="${p.id}" data-is-bench="${isBench}" data-position="${p.position}" data-team="${p.team_name}" data-is-captain="${!!p.is_captain}" data-is-vice="${!!p.is_vice_captain}" style="--team-color:${teamColor}" onclick="handleCaptainClick(${p.id})">
+    ${badge}${injuryHtml}
+    <div class="lp-photo">${photoHtml}</div>
     <div class="lp-name">${p.name}</div>
-    <div class="lp-team">${p.team_name} &middot; ${p.position_name}</div>
-    <div class="lp-pts">${p.live_points}</div>
+    <div class="lp-pts${p.live_points === 0 ? ' zero' : ''}">${p.live_points}</div>
     ${details.length ? `<div class="lp-detail">${details.join(' &middot; ')}</div>` : ''}
+    ${upcomingHtml}${benchBadge}
   </div>`;
+}
+
+function updateBenchOrders() {
+  const benchCards = document.querySelectorAll('#live-pitch .live-card.bench');
+  benchCards.forEach((c, i) => {
+    let badge = c.querySelector('.bench-order');
+    if (!badge) {
+      c.insertAdjacentHTML('beforeend', `<div class="bench-order">${i + 1}</div>`);
+    } else {
+      badge.textContent = i + 1;
+    }
+  });
+  // Remove bench-order from non-bench cards
+  document.querySelectorAll('#live-pitch .live-card:not(.bench) .bench-order').forEach(b => b.remove());
+}
+
+function initLiveDragDrop() {
+  let draggedCard = null;
+  const pitch = $('live-pitch');
+  if (!pitch) return;
+
+  // Touch drag support
+  let touchStartX, touchStartY, touchClone, touchTarget;
+
+  pitch.addEventListener('dragstart', e => {
+    const card = e.target.closest('.live-card');
+    if (!card || captainMode) { e.preventDefault(); return; }
+    draggedCard = card;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  pitch.addEventListener('dragend', e => {
+    if (draggedCard) draggedCard.classList.remove('dragging');
+    draggedCard = null;
+    pitch.querySelectorAll('.live-card').forEach(c => c.classList.remove('drag-over'));
+  });
+
+  pitch.addEventListener('dragover', e => {
+    const card = e.target.closest('.live-card');
+    if (!draggedCard || !card || draggedCard === card) return;
+
+    const fromBench = draggedCard.dataset.isBench === 'true';
+    const toBench = card.dataset.isBench === 'true';
+
+    // Allow: bench<->starting, bench<->bench, starting<->starting
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    card.classList.add('drag-over');
+  });
+
+  pitch.addEventListener('dragleave', e => {
+    const card = e.target.closest('.live-card');
+    if (card) card.classList.remove('drag-over');
+  });
+
+  pitch.addEventListener('drop', e => {
+    e.preventDefault();
+    const card = e.target.closest('.live-card');
+    if (!card) return;
+    card.classList.remove('drag-over');
+    if (!draggedCard || draggedCard === card) return;
+
+    const fromBench = draggedCard.dataset.isBench === 'true';
+    const toBench = card.dataset.isBench === 'true';
+
+    // Swap the DOM positions
+    const parentA = draggedCard.parentNode;
+    const parentB = card.parentNode;
+    const placeholderA = document.createElement('div');
+    const placeholderB = document.createElement('div');
+    parentA.insertBefore(placeholderA, draggedCard);
+    parentB.insertBefore(placeholderB, card);
+    parentB.insertBefore(draggedCard, placeholderB);
+    parentA.insertBefore(card, placeholderA);
+    placeholderA.remove();
+    placeholderB.remove();
+
+    // Update bench/starting status
+    if (fromBench !== toBench) {
+      if (fromBench) {
+        draggedCard.classList.remove('bench');
+        draggedCard.dataset.isBench = 'false';
+        card.classList.add('bench');
+        card.dataset.isBench = 'true';
+      } else {
+        card.classList.remove('bench');
+        card.dataset.isBench = 'false';
+        draggedCard.classList.add('bench');
+        draggedCard.dataset.isBench = 'true';
+      }
+    }
+    // If both bench, it's just a reorder (DOM positions already swapped)
+
+    draggedCard = null;
+    updateBenchOrders();
+    validateFormation();
+    saveLineup();
+  });
+
+  // --- Touch support for mobile ---
+  pitch.addEventListener('touchstart', e => {
+    const card = e.target.closest('.live-card');
+    if (!card || captainMode) return;
+    draggedCard = card;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchClone = card.cloneNode(true);
+    touchClone.style.cssText = 'position:fixed;z-index:9999;opacity:0.8;pointer-events:none;width:80px;';
+    touchClone.style.left = (touch.clientX - 40) + 'px';
+    touchClone.style.top = (touch.clientY - 40) + 'px';
+    document.body.appendChild(touchClone);
+    card.classList.add('dragging');
+  }, { passive: true });
+
+  pitch.addEventListener('touchmove', e => {
+    if (!draggedCard || !touchClone) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchClone.style.left = (touch.clientX - 40) + 'px';
+    touchClone.style.top = (touch.clientY - 40) + 'px';
+    // Highlight drop target
+    pitch.querySelectorAll('.live-card').forEach(c => c.classList.remove('drag-over'));
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el ? el.closest('.live-card') : null;
+    if (target && target !== draggedCard) target.classList.add('drag-over');
+    touchTarget = target;
+  }, { passive: false });
+
+  pitch.addEventListener('touchend', e => {
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    if (!draggedCard) return;
+    draggedCard.classList.remove('dragging');
+    pitch.querySelectorAll('.live-card').forEach(c => c.classList.remove('drag-over'));
+
+    if (touchTarget && touchTarget !== draggedCard) {
+      const fromBench = draggedCard.dataset.isBench === 'true';
+      const toBench = touchTarget.dataset.isBench === 'true';
+
+      const parentA = draggedCard.parentNode;
+      const parentB = touchTarget.parentNode;
+      const placeholderA = document.createElement('div');
+      const placeholderB = document.createElement('div');
+      parentA.insertBefore(placeholderA, draggedCard);
+      parentB.insertBefore(placeholderB, touchTarget);
+      parentB.insertBefore(draggedCard, placeholderB);
+      parentA.insertBefore(touchTarget, placeholderA);
+      placeholderA.remove();
+      placeholderB.remove();
+
+      if (fromBench !== toBench) {
+        if (fromBench) {
+          draggedCard.classList.remove('bench');
+          draggedCard.dataset.isBench = 'false';
+          touchTarget.classList.add('bench');
+          touchTarget.dataset.isBench = 'true';
+        } else {
+          touchTarget.classList.remove('bench');
+          touchTarget.dataset.isBench = 'false';
+          draggedCard.classList.add('bench');
+          draggedCard.dataset.isBench = 'true';
+        }
+      }
+
+      updateBenchOrders();
+      validateFormation();
+      saveLineup();
+    }
+    draggedCard = null;
+    touchTarget = null;
+  });
 }
 
 // ==================== FDR HEATMAP ====================
@@ -897,7 +2023,6 @@ async function compareSearch() {
   const q = $('compare-input').value.trim();
   if (q.length < 2) { $('compare-results').innerHTML = ''; return; }
 
-  // Use cached players list or fetch
   if (!allPlayersCache) {
     const resp = await fetch('/api/players?sort=total_points&dir=desc');
     const data = await resp.json();
@@ -948,10 +2073,8 @@ async function runComparison() {
     const ps = data.players;
     const colors = ['#00ff87', '#4da6ff', '#ffd700'];
 
-    // Radar chart
     const stats = ['form', 'points_per_game', 'xG', 'xA', 'ict_index', 'composite_score'];
     const labels = ['Form', 'PPG', 'xG', 'xA', 'ICT', 'Score'];
-    // Normalize each stat to 0-1 across compared players
     const maxes = stats.map(s => Math.max(...ps.map(p => p[s])) || 1);
 
     let html = '<div class="compare-container">';
@@ -978,7 +2101,6 @@ async function runComparison() {
 
     rows.forEach(([label, vals]) => {
       html += `<tr><td style="color:#888">${label}</td>`;
-      // Highlight best value
       vals.forEach(v => { html += `<td class="right">${v}</td>`; });
       html += '</tr>';
     });
@@ -986,7 +2108,6 @@ async function runComparison() {
     html += '</tbody></table></div></div></div>';
     $('compare-output').innerHTML = html;
 
-    // Draw radar
     drawRadar(ps, stats, labels, maxes, colors);
   } catch (err) {
     $('compare-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
@@ -1001,7 +2122,6 @@ function drawRadar(players, stats, labels, maxes, colors) {
   const n = stats.length;
   ctx.clearRect(0, 0, 280, 280);
 
-  // Draw grid
   for (let ring = 1; ring <= 4; ring++) {
     ctx.beginPath();
     const rr = r * ring / 4;
@@ -1015,7 +2135,6 @@ function drawRadar(players, stats, labels, maxes, colors) {
     ctx.stroke();
   }
 
-  // Draw axes and labels
   for (let i = 0; i < n; i++) {
     const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
     ctx.beginPath();
@@ -1024,7 +2143,6 @@ function drawRadar(players, stats, labels, maxes, colors) {
     ctx.strokeStyle = '#2a2f3e';
     ctx.stroke();
 
-    // Label
     const lx = cx + (r + 15) * Math.cos(angle);
     const ly = cy + (r + 15) * Math.sin(angle);
     ctx.fillStyle = '#888';
@@ -1034,7 +2152,6 @@ function drawRadar(players, stats, labels, maxes, colors) {
     ctx.fillText(labels[i], lx, ly);
   }
 
-  // Draw player polygons
   players.forEach((p, pi) => {
     ctx.beginPath();
     for (let i = 0; i <= n; i++) {
@@ -1059,48 +2176,72 @@ async function loadRival(rank, name, event) {
   event.stopPropagation();
   if (!loadedUserId) return;
 
-  // We need the entry_id — extract from the standings API
-  // The league standings API doesn't return entry_id directly in our endpoint,
-  // so let's grab it from the row context — actually we need to update the league endpoint
-  // For now, use a prompt approach: ask for rival ID
   const rivalId = prompt(`Enter FPL User ID for "${name}" to compare squads:`);
   if (!rivalId) return;
   const rid = parseInt(rivalId);
   if (isNaN(rid)) return;
 
-  switchNav('compare'); // Reuse compare panel area
-  $('compare-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
+  // Switch to rival panel
+  switchNav('nav-leagues-rival');
+  $('rival-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
 
   try {
     const resp = await fetch(`/api/rival/${rid}?user_id=${loadedUserId}`);
     const data = await resp.json();
-    if (!resp.ok) { $('compare-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    if (!resp.ok) { $('rival-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
 
-    let html = '<div class="section-title blue">Squad Comparison</div>';
-    html += '<div class="stat-row">';
-    html += `<div class="stat-card"><div class="label">${data.my_manager}</div><div class="value blue">${data.my_total_points}</div></div>`;
-    html += `<div class="stat-card"><div class="label">${data.rival_manager}</div><div class="value" style="color:#ffd700">${data.rival_total_points}</div></div>`;
-    html += `<div class="stat-card"><div class="label">Shared</div><div class="value">${data.shared.length}</div></div>`;
-    html += '</div>';
-
-    html += '<div class="rival-cols">';
-    html += '<div class="rival-col"><div class="rival-header" style="color:#4da6ff">Only in My Team</div>';
-    data.only_mine.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
-    html += '</div>';
-    html += '<div class="rival-col"><div class="rival-header" style="color:#ffd700">Only in Rival\'s Team</div>';
-    data.only_rival.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
-    html += '</div></div>';
-
-    if (data.shared.length > 0) {
-      html += '<div class="shared-list"><div class="shared-header">Shared Players</div>';
-      data.shared.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="score">${p.total_points}pts</span></div>`; });
-      html += '</div>';
-    }
-
-    $('compare-output').innerHTML = html;
+    renderRivalOutput(data);
   } catch (err) {
-    $('compare-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
+    $('rival-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
   }
+}
+
+async function loadRivalDirect() {
+  if (!loadedUserId) {
+    $('rival-output').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>';
+    return;
+  }
+  const rivalId = $('rival-id-input').value.trim();
+  if (!rivalId) return;
+  const rid = parseInt(rivalId);
+  if (isNaN(rid)) return;
+
+  $('rival-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
+
+  try {
+    const resp = await fetch(`/api/rival/${rid}?user_id=${loadedUserId}`);
+    const data = await resp.json();
+    if (!resp.ok) { $('rival-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+
+    renderRivalOutput(data);
+  } catch (err) {
+    $('rival-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  }
+}
+
+function renderRivalOutput(data) {
+  let html = '<div class="section-title blue">Squad Comparison</div>';
+  html += '<div class="stat-row">';
+  html += `<div class="stat-card"><div class="label">${data.my_manager}</div><div class="value blue">${data.my_total_points}</div></div>`;
+  html += `<div class="stat-card"><div class="label">${data.rival_manager}</div><div class="value" style="color:#ffd700">${data.rival_total_points}</div></div>`;
+  html += `<div class="stat-card"><div class="label">Shared</div><div class="value">${data.shared.length}</div></div>`;
+  html += '</div>';
+
+  html += '<div class="rival-cols">';
+  html += '<div class="rival-col"><div class="rival-header" style="color:#4da6ff">Only in My Team</div>';
+  data.only_mine.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
+  html += '</div>';
+  html += '<div class="rival-col"><div class="rival-header" style="color:#ffd700">Only in Rival\'s Team</div>';
+  data.only_rival.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
+  html += '</div></div>';
+
+  if (data.shared.length > 0) {
+    html += '<div class="shared-list"><div class="shared-header">Shared Players</div>';
+    data.shared.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="score">${p.total_points}pts</span></div>`; });
+    html += '</div>';
+  }
+
+  $('rival-output').innerHTML = html;
 }
 
 // ==================== PLAYERS TAB ====================
@@ -1233,7 +2374,7 @@ $('budget').addEventListener('input', e => {
 
 function switchTab(tab) {
   document.querySelectorAll('#tab-bar .tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#nav-optimizer .tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#nav-transfers-optimizer .tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector(`#tab-bar .tab[data-tab="${tab}"]`).classList.add('active');
   $('tab-' + tab).classList.add('active');
 }
@@ -1290,8 +2431,15 @@ async function runOptimizer() {
 
     renderSummary($('summary'), data.squad);
     renderSquad($('starting-body'), $('bench-body'), data.squad);
-    renderTransfers($('transfers-section'), $('transfers-body'), data.transfers);
 
+    // Render transfers in optimizer panel and suggestions panel
+    if (data.transfers && data.transfers.length > 0) {
+      $('transfers-body').innerHTML = data.transfers.map((t,i) => transferRow(t,i)).join('');
+      $('suggestions-content').classList.remove('hidden');
+      $('suggestions-no-data').classList.add('hidden');
+    }
+
+    // Handle My Team tab in optimizer
     const myTeamTab = document.querySelector('#tab-bar .tab[data-tab="my-team"]');
     if (data.user_team && !data.user_team.error) {
       if (!myTeamTab) {
@@ -1302,9 +2450,13 @@ async function runOptimizer() {
         tab.textContent = 'My Team';
         $('tab-bar').insertBefore(tab, document.querySelector('#tab-bar .tab[data-tab="top-players"]'));
       }
+
+      // Also populate the dedicated My Team panel
       renderSummary($('user-summary'), data.user_team.squad);
       renderSquad($('user-starting-body'), $('user-bench-body'), data.user_team.squad);
       renderTransfers($('user-transfers-section'), $('user-transfers-body'), data.user_team.transfers);
+      $('myteam-content').classList.remove('hidden');
+      $('myteam-no-data').classList.add('hidden');
     } else if (myTeamTab) myTeamTab.remove();
 
     const tpc = $('top-players-container');

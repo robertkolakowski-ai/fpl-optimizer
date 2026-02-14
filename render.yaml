@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: fpl-optimizer
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn fpl_optimizer.web:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"

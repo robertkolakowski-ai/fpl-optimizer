@@ -190,6 +190,7 @@ def api_league(league_id):
         for s in data.get("standings", {}).get("results", []):
             standings.append({
                 "rank": s.get("rank"),
+                "entry": s.get("entry"),
                 "manager_name": s.get("player_name", ""),
                 "team_name": s.get("entry_name", ""),
                 "gw_points": s.get("event_total", 0),
@@ -208,7 +209,7 @@ def api_league(league_id):
 def api_live(user_id):
     """Live GW points for a user's team."""
     try:
-        players, teams, gameweeks, _ = _get_cached_data()
+        players, teams, gameweeks, fixtures = _get_cached_data()
         current_gw = next((gw for gw in gameweeks if gw.is_current), None)
         if current_gw is None:
             current_gw = next((gw for gw in gameweeks if gw.is_next), None)
@@ -217,6 +218,25 @@ def api_live(user_id):
 
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        # Build upcoming fixtures (next 3 GWs) per team
+        gw_start = current_gw.id + 1
+        team_upcoming: dict[int, list] = {}
+        for f in fixtures:
+            if f.gameweek is None or f.gameweek < gw_start or f.gameweek >= gw_start + 3:
+                continue
+            for team_id, opp_id, is_home, diff in [
+                (f.home_team, f.away_team, True, f.home_difficulty),
+                (f.away_team, f.home_team, False, f.away_difficulty),
+            ]:
+                team_upcoming.setdefault(team_id, []).append({
+                    "gw": f.gameweek,
+                    "opponent": teams_dict.get(opp_id, "???"),
+                    "is_home": is_home,
+                    "difficulty": diff,
+                })
+        for tid in team_upcoming:
+            team_upcoming[tid].sort(key=lambda x: x["gw"])
 
         with httpx.Client(timeout=30) as client:
             picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
@@ -243,6 +263,7 @@ def api_live(user_id):
                 "team_name": teams_dict.get(p.team, "???") if p else "???",
                 "position": p.position if p else 0,
                 "position_name": p.position_name if p else "??",
+                "photo": p.photo if p else "",
                 "multiplier": multiplier,
                 "is_captain": is_captain,
                 "is_vice_captain": is_vice,
@@ -252,15 +273,30 @@ def api_live(user_id):
                 "goals": stats.get("goals_scored", 0),
                 "assists": stats.get("assists", 0),
                 "bonus": stats.get("bonus", 0),
+                "news": p.news if p else "",
+                "chance_of_playing": p.chance_of_playing if p else None,
+                "upcoming": team_upcoming.get(p.team, [])[:3] if p else [],
             })
             if multiplier > 0:
                 total_live += live_pts
+
+        # Fetch total season points and team value from entry
+        try:
+            with httpx.Client(timeout=30) as client2:
+                entry_data = fetch_user_entry(client2, user_id)
+            total_points = entry_data.get("summary_overall_points", 0)
+            team_value = entry_data.get("last_deadline_value", 0)
+        except Exception:
+            total_points = entry_history.get("total_points", 0)
+            team_value = 0
 
         return jsonify({
             "gameweek": current_gw.id,
             "gameweek_name": current_gw.name,
             "picks": pick_list,
             "total_live_points": total_live,
+            "total_points": total_points,
+            "team_value": team_value,
             "overall_rank": entry_history.get("overall_rank"),
             "points_on_bench": sum(
                 p["live_points"] for p in pick_list if p["multiplier"] == 0

@@ -4,3 +4,4 @@ pandas
 rich
 jinja2
 flask
+gunicorn

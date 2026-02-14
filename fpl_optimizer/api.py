@@ -71,6 +71,7 @@ def parse_players(data: dict) -> list[Player]:
             xG=float(e.get("expected_goals", 0)),
             xA=float(e.get("expected_assists", 0)),
             ict_index=float(e.get("ict_index", 0)),
+            photo=e.get("photo", "").replace(".jpg", ""),
             selected_by_percent=float(e.get("selected_by_percent", 0)),
             transfers_in_event=e.get("transfers_in_event", 0),
             transfers_out_event=e.get("transfers_out_event", 0),

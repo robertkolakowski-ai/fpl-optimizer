@@ -59,6 +59,7 @@ class Player:
     ict_index: float = 0.0
     composite_score: float = 0.0
     fixture_difficulty: float = 0.0
+    photo: str = ""
     selected_by_percent: float = 0.0
     transfers_in_event: int = 0
     transfers_out_event: int = 0
