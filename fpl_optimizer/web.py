@@ -278,6 +278,7 @@ def api_live(user_id):
                 "saves": stats.get("saves", 0),
                 "yellow_cards": stats.get("yellow_cards", 0),
                 "red_cards": stats.get("red_cards", 0),
+                "ep_next": p.ep_next if p else 0,
                 "news": p.news if p else "",
                 "chance_of_playing": p.chance_of_playing if p else None,
                 "upcoming": team_upcoming.get(p.team, [])[:3] if p else [],
@@ -601,6 +602,7 @@ OPTA_SORT_FIELDS = {
     "saves", "penalties_saved", "yellow_cards", "red_cards",
     "own_goals", "starts", "clean_sheets", "bonus", "total_points",
     "form", "xG", "xA", "minutes", "goals", "assists", "cost",
+    "ep_next", "ep_this", "xG_per90", "xA_per90", "xGI_per90", "xGC_per90",
 }
 
 
@@ -677,6 +679,12 @@ def api_opta_stats():
                 "red_cards": p.red_cards,
                 "own_goals": p.own_goals,
                 "selected_by_percent": p.selected_by_percent,
+                "ep_next": p.ep_next,
+                "ep_this": p.ep_this,
+                "xG_per90": round(p.xG_per90, 2),
+                "xA_per90": round(p.xA_per90, 2),
+                "xGI_per90": round(p.xGI_per90, 2),
+                "xGC_per90": round(p.xGC_per90, 2),
             })
 
         return jsonify({"players": players_out})

@@ -66,6 +66,14 @@ class Player:
     cost_change_event: int = 0
     news: str = ""
     chance_of_playing: int | None = None
+    # Expected points (FPL official)
+    ep_next: float = 0.0
+    ep_this: float = 0.0
+    # Per-90 expected stats
+    xG_per90: float = 0.0
+    xA_per90: float = 0.0
+    xGI_per90: float = 0.0
+    xGC_per90: float = 0.0
     # Opta / BPS fields
     influence: float = 0.0
     creativity: float = 0.0

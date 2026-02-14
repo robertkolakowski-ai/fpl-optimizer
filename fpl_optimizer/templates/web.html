@@ -1131,9 +1131,11 @@
             <div class="field">
               <label>View</label>
               <select id="opta-view" onchange="loadOptaStats()">
+                <option value="xpts">xPts (Expected Points)</option>
                 <option value="bps">BPS Leaders</option>
                 <option value="ict">ICT Breakdown</option>
                 <option value="expected">Expected Stats (xG/xA/xGI)</option>
+                <option value="per90">Per 90 Minutes</option>
                 <option value="defensive">Defensive</option>
                 <option value="discipline">Discipline</option>
               </select>
@@ -3094,8 +3096,10 @@ async function loadOptaStats() {
 
   // Determine sort field based on view
   let sortField = 'bps';
-  if (view === 'ict') sortField = 'ict_index';
+  if (view === 'xpts') sortField = 'ep_next';
+  else if (view === 'ict') sortField = 'ict_index';
   else if (view === 'expected') sortField = 'expected_goal_involvements';
+  else if (view === 'per90') sortField = 'xGI_per90';
   else if (view === 'defensive') sortField = 'saves';
   else if (view === 'discipline') sortField = 'yellow_cards';
 
@@ -3125,6 +3129,22 @@ function renderOptaTable(players, view) {
 
   // Define columns per view
   const views = {
+    xpts: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'xPts Next', 'xPts This', 'PPG', 'xGI/90', 'Form', 'Cost', 'Own%'],
+      row: (p, i) => `<tr${i < 3 ? ' style="background:rgba(0,255,135,0.05)"' : ''}>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#00ff87;font-weight:bold;font-size:1rem;">${p.ep_next.toFixed(1)}</td>
+        <td class="right" style="color:#4da6ff;font-weight:bold">${p.ep_this.toFixed(1)}</td>
+        <td class="right">${p.points_per_game}</td>
+        <td class="right">${p.xGI_per90.toFixed(2)}</td>
+        <td class="right">${p.form}</td>
+        <td class="right cost">${p.cost.toFixed(1)}</td>
+        <td class="right">${p.selected_by_percent}%</td>
+      </tr>`,
+    },
     bps: {
       headers: ['#', 'Player', 'Team', 'Pos', 'BPS', 'Bonus', 'Pts', 'Form', 'Minutes', 'Starts'],
       row: (p, i) => `<tr>
@@ -3175,6 +3195,22 @@ function renderOptaTable(players, view) {
           <td class="right cost">${p.cost.toFixed(1)}</td>
         </tr>`;
       },
+    },
+    per90: {
+      headers: ['#', 'Player', 'Team', 'Pos', 'xGI/90', 'xG/90', 'xA/90', 'xGC/90', 'Minutes', 'Starts', 'Cost'],
+      row: (p, i) => `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td class="pos">${p.position_name}</td>
+        <td class="right" style="color:#00ff87;font-weight:bold">${p.xGI_per90.toFixed(2)}</td>
+        <td class="right">${p.xG_per90.toFixed(2)}</td>
+        <td class="right">${p.xA_per90.toFixed(2)}</td>
+        <td class="right" style="color:#ff6b6b">${p.xGC_per90.toFixed(2)}</td>
+        <td class="right">${p.minutes}</td>
+        <td class="right">${p.starts}</td>
+        <td class="right cost">${p.cost.toFixed(1)}</td>
+      </tr>`,
     },
     defensive: {
       headers: ['#', 'Player', 'Team', 'Pos', 'Saves', 'CS', 'GC', 'xGC', 'Pen Saved', 'Own Goals', 'Pts'],

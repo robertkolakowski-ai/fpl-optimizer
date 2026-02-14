@@ -78,6 +78,13 @@ def parse_players(data: dict) -> list[Player]:
             cost_change_event=e.get("cost_change_event", 0),
             news=e.get("news", ""),
             chance_of_playing=e.get("chance_of_playing_next_round"),
+            # Expected points
+            ep_next=float(e.get("ep_next") or 0),
+            ep_this=float(e.get("ep_this") or 0),
+            xG_per90=float(e.get("expected_goals_per_90", 0)),
+            xA_per90=float(e.get("expected_assists_per_90", 0)),
+            xGI_per90=float(e.get("expected_goal_involvements_per_90", 0)),
+            xGC_per90=float(e.get("expected_goals_conceded_per_90", 0)),
             # Opta / BPS fields
             influence=float(e.get("influence", 0)),
             creativity=float(e.get("creativity", 0)),
