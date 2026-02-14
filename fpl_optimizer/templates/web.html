@@ -427,6 +427,47 @@
   .coming-soon .cs-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
   .coming-soon .cs-text { color: #888; font-size: 0.85rem; }
 
+  /* Draft / Waivers */
+  .draft-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .draft-header h2 { color: #00ff87; font-size: 1.15rem; margin: 0; }
+  .draft-header .draft-badge { background: #1a2540; color: #4da6ff; font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .waiver-top { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem; margin-bottom: 1.2rem; }
+  .waiver-card { background: #13161f; border: 1px solid #2a2f3e; border-radius: 8px; padding: 0.8rem 1rem; transition: border-color 0.15s; }
+  .waiver-card:hover { border-color: #4da6ff; }
+  .waiver-card .wc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+  .waiver-card .wc-name { font-weight: 600; font-size: 0.92rem; }
+  .waiver-card .wc-pos { font-size: 0.72rem; font-weight: 700; }
+  .waiver-card .wc-pos.gk { color: #f5a623; } .waiver-card .wc-pos.def { color: #4da6ff; }
+  .waiver-card .wc-pos.mid { color: #00ff87; } .waiver-card .wc-pos.fwd { color: #ff6b6b; }
+  .waiver-card .wc-meta { color: #888; font-size: 0.78rem; margin-bottom: 0.5rem; }
+  .waiver-card .wc-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.3rem; }
+  .waiver-card .wc-stat { text-align: center; }
+  .waiver-card .wc-stat .label { color: #555; font-size: 0.65rem; text-transform: uppercase; }
+  .waiver-card .wc-stat .val { color: #e6e6e6; font-size: 0.85rem; font-weight: 600; }
+  .waiver-card .wc-stat .val.green { color: #00ff87; }
+  .waiver-card .wc-score { margin-top: 0.5rem; text-align: right; }
+  .waiver-card .wc-score .val { color: #00ff87; font-size: 0.78rem; font-weight: 700; }
+
+  .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+  .roster-player { background: #13161f; border: 1px solid #2a2f3e; border-radius: 8px; padding: 0.65rem 0.9rem; display: flex; align-items: center; gap: 0.6rem; }
+  .roster-player .rp-pos { font-weight: 700; font-size: 0.75rem; width: 2rem; text-align: center; border-radius: 4px; padding: 0.15rem 0; }
+  .roster-player .rp-pos.gk { background: rgba(245,166,35,0.15); color: #f5a623; }
+  .roster-player .rp-pos.def { background: rgba(77,166,255,0.15); color: #4da6ff; }
+  .roster-player .rp-pos.mid { background: rgba(0,255,135,0.15); color: #00ff87; }
+  .roster-player .rp-pos.fwd { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .roster-player .rp-info { flex: 1; }
+  .roster-player .rp-name { font-size: 0.88rem; font-weight: 500; }
+  .roster-player .rp-team { color: #888; font-size: 0.75rem; }
+  .roster-player .rp-score { color: #00ff87; font-weight: 700; font-size: 0.85rem; }
+  .roster-player .rp-remove { color: #555; cursor: pointer; font-size: 1rem; padding: 0 0.3rem; }
+  .roster-player .rp-remove:hover { color: #ff6b6b; }
+
+  .roster-summary { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .roster-summary .rs-item { background: #1a1f2e; border-radius: 8px; padding: 0.6rem 1rem; text-align: center; flex: 1; min-width: 90px; }
+  .roster-summary .rs-label { color: #888; font-size: 0.68rem; text-transform: uppercase; }
+  .roster-summary .rs-value { color: #00ff87; font-size: 1.1rem; font-weight: 700; margin-top: 0.1rem; }
+  .roster-summary .rs-value.warn { color: #ff6b6b; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .container { padding: 0.5rem 0.5rem 2rem; }
@@ -689,9 +730,15 @@
       </div>
 
       <!-- Draft / Waivers -->
-      <div class="sidebar-item" data-nav="nav-draft" onclick="switchNav('nav-draft')">
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-draft', this)">
         <span class="si-icon">&#128221;</span>
         <span class="si-label">Draft / Waivers</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-draft">
+        <div class="sidebar-sub-item" data-nav="nav-draft-rankings" onclick="switchNav('nav-draft-rankings')">Draft Rankings</div>
+        <div class="sidebar-sub-item" data-nav="nav-draft-waiver" onclick="switchNav('nav-draft-waiver')">Waiver Wire</div>
+        <div class="sidebar-sub-item" data-nav="nav-draft-roster" onclick="switchNav('nav-draft-roster')">My Roster</div>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -1399,11 +1446,126 @@
       </div>
 
       <!-- ==================== DRAFT / WAIVERS ==================== -->
-      <div class="nav-panel" id="nav-draft">
-        <div class="coming-soon">
-          <div class="cs-icon">&#128221;</div>
-          <div class="cs-title">Draft &amp; Waivers</div>
-          <div class="cs-text">Draft league support is coming soon.<br>Stay tuned for waiver wire tools and draft rankings.</div>
+      <!-- ==================== DRAFT: RANKINGS ==================== -->
+      <div class="nav-panel" id="nav-draft-rankings">
+        <div class="draft-header">
+          <h2>Draft Rankings</h2>
+          <span class="draft-badge">Cost-Agnostic</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Rankings based purely on player quality, form, fixtures, and output — price is irrelevant in draft format.</p>
+
+        <div class="filters">
+          <div class="field">
+            <label>Position</label>
+            <select id="draft-rank-pos" onchange="loadDraftRankings()">
+              <option value="">All positions</option>
+              <option value="GK">GK</option>
+              <option value="DEF">DEF</option>
+              <option value="MID">MID</option>
+              <option value="FWD">FWD</option>
+            </select>
+          </div>
+          <div class="field" style="flex:0 0 auto;">
+            <label>&nbsp;</label>
+            <button class="btn" onclick="loadDraftRankings()">Refresh</button>
+          </div>
+        </div>
+
+        <div class="loader" id="draft-rank-loader"><div class="spinner"></div><div class="loader-text">Loading draft rankings...</div></div>
+        <div id="draft-rank-error"></div>
+
+        <div class="section" id="draft-rank-section" style="display:none;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Player</th><th>Team</th><th>Pos</th>
+                <th class="right">Pts</th><th class="right">Form</th><th class="right">PPG</th>
+                <th class="right">xG</th><th class="right">xA</th><th class="right">ICT</th>
+                <th class="right">Fix.</th><th class="right">Min&#x0302;</th><th class="right">Rot%</th>
+                <th class="right score">Score</th>
+              </tr></thead>
+              <tbody id="draft-rank-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DRAFT: WAIVER WIRE ==================== -->
+      <div class="nav-panel" id="nav-draft-waiver">
+        <div class="draft-header">
+          <h2>Waiver Wire</h2>
+          <span class="draft-badge">Short-term value</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Best available pickups ranked by recent form, fixture ease, and expected points — optimised for the next 3 GWs.</p>
+
+        <div class="filters">
+          <div class="field" style="flex:0 0 auto;">
+            <label>&nbsp;</label>
+            <button class="btn" onclick="loadWaiverWire()">Load Waiver Wire</button>
+          </div>
+        </div>
+
+        <div class="loader" id="waiver-loader"><div class="spinner"></div><div class="loader-text">Analysing waiver wire...</div></div>
+        <div id="waiver-error"></div>
+
+        <div id="waiver-content" style="display:none;">
+          <div class="section">
+            <div class="section-title">Top Picks — All Positions</div>
+            <div class="waiver-top" id="waiver-top-cards"></div>
+          </div>
+
+          <div class="tabs" id="waiver-pos-tabs">
+            <div class="tab active" onclick="switchWaiverPos('GK', this)">GK</div>
+            <div class="tab" onclick="switchWaiverPos('DEF', this)">DEF</div>
+            <div class="tab" onclick="switchWaiverPos('MID', this)">MID</div>
+            <div class="tab" onclick="switchWaiverPos('FWD', this)">FWD</div>
+          </div>
+          <div class="section">
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Player</th><th>Team</th><th class="right">Form</th><th class="right">PPG</th>
+                  <th class="right">EP</th><th class="right">xG</th><th class="right">xA</th>
+                  <th class="right">Fix.</th><th class="right">Min&#x0302;</th><th class="right">Rot%</th>
+                  <th class="right score">Waiver</th>
+                </tr></thead>
+                <tbody id="waiver-pos-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DRAFT: MY ROSTER ==================== -->
+      <div class="nav-panel" id="nav-draft-roster">
+        <div class="draft-header">
+          <h2>My Draft Roster</h2>
+          <span class="draft-badge">Roster Analysis</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Build your draft roster to see analysis, strengths, and weaknesses. Search and add players below.</p>
+
+        <div class="section">
+          <div class="compare-search">
+            <div class="field">
+              <label>Search Player</label>
+              <input type="text" id="roster-search" placeholder="Type player name..." oninput="searchRosterPlayer(this.value)">
+            </div>
+          </div>
+          <div class="compare-results" id="roster-search-results"></div>
+        </div>
+
+        <div id="roster-analysis" style="display:none;">
+          <div class="roster-summary" id="roster-summary"></div>
+
+          <div class="section">
+            <div class="section-title">Roster</div>
+            <div class="roster-grid" id="roster-player-grid"></div>
+          </div>
+
+          <div class="section" id="roster-weakness-section">
+            <div class="section-title" style="color:#ff6b6b;">Weakest Position</div>
+            <p id="roster-weakness-text" style="color:#888;font-size:0.85rem;"></p>
+          </div>
         </div>
       </div>
 
@@ -1545,6 +1707,9 @@ function switchNav(panelId) {
   if (panelId === 'nav-transfers-planner') loadTransferPlanner();
   if (panelId === 'nav-playerstats-opta') loadOptaStats();
   if (panelId === 'nav-dashboard') loadDashboard();
+  if (panelId === 'nav-draft-rankings' && !draftRankLoaded) loadDraftRankings();
+  if (panelId === 'nav-draft-waiver') loadWaiverWire();
+  if (panelId === 'nav-draft-roster') analyseRoster();
 }
 
 // ==================== DASHBOARD ====================
@@ -3999,6 +4164,241 @@ function renderSchedule() {
 
   html += '</tbody></table>';
   $('sched-container').innerHTML = html;
+}
+
+// ==================== DRAFT RANKINGS ====================
+let draftRankLoaded = false;
+async function loadDraftRankings() {
+  const loader = $('draft-rank-loader');
+  const section = $('draft-rank-section');
+  const errDiv = $('draft-rank-error');
+  loader.classList.add('active');
+  section.style.display = 'none';
+  errDiv.innerHTML = '';
+
+  const pos = $('draft-rank-pos').value;
+  const rostered = getDraftRostered().join(',');
+  let url = `/api/draft/rankings?rostered=${rostered}`;
+  if (pos) url += `&position=${pos}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.error) { errDiv.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+
+    const body = $('draft-rank-body');
+    body.innerHTML = data.players.map(p => `<tr>
+      <td>${p.rank}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.team_name}</td>
+      <td><span class="pos">${p.position_name}</span></td>
+      <td class="right">${p.total_points}</td>
+      <td class="right">${p.form}</td>
+      <td class="right">${p.points_per_game}</td>
+      <td class="right">${p.xG}</td>
+      <td class="right">${p.xA}</td>
+      <td class="right">${p.ict_index}</td>
+      <td class="right">${fdrBadge(p.fixture_difficulty)}</td>
+      <td class="right">${p.projected_minutes}</td>
+      <td class="right">${rotBadge(p.rotation_risk)}</td>
+      <td class="right score">${p.draft_score}</td>
+    </tr>`).join('');
+
+    section.style.display = '';
+    draftRankLoaded = true;
+  } catch (e) {
+    errDiv.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function fdrBadge(val) {
+  const pct = Math.round(val * 100);
+  const color = val >= 0.7 ? '#00ff87' : val >= 0.4 ? '#ffd700' : '#ff6b6b';
+  return `<span style="color:${color};font-weight:600;">${pct}%</span>`;
+}
+function rotBadge(val) {
+  if (val <= 0.1) return `<span style="color:#00ff87;">${Math.round(val*100)}%</span>`;
+  if (val <= 0.3) return `<span style="color:#ffd700;">${Math.round(val*100)}%</span>`;
+  return `<span style="color:#ff6b6b;">${Math.round(val*100)}%</span>`;
+}
+
+function getDraftRostered() {
+  try { return JSON.parse(localStorage.getItem('draft_roster') || '[]'); }
+  catch { return []; }
+}
+function saveDraftRostered(ids) {
+  localStorage.setItem('draft_roster', JSON.stringify(ids));
+}
+
+// ==================== WAIVER WIRE ====================
+let waiverData = null;
+async function loadWaiverWire() {
+  const loader = $('waiver-loader');
+  const content = $('waiver-content');
+  const errDiv = $('waiver-error');
+  loader.classList.add('active');
+  content.style.display = 'none';
+  errDiv.innerHTML = '';
+
+  const rostered = getDraftRostered().join(',');
+
+  try {
+    const resp = await fetch(`/api/draft/waiver-wire?rostered=${rostered}`);
+    const data = await resp.json();
+    if (data.error) { errDiv.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+
+    waiverData = data;
+
+    // Top picks cards
+    const cardsHtml = data.top_picks.map(p => {
+      const posClass = p.position_name.toLowerCase();
+      return `<div class="waiver-card">
+        <div class="wc-header">
+          <span class="wc-name">${p.name}</span>
+          <span class="wc-pos ${posClass}">${p.position_name}</span>
+        </div>
+        <div class="wc-meta">${p.team_name} &middot; Fix: ${fdrBadge(p.fixture_difficulty)}</div>
+        <div class="wc-stats">
+          <div class="wc-stat"><div class="label">Form</div><div class="val green">${p.form}</div></div>
+          <div class="wc-stat"><div class="label">EP</div><div class="val">${p.ep_next}</div></div>
+          <div class="wc-stat"><div class="label">PPG</div><div class="val">${p.points_per_game}</div></div>
+        </div>
+        <div class="wc-stats" style="margin-top:0.3rem;">
+          <div class="wc-stat"><div class="label">Min&#x0302;</div><div class="val">${p.projected_minutes}</div></div>
+          <div class="wc-stat"><div class="label">Rot</div><div class="val">${rotBadge(p.rotation_risk)}</div></div>
+          <div class="wc-stat"><div class="label">Score</div><div class="val green">${p.waiver_score}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    $('waiver-top-cards').innerHTML = cardsHtml;
+
+    // Default to GK tab
+    switchWaiverPos('GK', document.querySelector('#waiver-pos-tabs .tab'));
+
+    content.style.display = '';
+  } catch (e) {
+    errDiv.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function switchWaiverPos(pos, el) {
+  document.querySelectorAll('#waiver-pos-tabs .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  if (!waiverData) return;
+  const players = waiverData.by_position[pos] || [];
+
+  $('waiver-pos-body').innerHTML = players.map(p => `<tr>
+    <td><strong>${p.name}</strong></td>
+    <td>${p.team_name}</td>
+    <td class="right">${p.form}</td>
+    <td class="right">${p.points_per_game}</td>
+    <td class="right">${p.ep_next}</td>
+    <td class="right">${p.xG}</td>
+    <td class="right">${p.xA}</td>
+    <td class="right">${fdrBadge(p.fixture_difficulty)}</td>
+    <td class="right">${p.projected_minutes}</td>
+    <td class="right">${rotBadge(p.rotation_risk)}</td>
+    <td class="right score">${p.waiver_score}</td>
+  </tr>`).join('');
+}
+
+// ==================== MY DRAFT ROSTER ====================
+let allPlayersCache = null;
+let draftRosterIds = getDraftRostered();
+
+async function ensurePlayersCache() {
+  if (allPlayersCache) return;
+  const resp = await fetch('/api/players?sort=total_points&dir=desc');
+  const data = await resp.json();
+  allPlayersCache = data.players || [];
+}
+
+async function searchRosterPlayer(query) {
+  const container = $('roster-search-results');
+  if (query.length < 2) { container.innerHTML = ''; return; }
+
+  await ensurePlayersCache();
+  const q = query.toLowerCase();
+  const matches = allPlayersCache
+    .filter(p => p.name.toLowerCase().includes(q) && !draftRosterIds.includes(p.id))
+    .slice(0, 8);
+
+  container.innerHTML = matches.map(p =>
+    `<div class="compare-pick" onclick="addToRoster(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
+      <span class="pos">${p.position_name}</span> ${p.name} <span style="color:#888;">${p.team_name}</span>
+    </div>`
+  ).join('');
+}
+
+function addToRoster(id, name) {
+  if (draftRosterIds.includes(id) || draftRosterIds.length >= 15) return;
+  draftRosterIds.push(id);
+  saveDraftRostered(draftRosterIds);
+  $('roster-search').value = '';
+  $('roster-search-results').innerHTML = '';
+  analyseRoster();
+}
+
+function removeFromRoster(id) {
+  draftRosterIds = draftRosterIds.filter(x => x !== id);
+  saveDraftRostered(draftRosterIds);
+  analyseRoster();
+}
+
+async function analyseRoster() {
+  const analysis = $('roster-analysis');
+  if (draftRosterIds.length === 0) { analysis.style.display = 'none'; return; }
+
+  try {
+    const resp = await fetch('/api/draft/my-roster', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ roster_ids: draftRosterIds }),
+    });
+    const data = await resp.json();
+    if (data.error) return;
+
+    // Summary cards
+    const bd = data.position_breakdown;
+    $('roster-summary').innerHTML = `
+      <div class="rs-item"><div class="rs-label">Players</div><div class="rs-value">${data.roster_size}/15</div></div>
+      <div class="rs-item"><div class="rs-label">GK</div><div class="rs-value">${bd.GK || 0}</div></div>
+      <div class="rs-item"><div class="rs-label">DEF</div><div class="rs-value">${bd.DEF || 0}</div></div>
+      <div class="rs-item"><div class="rs-label">MID</div><div class="rs-value">${bd.MID || 0}</div></div>
+      <div class="rs-item"><div class="rs-label">FWD</div><div class="rs-value">${bd.FWD || 0}</div></div>
+      <div class="rs-item"><div class="rs-label">Avg Form</div><div class="rs-value">${data.avg_form}</div></div>
+      <div class="rs-item"><div class="rs-label">Total Score</div><div class="rs-value">${data.total_draft_score}</div></div>
+    `;
+
+    // Player grid
+    $('roster-player-grid').innerHTML = data.roster.map(p => {
+      const posClass = p.position_name.toLowerCase();
+      return `<div class="roster-player">
+        <span class="rp-pos ${posClass}">${p.position_name}</span>
+        <div class="rp-info">
+          <div class="rp-name">${p.name}</div>
+          <div class="rp-team">${p.team_name} &middot; Form ${p.form} &middot; Min&#x0302; ${p.projected_minutes}</div>
+        </div>
+        <span class="rp-score">${p.draft_score}</span>
+        <span class="rp-remove" onclick="removeFromRoster(${p.id})" title="Remove">&times;</span>
+      </div>`;
+    }).join('');
+
+    // Weakness
+    $('roster-weakness-text').textContent = `Your ${data.weakest_position} position is the weakest area — consider targeting this in your next waiver claim or trade.`;
+
+    analysis.style.display = '';
+  } catch (e) { /* silent */ }
+}
+
+// Restore roster on load
+if (draftRosterIds.length > 0) {
+  setTimeout(analyseRoster, 300);
 }
 </script>
 </body>

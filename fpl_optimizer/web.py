@@ -1425,3 +1425,223 @@ def api_rank_simulation(user_id):
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ==================== DRAFT / WAIVERS ====================
+
+
+def _draft_score(p: Player, fixture_ease: float) -> float:
+    """Compute a draft ranking score ignoring cost (unlike FPL classic)."""
+    pos = p.position
+    if pos == 1:  # GK
+        w = (0.15, 0.25, 0.0, 0.0, 0.30, 0.10, 0.05, 0.15)
+    elif pos == 2:  # DEF
+        w = (0.15, 0.20, 0.05, 0.05, 0.25, 0.10, 0.05, 0.15)
+    elif pos == 3:  # MID
+        w = (0.20, 0.15, 0.20, 0.15, 0.0, 0.10, 0.10, 0.10)
+    else:  # FWD
+        w = (0.20, 0.15, 0.25, 0.10, 0.0, 0.10, 0.10, 0.10)
+
+    vals = [
+        p.form, p.points_per_game, p.xG, p.xA,
+        float(p.clean_sheets), float(p.bonus), p.ict_index, fixture_ease,
+    ]
+    return sum(a * b for a, b in zip(w, vals))
+
+
+@app.route("/api/draft/rankings")
+def api_draft_rankings():
+    """Draft rankings: best available players ignoring price."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        # Rostered IDs (sent as comma-separated query param)
+        rostered_raw = request.args.get("rostered", "")
+        rostered_ids = set()
+        if rostered_raw:
+            rostered_ids = {int(x) for x in rostered_raw.split(",") if x.strip().isdigit()}
+
+        # Position filter
+        pos_filter = request.args.get("position", "").upper()
+        pos_id = POS_MAP.get(pos_filter)
+
+        # Compute draft scores
+        for p in players:
+            p._draft_score = _draft_score(p, p.fixture_difficulty)
+
+        available = [p for p in players if p.id not in rostered_ids]
+        if pos_id:
+            available = [p for p in available if p.position == pos_id]
+
+        # Min minutes filter (skip players with near-zero playing time)
+        available = [p for p in available if p.minutes >= 90]
+
+        available.sort(key=lambda p: p._draft_score, reverse=True)
+
+        result = []
+        for rank, p in enumerate(available[:80], 1):
+            result.append({
+                "rank": rank,
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "total_points": p.total_points,
+                "form": p.form,
+                "points_per_game": p.points_per_game,
+                "xG": round(p.xG, 2),
+                "xA": round(p.xA, 2),
+                "ict_index": round(p.ict_index, 1),
+                "fixture_difficulty": round(p.fixture_difficulty, 2),
+                "projected_minutes": p.projected_minutes,
+                "rotation_risk": round(p.rotation_risk, 2),
+                "selected_by_percent": p.selected_by_percent,
+                "draft_score": round(p._draft_score, 3),
+            })
+
+        return jsonify({"players": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/draft/waiver-wire")
+def api_draft_waiver_wire():
+    """Waiver wire picks: best unrostered players by recent form and upside."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=3)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        rostered_raw = request.args.get("rostered", "")
+        rostered_ids = set()
+        if rostered_raw:
+            rostered_ids = {int(x) for x in rostered_raw.split(",") if x.strip().isdigit()}
+
+        available = [p for p in players if p.id not in rostered_ids and p.minutes >= 90]
+
+        # Waiver score: heavy weight on recent form + fixture ease (short-term value)
+        def waiver_score(p):
+            form_w = p.form * 0.35
+            fixture_w = p.fixture_difficulty * 0.25
+            ep_w = p.ep_next * 0.20
+            xgi_w = (p.xG + p.xA) * 0.10
+            mins_w = (p.projected_minutes / 90.0) * 0.10
+            return form_w + fixture_w + ep_w + xgi_w + mins_w
+
+        for p in available:
+            p._waiver_score = waiver_score(p)
+
+        available.sort(key=lambda p: p._waiver_score, reverse=True)
+
+        # Group by position for structured recommendations
+        picks_by_pos = {}
+        for pos_name, pos_id in POS_MAP.items():
+            pos_list = [p for p in available if p.position == pos_id][:10]
+            picks_by_pos[pos_name] = [{
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "form": p.form,
+                "ep_next": round(p.ep_next, 2),
+                "points_per_game": p.points_per_game,
+                "fixture_difficulty": round(p.fixture_difficulty, 2),
+                "projected_minutes": p.projected_minutes,
+                "rotation_risk": round(p.rotation_risk, 2),
+                "xG": round(p.xG, 2),
+                "xA": round(p.xA, 2),
+                "waiver_score": round(p._waiver_score, 3),
+                "selected_by_percent": p.selected_by_percent,
+            } for p in pos_list]
+
+        # Overall top 20 waiver picks
+        top_picks = [{
+            "id": p.id,
+            "name": p.name,
+            "team_name": teams_dict.get(p.team, "???"),
+            "position_name": p.position_name,
+            "form": p.form,
+            "ep_next": round(p.ep_next, 2),
+            "points_per_game": p.points_per_game,
+            "fixture_difficulty": round(p.fixture_difficulty, 2),
+            "projected_minutes": p.projected_minutes,
+            "rotation_risk": round(p.rotation_risk, 2),
+            "waiver_score": round(p._waiver_score, 3),
+        } for p in available[:20]]
+
+        return jsonify({"top_picks": top_picks, "by_position": picks_by_pos})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/draft/my-roster", methods=["POST"])
+def api_draft_my_roster():
+    """Analyse a draft roster: starters, bench ranking, weaknesses."""
+    try:
+        data = request.get_json(force=True)
+        roster_ids = data.get("roster_ids", [])
+        if not roster_ids or len(roster_ids) > 15:
+            return jsonify({"error": "Provide 1-15 player IDs"}), 400
+
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+        player_map = {p.id: p for p in players}
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        roster = [player_map[pid] for pid in roster_ids if pid in player_map]
+        if not roster:
+            return jsonify({"error": "No valid players found"}), 400
+
+        # Rank roster players by draft score
+        for p in roster:
+            p._draft_score = _draft_score(p, p.fixture_difficulty)
+        roster.sort(key=lambda p: p._draft_score, reverse=True)
+
+        # Identify weakest position
+        pos_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+        pos_scores = {1: [], 2: [], 3: [], 4: []}
+        for p in roster:
+            pos_counts[p.position] += 1
+            pos_scores[p.position].append(p._draft_score)
+
+        pos_avg = {}
+        for pos in (1, 2, 3, 4):
+            scores = pos_scores[pos]
+            pos_avg[pos] = sum(scores) / len(scores) if scores else 0
+
+        weakest_pos = min(pos_avg, key=pos_avg.get) if pos_avg else 3
+        pos_name_map = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}
+
+        result_players = []
+        for p in roster:
+            result_players.append({
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "total_points": p.total_points,
+                "form": p.form,
+                "points_per_game": p.points_per_game,
+                "fixture_difficulty": round(p.fixture_difficulty, 2),
+                "projected_minutes": p.projected_minutes,
+                "rotation_risk": round(p.rotation_risk, 2),
+                "draft_score": round(p._draft_score, 3),
+            })
+
+        return jsonify({
+            "roster": result_players,
+            "roster_size": len(roster),
+            "position_breakdown": {pos_name_map[k]: v for k, v in pos_counts.items()},
+            "weakest_position": pos_name_map[weakest_pos],
+            "total_draft_score": round(sum(p._draft_score for p in roster), 2),
+            "avg_form": round(sum(p.form for p in roster) / len(roster), 2),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
