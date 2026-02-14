@@ -1796,6 +1796,9 @@ let fixturesLoaded = false;
 let debounceTimer = null;
 let compareTimer = null;
 let loadedUserId = null;
+let draftRankLoaded = false;
+let captainLoaded = false;
+let pricesLoaded = false;
 let compareIds = [];
 let allPlayersCache = null;
 
@@ -2838,7 +2841,6 @@ async function loadFDR() {
 }
 
 // ==================== CAPTAIN PICKS ====================
-let captainLoaded = false;
 async function loadCaptainPicks() {
   if (captainLoaded) return;
   const loader = $('captain-loader');
@@ -2938,7 +2940,6 @@ function drawCaptainEVChart(picks) {
 }
 
 // ==================== PRICE CHANGES ====================
-let pricesLoaded = false;
 async function loadPriceChanges() {
   if (pricesLoaded) return;
   const loader = $('prices-loader');
@@ -4337,7 +4338,6 @@ function renderSchedule() {
 }
 
 // ==================== DRAFT RANKINGS ====================
-let draftRankLoaded = false;
 async function loadDraftRankings() {
   const loader = $('draft-rank-loader');
   const section = $('draft-rank-section');
