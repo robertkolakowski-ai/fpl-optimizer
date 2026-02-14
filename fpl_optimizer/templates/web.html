@@ -503,6 +503,61 @@
   .opta-high { color: #00ff87; font-weight: 600; }
   .opta-mid { color: #4da6ff; }
   .opta-low { color: #888; }
+
+  /* ==================== SCHEDULE GRID ==================== */
+  .sched-controls { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; }
+  .sched-controls .field { min-width: 120px; }
+
+  .sched-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sched-grid table { min-width: 700px; border-collapse: separate; border-spacing: 0; }
+  .sched-grid th, .sched-grid td { text-align: center; padding: 0; font-size: 0.72rem; border: 1px solid #1a1f2e; }
+  .sched-grid th { font-size: 0.65rem; padding: 0.3rem 0.15rem; background: #1a1f2e; color: #888; position: sticky; top: 0; z-index: 2; }
+  .sched-grid th.sched-gw-current { color: #00ff87; }
+  .sched-grid th.sched-gw-next { color: #4da6ff; }
+  .sched-grid th .gw-tag { display: block; font-size: 0.55rem; font-weight: 400; }
+  .sched-grid th .gw-tag.double { color: #ffd700; }
+  .sched-grid th .gw-tag.blank { color: #ff6b6b; }
+
+  .sched-grid .team-col { text-align: left; font-weight: 600; min-width: 55px; padding: 0.25rem 0.4rem; position: sticky; left: 0; background: #13161f; z-index: 1; white-space: nowrap; border-right: 2px solid #2a2f3e; }
+  .sched-grid .team-col .cs-rate { font-size: 0.6rem; color: #888; font-weight: 400; }
+
+  .sched-cell { padding: 0.2rem 0.1rem; min-width: 52px; cursor: default; position: relative; }
+  .sched-cell.blank-gw { background: repeating-linear-gradient(45deg, #1a1f2e, #1a1f2e 3px, #13161f 3px, #13161f 6px); }
+  .sched-cell.double-gw { border: 1px solid rgba(255,215,0,0.3); }
+
+  .sched-fx { border-radius: 3px; padding: 0.15rem 0.1rem; margin: 1px 2px; font-weight: 600; font-size: 0.7rem; line-height: 1.3; position: relative; }
+  .sched-fx .sched-opp { display: block; }
+  .sched-fx .sched-ha { font-size: 0.55rem; font-weight: 400; opacity: 0.8; }
+  .sched-fx .sched-date { display: none; font-size: 0.55rem; color: rgba(255,255,255,0.6); }
+  .sched-cell:hover .sched-fx .sched-date { display: block; }
+  .sched-fx .sched-cs { display: none; font-size: 0.55rem; }
+  .sched-cell:hover .sched-fx .sched-cs { display: block; }
+
+  /* FDR colors for schedule */
+  .sched-fx.fdr-1 { background: #375523; color: #e6e6e6; }
+  .sched-fx.fdr-2 { background: #01fc7a; color: #0e1117; }
+  .sched-fx.fdr-3 { background: #888; color: #fff; }
+  .sched-fx.fdr-4 { background: #ff6b6b; color: #fff; }
+  .sched-fx.fdr-5 { background: #a01818; color: #fff; }
+
+  .sched-blank-text { color: #555; font-size: 0.6rem; font-style: italic; }
+
+  /* Legend */
+  .sched-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.8rem; font-size: 0.72rem; align-items: center; }
+  .sched-legend-item { display: flex; align-items: center; gap: 0.3rem; }
+  .sched-legend-swatch { width: 16px; height: 12px; border-radius: 2px; display: inline-block; }
+
+  /* Team filter highlight */
+  .sched-grid tr.sched-highlight { outline: 2px solid #4da6ff; outline-offset: -1px; }
+
+  /* Score overlay for finished */
+  .sched-fx .sched-score { font-size: 0.6rem; font-weight: bold; color: rgba(255,255,255,0.9); }
+
+  @media (max-width: 768px) {
+    .sched-cell { min-width: 44px; }
+    .sched-fx { font-size: 0.62rem; }
+    .sched-grid .team-col { min-width: 42px; font-size: 0.65rem; }
+  }
 </style>
 </head>
 <body>
@@ -571,6 +626,7 @@
         <span class="si-arrow">&#9654;</span>
       </div>
       <div class="sidebar-sub" id="sub-fixtures">
+        <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Schedule & CS%</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
       </div>
@@ -1014,6 +1070,53 @@
         </div>
       </div>
 
+      <!-- ==================== FIXTURES: SCHEDULE ==================== -->
+      <div class="nav-panel" id="nav-fixtures-schedule">
+        <div class="section">
+          <div class="section-title">Fixture Schedule</div>
+
+          <div class="sched-controls">
+            <div class="field">
+              <label>GW Range</label>
+              <select id="sched-range" onchange="renderSchedule()">
+                <option value="next6">Next 6 GWs</option>
+                <option value="next10" selected>Next 10 GWs</option>
+                <option value="all">All Remaining</option>
+                <option value="full">Full Season</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Highlight Team</label>
+              <select id="sched-team" onchange="renderSchedule()">
+                <option value="">None</option>
+              </select>
+            </div>
+            <div class="field">
+              <label style="display:flex;align-items:center;gap:0.3rem;">
+                <input type="checkbox" id="sched-show-cs" onchange="renderSchedule()" checked style="width:auto;">
+                Show CS%
+              </label>
+            </div>
+          </div>
+
+          <div class="sched-legend">
+            <span style="color:#888;">Difficulty:</span>
+            <div class="sched-legend-item"><span class="sched-legend-swatch" style="background:#375523"></span> 1</div>
+            <div class="sched-legend-item"><span class="sched-legend-swatch" style="background:#01fc7a"></span> 2</div>
+            <div class="sched-legend-item"><span class="sched-legend-swatch" style="background:#888"></span> 3</div>
+            <div class="sched-legend-item"><span class="sched-legend-swatch" style="background:#ff6b6b"></span> 4</div>
+            <div class="sched-legend-item"><span class="sched-legend-swatch" style="background:#a01818"></span> 5</div>
+            <span style="color:#888;margin-left:0.5rem;">(H) = Home</span>
+            <span style="color:#ffd700;">DGW = Double</span>
+            <span style="color:#ff6b6b;">BGW = Blank</span>
+            <span style="color:#888;">Hover for date & CS%</span>
+          </div>
+
+          <div class="loader" id="sched-loader"><div class="spinner"></div><div class="loader-text">Loading schedule...</div></div>
+          <div class="sched-grid" id="sched-container"></div>
+        </div>
+      </div>
+
       <!-- ==================== FIXTURES: FDR ==================== -->
       <div class="nav-panel" id="nav-fixtures-fdr">
         <div class="section">
@@ -1334,6 +1437,7 @@ function switchNav(panelId) {
   // Lazy load data
   if (panelId === 'nav-playerstats-table' && !playersLoaded) loadMetadata().then(() => loadPlayers());
   if (panelId === 'nav-fixtures-list' && !fixturesLoaded) loadMetadata().then(() => loadFixtures());
+  if (panelId === 'nav-fixtures-schedule') loadSchedule();
   if (panelId === 'nav-fixtures-fdr') loadFDR();
   if (panelId === 'nav-news-captain') loadCaptainPicks();
   if (panelId === 'nav-news-prices') loadPriceChanges();
@@ -3248,6 +3352,143 @@ function renderOptaTable(players, view) {
   const config = views[view] || views.bps;
   thead.innerHTML = `<tr>${config.headers.map((h, i) => `<th${i >= 4 ? ' class="right"' : ''}>${h}</th>`).join('')}</tr>`;
   tbody.innerHTML = players.map((p, i) => config.row(p, i)).join('');
+}
+
+// ==================== FIXTURE SCHEDULE ====================
+let schedData = null;
+let schedLoaded = false;
+
+async function loadSchedule() {
+  if (schedLoaded) return;
+
+  const loader = $('sched-loader');
+  loader.classList.add('active');
+
+  try {
+    // Load metadata for team filter dropdown
+    await loadMetadata();
+    const teamSel = $('sched-team');
+    if (teamSel.options.length <= 1) {
+      Object.values(teamsMap).forEach(t => {
+        const o = document.createElement('option');
+        o.value = t.id;
+        o.textContent = t.name || t.short_name;
+        teamSel.appendChild(o);
+      });
+    }
+
+    const resp = await fetch('/api/schedule');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    schedData = data;
+    renderSchedule();
+    schedLoaded = true;
+  } catch (err) {
+    $('sched-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function renderSchedule() {
+  if (!schedData) return;
+
+  const range = $('sched-range').value;
+  const highlightTeam = $('sched-team').value;
+  const showCS = $('sched-show-cs').checked;
+
+  // Determine which GWs to show
+  const allGWs = schedData.gw_info;
+  const currentIdx = allGWs.findIndex(g => g.is_current || g.is_next);
+  let gwsToShow;
+
+  if (range === 'next6') {
+    const start = currentIdx >= 0 ? currentIdx : allGWs.findIndex(g => !g.finished);
+    gwsToShow = allGWs.slice(Math.max(0, start), start + 6);
+  } else if (range === 'next10') {
+    const start = currentIdx >= 0 ? currentIdx : allGWs.findIndex(g => !g.finished);
+    gwsToShow = allGWs.slice(Math.max(0, start), start + 10);
+  } else if (range === 'all') {
+    gwsToShow = allGWs.filter(g => !g.finished);
+  } else {
+    gwsToShow = allGWs;
+  }
+
+  if (gwsToShow.length === 0) {
+    $('sched-container').innerHTML = '<p style="color:#888;text-align:center;">No fixtures to display.</p>';
+    return;
+  }
+
+  // Header row
+  let html = '<table><thead><tr><th class="team-col">Team</th>';
+  for (const gw of gwsToShow) {
+    let cls = '';
+    if (gw.is_current) cls = ' sched-gw-current';
+    else if (gw.is_next) cls = ' sched-gw-next';
+    let tag = '';
+    if (gw.has_double) tag = '<span class="gw-tag double">DGW</span>';
+    else if (gw.has_blank) tag = '<span class="gw-tag blank">BGW</span>';
+    else if (gw.is_current) tag = '<span class="gw-tag" style="color:#00ff87">NOW</span>';
+    else if (gw.is_next) tag = '<span class="gw-tag" style="color:#4da6ff">NEXT</span>';
+    html += `<th class="${cls}">GW${gw.id}${tag}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  // Team rows
+  for (const team of schedData.schedule) {
+    const isHighlight = highlightTeam && parseInt(highlightTeam) === team.team_id;
+    html += `<tr class="${isHighlight ? 'sched-highlight' : ''}">`;
+    html += `<td class="team-col">${team.team_name}${showCS ? `<br><span class="cs-rate">CS: ${(team.cs_rate * 100).toFixed(0)}%</span>` : ''}</td>`;
+
+    for (const gw of gwsToShow) {
+      const gwData = team.gameweeks[gw.id];
+      if (!gwData || gwData.is_blank) {
+        html += `<td class="sched-cell blank-gw"><span class="sched-blank-text">-</span></td>`;
+        continue;
+      }
+
+      const cellClass = gwData.is_double ? 'sched-cell double-gw' : 'sched-cell';
+      const fxHtml = gwData.fixtures.map(fx => {
+        const ha = fx.is_home ? '(H)' : '(A)';
+        // Format date
+        let dateStr = '';
+        if (fx.kickoff_time) {
+          const d = new Date(fx.kickoff_time);
+          const day = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+          const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          dateStr = `${day} ${time}`;
+        }
+
+        // CS probability: we use the team's own CS rate adjusted by opponent difficulty
+        // Simple heuristic: team's CS rate * difficulty factor
+        const diffFactor = { 1: 1.4, 2: 1.2, 3: 1.0, 4: 0.7, 5: 0.5 }[fx.difficulty] || 1;
+        const csProb = Math.min(0.99, team.cs_rate * diffFactor);
+        const csPctText = (csProb * 100).toFixed(0) + '%';
+        const csColor = csProb >= 0.4 ? '#51cf66' : csProb >= 0.25 ? '#ffd700' : '#ff6b6b';
+
+        // Score for finished matches
+        let scoreHtml = '';
+        if (fx.finished && fx.home_score !== null) {
+          const score = fx.is_home ? `${fx.home_score}-${fx.away_score}` : `${fx.away_score}-${fx.home_score}`;
+          scoreHtml = `<span class="sched-score">${score}</span> `;
+        }
+
+        return `<div class="sched-fx fdr-${fx.difficulty}">
+          <span class="sched-opp">${scoreHtml}${fx.opponent_name} <span class="sched-ha">${ha}</span></span>
+          ${dateStr ? `<span class="sched-date">${dateStr}</span>` : ''}
+          ${showCS ? `<span class="sched-cs" style="color:${csColor}">CS: ${csPctText}</span>` : ''}
+        </div>`;
+      }).join('');
+
+      html += `<td class="${cellClass}">${fxHtml}</td>`;
+    }
+
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  $('sched-container').innerHTML = html;
 }
 </script>
 </body>

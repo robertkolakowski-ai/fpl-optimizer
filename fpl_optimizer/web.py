@@ -596,6 +596,124 @@ def api_rival(rival_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/schedule")
+def api_schedule():
+    """Full fixture schedule with double/blank GW detection and CS probability."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        teams_dict = {tid: t for tid, t in teams.items()}
+
+        # Compute per-team clean sheet rate using the first-choice GK
+        from collections import defaultdict
+        team_cs_rate = {}
+        # Find the GK with most starts per team
+        team_gks = defaultdict(list)
+        for p in players:
+            if p.position == 1 and p.starts > 0:
+                team_gks[p.team].append(p)
+        for tid, gks in team_gks.items():
+            gk = max(gks, key=lambda g: g.starts)
+            team_cs_rate[tid] = round(gk.clean_sheets / gk.starts, 2) if gk.starts > 0 else 0.0
+        # Fill missing teams
+        for tid in teams:
+            if tid not in team_cs_rate:
+                team_cs_rate[tid] = 0.0
+
+        # Count fixtures per team per GW for double/blank detection
+        team_gw_fixtures = defaultdict(lambda: defaultdict(list))
+        all_gw_ids = set()
+
+        for f in fixtures:
+            gw = f.gameweek
+            if gw is None:
+                continue
+            all_gw_ids.add(gw)
+            fx_data = {
+                "id": f.id,
+                "kickoff_time": f.kickoff_time,
+                "finished": f.finished,
+                "started": f.started,
+                "home_score": f.home_score,
+                "away_score": f.away_score,
+            }
+            # Home team entry
+            team_gw_fixtures[f.home_team][gw].append({
+                **fx_data,
+                "opponent": f.away_team,
+                "opponent_name": teams_dict[f.away_team].short_name if f.away_team in teams_dict else "???",
+                "opponent_full": teams_dict[f.away_team].name if f.away_team in teams_dict else "???",
+                "is_home": True,
+                "difficulty": f.home_difficulty,
+                "opponent_cs_rate": team_cs_rate.get(f.away_team, 0),
+            })
+            # Away team entry
+            team_gw_fixtures[f.away_team][gw].append({
+                **fx_data,
+                "opponent": f.home_team,
+                "opponent_name": teams_dict[f.home_team].short_name if f.home_team in teams_dict else "???",
+                "opponent_full": teams_dict[f.home_team].name if f.home_team in teams_dict else "???",
+                "is_home": False,
+                "difficulty": f.away_difficulty,
+                "opponent_cs_rate": team_cs_rate.get(f.home_team, 0),
+            })
+
+        gw_ids = sorted(all_gw_ids)
+
+        # Detect double/blank for each GW
+        gw_info = []
+        for gw_id in gw_ids:
+            gw_obj = next((g for g in gameweeks if g.id == gw_id), None)
+            total_fixtures = sum(
+                len(team_gw_fixtures[tid].get(gw_id, []))
+                for tid in teams_dict
+            ) // 2  # each fixture counted twice
+            has_blank = any(
+                gw_id not in team_gw_fixtures[tid] for tid in teams_dict
+            )
+            has_double = any(
+                len(team_gw_fixtures[tid].get(gw_id, [])) >= 2
+                for tid in teams_dict
+            )
+            gw_info.append({
+                "id": gw_id,
+                "name": gw_obj.name if gw_obj else f"Gameweek {gw_id}",
+                "finished": gw_obj.finished if gw_obj else False,
+                "is_current": gw_obj.is_current if gw_obj else False,
+                "is_next": gw_obj.is_next if gw_obj else False,
+                "fixture_count": total_fixtures,
+                "has_blank": has_blank,
+                "has_double": has_double,
+            })
+
+        # Build per-team schedule
+        schedule = []
+        for tid in sorted(teams_dict.keys(), key=lambda t: teams_dict[t].short_name):
+            t = teams_dict[tid]
+            team_data = {
+                "team_id": tid,
+                "team_name": t.short_name,
+                "team_full": t.name,
+                "cs_rate": team_cs_rate.get(tid, 0),
+                "gameweeks": {},
+            }
+            for gw_id in gw_ids:
+                fxs = team_gw_fixtures[tid].get(gw_id, [])
+                team_data["gameweeks"][gw_id] = {
+                    "fixtures": fxs,
+                    "is_blank": len(fxs) == 0,
+                    "is_double": len(fxs) >= 2,
+                }
+            schedule.append(team_data)
+
+        return jsonify({
+            "gw_info": gw_info,
+            "schedule": schedule,
+            "team_cs_rates": {tid: rate for tid, rate in team_cs_rate.items()},
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 OPTA_SORT_FIELDS = {
     "bps", "influence", "creativity", "threat", "ict_index",
     "expected_goal_involvements", "expected_goals_conceded",

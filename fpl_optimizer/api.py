@@ -116,6 +116,8 @@ def parse_fixtures(raw: list[dict]) -> list[Fixture]:
             finished=f.get("finished", False),
             home_score=f.get("team_h_score"),
             away_score=f.get("team_a_score"),
+            kickoff_time=f.get("kickoff_time"),
+            started=f.get("started"),
         )
         for f in raw
     ]

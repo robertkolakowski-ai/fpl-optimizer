@@ -24,6 +24,8 @@ class Fixture:
     finished: bool
     home_score: int | None = None
     away_score: int | None = None
+    kickoff_time: str | None = None
+    started: bool | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
