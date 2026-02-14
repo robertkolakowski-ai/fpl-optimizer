@@ -520,19 +520,33 @@ def api_price_changes():
 
 @app.route("/api/differentials")
 def api_differentials():
-    """High-performing players with low ownership."""
+    """Differential Finder 2.0: low-ownership players with high upside."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
         max_ownership = float(request.args.get("max_ownership", 10.0))
+        pos_filter = request.args.get("position", "").upper()
+        pos_id = POS_MAP.get(pos_filter)
 
-        diffs = sorted(
-            [p for p in players if p.selected_by_percent <= max_ownership and p.composite_score > 0],
-            key=lambda p: p.composite_score,
-            reverse=True,
-        )[:20]
+        candidates = [p for p in players
+                      if p.selected_by_percent <= max_ownership
+                      and p.composite_score > 0 and p.minutes >= 90]
+        if pos_id:
+            candidates = [p for p in candidates if p.position == pos_id]
+
+        # Upside score: composite + fixture ease + form momentum, penalize rotation
+        for p in candidates:
+            form_momentum = max(0, p.form - p.points_per_game) * 0.2
+            xgi_upside = (p.xG + p.xA) * 0.15
+            fixture_boost = p.fixture_difficulty * 0.2
+            rotation_penalty = p.rotation_risk * 0.15
+            p._upside = p.composite_score + form_momentum + xgi_upside + fixture_boost - rotation_penalty
+
+        candidates.sort(key=lambda p: p._upside, reverse=True)
 
         return jsonify({
             "differentials": [{
@@ -544,11 +558,17 @@ def api_differentials():
                 "total_points": p.total_points,
                 "form": p.form,
                 "points_per_game": p.points_per_game,
-                "xG": p.xG,
-                "xA": p.xA,
+                "xG": round(p.xG, 2),
+                "xA": round(p.xA, 2),
+                "xGI_per90": round(p.xGI_per90, 2),
+                "ep_next": round(p.ep_next, 2),
+                "fixture_difficulty": round(p.fixture_difficulty, 2),
+                "projected_minutes": p.projected_minutes,
+                "rotation_risk": round(p.rotation_risk, 2),
                 "selected_by_percent": p.selected_by_percent,
                 "composite_score": round(p.composite_score, 3),
-            } for p in diffs],
+                "upside_score": round(p._upside, 3),
+            } for p in candidates[:25]],
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1264,6 +1284,9 @@ def api_transfer_gain(user_id):
                 if score_gain <= 0:
                     continue
 
+                # Breakeven: how many GWs until hit pays off
+                breakeven_gws = round(4 / pts_gain, 1) if pts_gain > 0 else 99
+
                 transfers.append({
                     "out_name": out_p.name,
                     "out_team": teams_dict.get(out_p.team, "???"),
@@ -1280,6 +1303,7 @@ def api_transfer_gain(user_id):
                     "net_gain_free": round(pts_gain, 2),
                     "net_gain_hit": round(pts_gain - 4, 2),
                     "worth_hit": pts_gain > 4,
+                    "breakeven_gws": breakeven_gws,
                 })
 
         transfers.sort(key=lambda t: t["pts_gain"], reverse=True)
@@ -1423,6 +1447,88 @@ def api_rank_simulation(user_id):
         if e.response.status_code == 404:
             return jsonify({"error": "User not found"}), 404
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/fixture-swing")
+def api_fixture_swing():
+    """Fixture swing data: per-team difficulty over upcoming GWs for rotation planning."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        teams_dict = {tid: t for tid, t in teams.items()}
+        lookahead = min(int(request.args.get("lookahead", 8)), 12)
+
+        current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+        if current_gw is None:
+            current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+        if current_gw is None:
+            return jsonify({"error": "No upcoming gameweeks"}), 400
+
+        gw_ids = list(range(current_gw.id, current_gw.id + lookahead))
+
+        # Build team->gw->difficulty mapping
+        team_gw_diff: dict[int, dict[int, list]] = {}
+        for tid in teams_dict:
+            team_gw_diff[tid] = {}
+
+        for f in fixtures:
+            if f.gameweek is None or f.gameweek < current_gw.id or f.gameweek >= current_gw.id + lookahead:
+                continue
+            team_gw_diff.setdefault(f.home_team, {}).setdefault(f.gameweek, []).append({
+                "opponent": teams_dict[f.away_team].short_name if f.away_team in teams_dict else "???",
+                "is_home": True,
+                "difficulty": f.home_difficulty,
+            })
+            team_gw_diff.setdefault(f.away_team, {}).setdefault(f.gameweek, []).append({
+                "opponent": teams_dict[f.home_team].short_name if f.home_team in teams_dict else "???",
+                "is_home": False,
+                "difficulty": f.away_difficulty,
+            })
+
+        # Compute swing: difference between best and worst stretch
+        rows = []
+        for tid, gws in team_gw_diff.items():
+            diffs_per_gw = []
+            fixtures_per_gw = []
+            for gw_id in gw_ids:
+                fx = gws.get(gw_id, [])
+                fixtures_per_gw.append(fx)
+                avg_d = sum(f["difficulty"] for f in fx) / len(fx) if fx else 3.0
+                diffs_per_gw.append(round(avg_d, 2))
+
+            # Swing = max diff - min diff over window
+            swing = max(diffs_per_gw) - min(diffs_per_gw) if diffs_per_gw else 0
+
+            rows.append({
+                "team_id": tid,
+                "team_name": teams_dict[tid].short_name if tid in teams_dict else "???",
+                "gw_difficulties": diffs_per_gw,
+                "gw_fixtures": fixtures_per_gw,
+                "avg_difficulty": round(sum(diffs_per_gw) / len(diffs_per_gw), 2) if diffs_per_gw else 3.0,
+                "swing": round(swing, 2),
+            })
+
+        rows.sort(key=lambda r: r["avg_difficulty"])
+
+        # Rotation pairs: teams whose fixtures complement each other
+        pairs = []
+        for i in range(len(rows)):
+            for j in range(i + 1, len(rows)):
+                a, b = rows[i], rows[j]
+                # Combined min difficulty per GW
+                combined = [min(ad, bd) for ad, bd in zip(a["gw_difficulties"], b["gw_difficulties"])]
+                avg_combined = sum(combined) / len(combined) if combined else 3.0
+                if avg_combined < 2.8:
+                    pairs.append({
+                        "team_a": a["team_name"],
+                        "team_b": b["team_name"],
+                        "combined_avg": round(avg_combined, 2),
+                        "combined_per_gw": [round(c, 2) for c in combined],
+                    })
+        pairs.sort(key=lambda p: p["combined_avg"])
+
+        return jsonify({"gw_ids": gw_ids, "teams": rows, "rotation_pairs": pairs[:10]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -679,6 +679,7 @@
         <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
         <div class="sidebar-sub-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">Multi-GW Planner</div>
         <div class="sidebar-sub-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">Chip Strategy</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">Gain vs Hit</div>
       </div>
 
       <!-- Leagues -->
@@ -702,6 +703,7 @@
         <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Schedule & CS%</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
+        <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
       </div>
 
       <!-- Player Stats -->
@@ -727,6 +729,8 @@
         <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
         <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
         <div class="sidebar-sub-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')">Rotation Risk</div>
+        <div class="sidebar-sub-item" data-nav="nav-news-ownership" onclick="switchNav('nav-news-ownership')">Ownership & EO</div>
+        <div class="sidebar-sub-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')">Rank Simulator</div>
       </div>
 
       <!-- Draft / Waivers -->
@@ -1076,6 +1080,14 @@
                 <option value="10">10 GWs</option>
               </select>
             </div>
+            <div class="field">
+              <label>Strategy</label>
+              <select id="risk-mode">
+                <option value="balanced" selected>Balanced</option>
+                <option value="safe">Safe (high floor)</option>
+                <option value="aggressive">Aggressive (differentials)</option>
+              </select>
+            </div>
             <button class="btn" id="run-btn" onclick="runOptimizer()">Optimize</button>
           </div>
         </div>
@@ -1112,6 +1124,158 @@
 
           <div class="tab-content" id="tab-top-players">
             <div id="top-players-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: MULTI-GW PLANNER ==================== -->
+      <div class="nav-panel" id="nav-transfers-multigw">
+        <div class="draft-header">
+          <h2>Multi-GW Transfer Planner</h2>
+          <span class="draft-badge">3–6 GW Horizon</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Optimal transfer path across multiple gameweeks, accounting for hits, budget, and squad structure.</p>
+        <div class="filters">
+          <div class="field" style="max-width:160px;">
+            <label>Horizon</label>
+            <select id="multigw-horizon">
+              <option value="3">3 GWs</option>
+              <option value="4">4 GWs</option>
+              <option value="5">5 GWs</option>
+              <option value="6" selected>6 GWs</option>
+            </select>
+          </div>
+          <div class="field" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn" onclick="loadMultiGW()">Plan</button></div>
+        </div>
+        <div class="loader" id="multigw-loader"><div class="spinner"></div><div class="loader-text">Planning transfers...</div></div>
+        <div id="multigw-error"></div>
+        <div id="multigw-content" style="display:none;">
+          <div class="stat-row" id="multigw-summary"></div>
+          <div class="section">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>GW</th><th>FT</th><th>Transfer Out</th><th>Transfer In</th><th class="right">Gain</th><th class="right">Hit</th><th class="right">Cumulative</th></tr></thead>
+                <tbody id="multigw-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: CHIP STRATEGY ==================== -->
+      <div class="nav-panel" id="nav-transfers-chips">
+        <div class="draft-header">
+          <h2>Chip Strategy Optimizer</h2>
+          <span class="draft-badge">Strategic Planning</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Optimal timing for Wildcard, Bench Boost, Triple Captain, and Free Hit based on DGW/BGW patterns and fixture swings.</p>
+        <div class="filters">
+          <div class="field" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn" onclick="loadChipStrategy()">Analyse Chips</button></div>
+        </div>
+        <div class="loader" id="chips-loader"><div class="spinner"></div><div class="loader-text">Calculating chip strategy...</div></div>
+        <div id="chips-error"></div>
+        <div id="chips-content" style="display:none;">
+          <div class="waiver-top" id="chips-cards"></div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: GAIN VS HIT ==================== -->
+      <div class="nav-panel" id="nav-transfers-gain">
+        <div class="draft-header">
+          <h2>Transfer Gain vs Hit</h2>
+          <span class="draft-badge">Breakeven Analysis</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Visualise expected point gain vs the 4-point hit cost. See how many GWs until a hit pays off.</p>
+        <div class="loader" id="gain-loader"><div class="spinner"></div><div class="loader-text">Evaluating transfers...</div></div>
+        <div id="gain-error"></div>
+        <div id="gain-content" style="display:none;">
+          <div class="section">
+            <canvas id="gain-chart" width="700" height="300" style="max-width:100%;margin-bottom:1rem;"></canvas>
+          </div>
+          <div class="section">
+            <div class="section-title">Top Transfers</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Out</th><th>In</th><th>Pos</th><th class="right">EP Gain</th><th class="right">Free</th><th class="right">After Hit</th><th class="right">Breakeven</th><th class="right">Worth?</th></tr></thead>
+                <tbody id="gain-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== FIXTURE SWING & ROTATION ==================== -->
+      <div class="nav-panel" id="nav-fixtures-swing">
+        <div class="draft-header">
+          <h2>Fixture Swing & Rotation</h2>
+          <span class="draft-badge">Rotation Planner</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Fixture difficulty over time per team. Identifies rotation pairs with complementary fixtures.</p>
+        <div class="loader" id="swing-loader"><div class="spinner"></div><div class="loader-text">Analysing fixtures...</div></div>
+        <div id="swing-error"></div>
+        <div id="swing-content" style="display:none;">
+          <div class="section">
+            <div class="section-title">Best Rotation Pairs</div>
+            <div class="waiver-top" id="swing-pairs"></div>
+          </div>
+          <div class="section">
+            <div class="section-title">Team Fixture Difficulty</div>
+            <div class="table-wrap">
+              <table>
+                <thead id="swing-thead"></thead>
+                <tbody id="swing-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== OWNERSHIP & EO ==================== -->
+      <div class="nav-panel" id="nav-news-ownership">
+        <div class="draft-header">
+          <h2>Ownership & EO</h2>
+          <span class="draft-badge">Effective Ownership</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Effective ownership with estimated captaincy rates. See point swing impact of owning or missing popular players.</p>
+        <div class="loader" id="eo-loader"><div class="spinner"></div><div class="loader-text">Modelling ownership...</div></div>
+        <div id="eo-error"></div>
+        <div id="eo-content" style="display:none;">
+          <div class="section">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Own%</th><th class="right">Capt%</th><th class="right">EO%</th><th class="right">EP</th><th class="right" style="color:#51cf66">Haul+</th><th class="right" style="color:#ff6b6b">Miss-</th></tr></thead>
+                <tbody id="eo-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== RANK SIMULATOR ==================== -->
+      <div class="nav-panel" id="nav-news-ranksim">
+        <div class="draft-header">
+          <h2>Rank Simulator</h2>
+          <span class="draft-badge">Monte Carlo</span>
+        </div>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Simulate your expected rank after upcoming GWs based on squad xPts, EO, and variance.</p>
+        <div class="filters">
+          <div class="field" style="max-width:120px;">
+            <label>Horizon</label>
+            <select id="ranksim-horizon">
+              <option value="3">3 GWs</option>
+              <option value="5" selected>5 GWs</option>
+              <option value="8">8 GWs</option>
+            </select>
+          </div>
+          <div class="field" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn" onclick="loadRankSim()">Simulate</button></div>
+        </div>
+        <div class="loader" id="ranksim-loader"><div class="spinner"></div><div class="loader-text">Running simulations...</div></div>
+        <div id="ranksim-error"></div>
+        <div id="ranksim-content" style="display:none;">
+          <div class="stat-row" id="ranksim-summary"></div>
+          <div class="section">
+            <div class="section-title blue">Points Distribution</div>
+            <canvas id="ranksim-chart" width="700" height="260" style="max-width:100%;"></canvas>
           </div>
         </div>
       </div>
@@ -1425,7 +1589,7 @@
         </div>
       </div>
 
-      <!-- ==================== NEWS: ROTATION RISK ==================== -->
+      <!-- ==================== NEWS: ROTATION / MINUTES ==================== -->
       <div class="nav-panel" id="nav-news-rotation">
         <div class="section">
           <div class="section-title" style="color:#ff6b6b;">Rotation Risk Flags</div>
@@ -1581,9 +1745,9 @@
           </div>
           <div class="user-bar-row">
             <div class="field">
-              <label>FPL User ID</label>
-              <input type="text" id="user-id" placeholder="e.g. 1234567" onkeydown="if(event.key==='Enter')loadUser()">
-              <div class="help-text">Find your ID in the FPL website URL</div>
+              <label>FPL User ID or Profile URL</label>
+              <input type="text" id="user-id" placeholder="e.g. 1234567 or paste FPL URL" onkeydown="if(event.key==='Enter')loadUser()" oninput="autoDetectFplId(this)">
+              <div class="help-text">Paste your FPL URL or enter your ID — we'll detect it automatically</div>
             </div>
             <button class="btn-blue" id="load-user-btn" onclick="loadUser()">Load</button>
           </div>
@@ -1710,6 +1874,12 @@ function switchNav(panelId) {
   if (panelId === 'nav-draft-rankings' && !draftRankLoaded) loadDraftRankings();
   if (panelId === 'nav-draft-waiver') loadWaiverWire();
   if (panelId === 'nav-draft-roster') analyseRoster();
+  if (panelId === 'nav-transfers-multigw') loadMultiGW();
+  if (panelId === 'nav-transfers-chips') loadChipStrategy();
+  if (panelId === 'nav-transfers-gain') loadTransferGain();
+  if (panelId === 'nav-fixtures-swing') loadFixtureSwing();
+  if (panelId === 'nav-news-ownership') loadOwnership();
+  if (panelId === 'nav-news-ranksim') { /* manual button */ }
 }
 
 // ==================== DASHBOARD ====================
@@ -3453,7 +3623,7 @@ async function runOptimizer() {
     const resp = await fetch('/api/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ budget: parseFloat($('budget').value), lookahead: parseInt($('lookahead').value), user_id: userId || null }),
+      body: JSON.stringify({ budget: parseFloat($('budget').value), lookahead: parseInt($('lookahead').value), user_id: userId || null, risk_mode: $('risk-mode').value }),
     });
     const data = await resp.json();
     if (!resp.ok) { errorEl.innerHTML = `<div class="error-msg">${data.error || 'Error'}</div>`; return; }
@@ -4400,6 +4570,289 @@ async function analyseRoster() {
 if (draftRosterIds.length > 0) {
   setTimeout(analyseRoster, 300);
 }
+
+// ==================== #1 AUTO FPL URL DETECT ====================
+function autoDetectFplId(input) {
+  const val = input.value.trim();
+  // Match FPL URLs: /entry/12345, /entry/12345/event, etc.
+  const match = val.match(/entry\/(\d+)/);
+  if (match) {
+    input.value = match[1];
+    input.style.borderColor = '#00ff87';
+    setTimeout(() => { input.style.borderColor = ''; }, 1500);
+  }
+}
+
+// ==================== #2 MULTI-GW PLANNER ====================
+async function loadMultiGW() {
+  if (!loadedUserId) { $('multigw-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  const loader = $('multigw-loader'), content = $('multigw-content'), err = $('multigw-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  const horizon = $('multigw-horizon').value;
+  try {
+    const resp = await fetch(`/api/multi-gw/${loadedUserId}?horizon=${horizon}`);
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    $('multigw-summary').innerHTML = `
+      <div class="stat-card"><div class="label">Bank</div><div class="value">${data.bank}M</div></div>
+      <div class="stat-card"><div class="label">Horizon</div><div class="value">${data.horizon} GWs</div></div>
+      <div class="stat-card"><div class="label">Total Gain</div><div class="value">${data.plan.length ? data.plan[data.plan.length-1].cumulative_gain : 0}</div></div>
+    `;
+    $('multigw-body').innerHTML = data.plan.map(gw => {
+      const out = gw.transfer_out ? `<span class="out">${gw.transfer_out.name}</span> <span style="color:#888">(${gw.transfer_out.position_name})</span>` : '<span style="color:#555">— Hold —</span>';
+      const inn = gw.transfer_in ? `<span class="in">${gw.transfer_in.name}</span> <span style="color:#888">(${gw.transfer_in.position_name})</span>` : '—';
+      const hitColor = gw.hit_cost > 0 ? 'color:#ff6b6b' : '';
+      return `<tr>
+        <td><strong>GW${gw.gameweek}</strong></td>
+        <td>${gw.free_transfers}</td>
+        <td>${out}</td><td>${inn}</td>
+        <td class="right score">${gw.expected_points_gain > 0 ? '+' : ''}${gw.expected_points_gain}</td>
+        <td class="right" style="${hitColor}">${gw.hit_cost ? '-' + gw.hit_cost : '0'}</td>
+        <td class="right" style="font-weight:600">${gw.cumulative_gain > 0 ? '+' : ''}${gw.cumulative_gain}</td>
+      </tr>`;
+    }).join('');
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+// ==================== #3 CHIP STRATEGY ====================
+async function loadChipStrategy() {
+  if (!loadedUserId) { $('chips-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  const loader = $('chips-loader'), content = $('chips-content'), err = $('chips-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  try {
+    const resp = await fetch(`/api/chip-strategy/${loadedUserId}`);
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    const chips = [
+      { key: 'bench_boost', name: 'Bench Boost', icon: '🪑', color: '#51cf66' },
+      { key: 'triple_captain', name: 'Triple Captain', icon: '©️', color: '#ffd700' },
+      { key: 'free_hit', name: 'Free Hit', icon: '⚡', color: '#4da6ff' },
+      { key: 'wildcard', name: 'Wildcard', icon: '🃏', color: '#ff6b6b' },
+    ];
+    $('chips-cards').innerHTML = chips.map(c => {
+      const d = data[c.key] || {};
+      return `<div class="waiver-card" style="border-top:3px solid ${c.color};">
+        <div class="wc-header">
+          <span class="wc-name">${c.icon} ${c.name}</span>
+          <span style="color:${c.color};font-weight:700;font-size:0.9rem;">${d.gw ? 'GW' + d.gw : 'N/A'}</span>
+        </div>
+        <div class="wc-meta">${d.reason || 'No recommendation available'}</div>
+        ${d.player ? `<div style="color:#e6e6e6;font-size:0.82rem;margin-top:0.3rem;">Player: <strong>${d.player}</strong></div>` : ''}
+        ${d.dgw_teams ? `<div style="color:#888;font-size:0.78rem;margin-top:0.2rem;">DGW players: ${d.dgw_teams}</div>` : ''}
+      </div>`;
+    }).join('');
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+// ==================== #4 OWNERSHIP & EO ====================
+async function loadOwnership() {
+  const loader = $('eo-loader'), content = $('eo-content'), err = $('eo-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  try {
+    const resp = await fetch('/api/ownership');
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    $('eo-body').innerHTML = data.players.map((p, i) => `<tr>
+      <td>${i + 1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.team_name}</td>
+      <td><span class="pos">${p.position_name}</span></td>
+      <td class="right">${p.ownership}%</td>
+      <td class="right" style="color:#ffd700">${p.captain_rate}%</td>
+      <td class="right" style="color:#4da6ff;font-weight:600">${p.effective_ownership}%</td>
+      <td class="right">${p.ep_next}</td>
+      <td class="right" style="color:#51cf66">+${p.haul_swing_own}</td>
+      <td class="right" style="color:#ff6b6b">${p.haul_swing_miss}</td>
+    </tr>`).join('');
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+// ==================== #6 TRANSFER GAIN VS HIT ====================
+async function loadTransferGain() {
+  if (!loadedUserId) { $('gain-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  const loader = $('gain-loader'), content = $('gain-content'), err = $('gain-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  try {
+    const resp = await fetch(`/api/transfer-gain/${loadedUserId}`);
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    // Table
+    $('gain-body').innerHTML = data.transfers.map(t => {
+      const beColor = t.breakeven_gws <= 2 ? '#00ff87' : t.breakeven_gws <= 4 ? '#ffd700' : '#ff6b6b';
+      return `<tr>
+        <td><span class="out">${t.out_name}</span> <span style="color:#555">${t.out_team}</span></td>
+        <td><span class="in">${t.in_name}</span> <span style="color:#555">${t.in_team}</span></td>
+        <td><span class="pos">${t.position_name}</span></td>
+        <td class="right score">+${t.pts_gain}</td>
+        <td class="right" style="color:#51cf66">${t.net_gain_free > 0 ? '+' : ''}${t.net_gain_free}</td>
+        <td class="right" style="color:${t.net_gain_hit >= 0 ? '#51cf66' : '#ff6b6b'}">${t.net_gain_hit > 0 ? '+' : ''}${t.net_gain_hit}</td>
+        <td class="right" style="color:${beColor};font-weight:600">${t.breakeven_gws < 99 ? t.breakeven_gws + ' GWs' : '—'}</td>
+        <td class="right">${t.worth_hit ? '<span style="color:#00ff87;font-weight:700">YES</span>' : '<span style="color:#ff6b6b">NO</span>'}</td>
+      </tr>`;
+    }).join('');
+    // Chart
+    drawGainChart(data.transfers.slice(0, 15), data.hit_cost);
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+function drawGainChart(transfers, hitCost) {
+  const canvas = $('gain-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const pad = { top: 25, right: 15, bottom: 60, left: 50 };
+  ctx.clearRect(0, 0, w, h);
+  const chartW = w - pad.left - pad.right, chartH = h - pad.top - pad.bottom;
+  const maxGain = Math.max(...transfers.map(t => t.pts_gain), hitCost + 1);
+  const gap = chartW / transfers.length;
+  const barW = Math.min(gap * 0.6, 30);
+
+  // Hit cost line
+  const hitY = pad.top + chartH - (hitCost / maxGain) * chartH;
+  ctx.setLineDash([6, 4]); ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(pad.left, hitY); ctx.lineTo(w - pad.right, hitY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ff6b6b'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`-${hitCost} hit cost`, pad.left + 4, hitY - 6);
+
+  // Gridlines
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + chartH - (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y);
+    ctx.strokeStyle = '#1a1f2e'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText((maxGain * i / 4).toFixed(1), pad.left - 6, y + 3);
+  }
+
+  transfers.forEach((t, i) => {
+    const barH = Math.max((t.pts_gain / maxGain) * chartH, 2);
+    const x = pad.left + i * gap + (gap - barW) / 2;
+    const y = pad.top + chartH - barH;
+    const color = t.worth_hit ? '#00ff87' : '#ffd700';
+    const grad = ctx.createLinearGradient(x, y, x, y + barH);
+    grad.addColorStop(0, color); grad.addColorStop(1, color + '44');
+    ctx.fillStyle = grad;
+    const r = Math.min(3, barW / 2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+barW-r,y); ctx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    ctx.lineTo(x+barW,y+barH); ctx.lineTo(x,y+barH); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.fill();
+    ctx.fillStyle = '#e6e6e6'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('+' + t.pts_gain, x + barW/2, y - 5);
+    ctx.save(); ctx.translate(x + barW/2, h - pad.bottom + 8); ctx.rotate(-Math.PI/5);
+    ctx.fillStyle = '#888'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(t.in_name.split(' ').pop(), 0, 0); ctx.restore();
+  });
+  ctx.save(); ctx.translate(14, pad.top + chartH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('EP Gain per GW', 0, 0); ctx.restore();
+}
+
+// ==================== #8 FIXTURE SWING & ROTATION ====================
+async function loadFixtureSwing() {
+  const loader = $('swing-loader'), content = $('swing-content'), err = $('swing-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  try {
+    const resp = await fetch('/api/fixture-swing?lookahead=8');
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    // Rotation pairs
+    $('swing-pairs').innerHTML = data.rotation_pairs.map(p =>
+      `<div class="waiver-card">
+        <div class="wc-header"><span class="wc-name">${p.team_a} + ${p.team_b}</span></div>
+        <div class="wc-meta">Combined avg difficulty: <strong style="color:#00ff87">${p.combined_avg}</strong></div>
+        <div style="display:flex;gap:0.3rem;margin-top:0.4rem;">${p.combined_per_gw.map((d,i) =>
+          `<span class="fdr-cell fdr-${Math.round(d)}" style="flex:1;text-align:center;font-size:0.7rem;">${d}</span>`
+        ).join('')}</div>
+      </div>`
+    ).join('') || '<p style="color:#888">No strong rotation pairs found.</p>';
+    // Table
+    const gws = data.gw_ids;
+    $('swing-thead').innerHTML = `<tr><th>Team</th>${gws.map(g => `<th>GW${g}</th>`).join('')}<th class="right">Avg</th><th class="right">Swing</th></tr>`;
+    $('swing-body').innerHTML = data.teams.map(t =>
+      `<tr><td><strong>${t.team_name}</strong></td>${t.gw_difficulties.map(d => {
+        const fdr = Math.round(d);
+        return `<td><span class="fdr-cell fdr-${fdr}" style="display:inline-block;min-width:28px;text-align:center;">${d}</span></td>`;
+      }).join('')}<td class="right">${t.avg_difficulty}</td><td class="right" style="color:${t.swing >= 2 ? '#ff6b6b' : '#00ff87'}">${t.swing}</td></tr>`
+    ).join('');
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+// ==================== #9 RANK SIMULATOR ====================
+async function loadRankSim() {
+  if (!loadedUserId) { $('ranksim-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  const loader = $('ranksim-loader'), content = $('ranksim-content'), err = $('ranksim-error');
+  loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  const horizon = $('ranksim-horizon').value;
+  try {
+    const resp = await fetch(`/api/rank-simulation/${loadedUserId}?horizon=${horizon}&sims=2000`);
+    const data = await resp.json();
+    if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+    const pp = data.projected_points;
+    const rankDir = data.projected_rank_change <= 0 ? 'color:#00ff87' : 'color:#ff6b6b';
+    const rankArrow = data.projected_rank_change <= 0 ? '↑' : '↓';
+    $('ranksim-summary').innerHTML = `
+      <div class="stat-card"><div class="label">Current Rank</div><div class="value blue">${data.current_rank.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">Current Pts</div><div class="value">${data.current_points}</div></div>
+      <div class="stat-card"><div class="label">Squad EP/GW</div><div class="value">${data.squad_ep_per_gw}</div></div>
+      <div class="stat-card"><div class="label">Projected Rank</div><div class="value" style="${rankDir}">${rankArrow} ${data.projected_rank.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">Median Pts</div><div class="value">${pp.median}</div></div>
+      <div class="stat-card"><div class="label">P10–P90</div><div class="value" style="font-size:0.9rem">${pp.p10} – ${pp.p90}</div></div>
+    `;
+    drawRankHistogram(data.histogram);
+    content.style.display = '';
+  } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
+  finally { loader.classList.remove('active'); }
+}
+
+function drawRankHistogram(buckets) {
+  const canvas = $('ranksim-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const pad = { top: 15, right: 15, bottom: 40, left: 45 };
+  ctx.clearRect(0, 0, w, h);
+  const chartW = w - pad.left - pad.right, chartH = h - pad.top - pad.bottom;
+  const maxCount = Math.max(...buckets.map(b => b.count)) || 1;
+  const gap = chartW / buckets.length;
+  const barW = Math.max(gap - 2, 3);
+
+  buckets.forEach((b, i) => {
+    const barH = Math.max((b.count / maxCount) * chartH, 1);
+    const x = pad.left + i * gap;
+    const y = pad.top + chartH - barH;
+    const grad = ctx.createLinearGradient(x, y, x, y + barH);
+    grad.addColorStop(0, '#4da6ff'); grad.addColorStop(1, '#1a3a5c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, barW, barH);
+    if (i % 4 === 0) {
+      ctx.fillStyle = '#555'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(Math.round(b.min), x + barW/2, h - pad.bottom + 14);
+    }
+  });
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Projected Total Points', pad.left + chartW/2, h - 5);
+}
+
+// ==================== #10 PERFORMANCE: PROGRESSIVE LOADING ====================
+// Prefetch core data on first load for faster tab switches
+let _prefetchDone = false;
+function prefetchCoreData() {
+  if (_prefetchDone) return;
+  _prefetchDone = true;
+  // Warm the server cache with a lightweight call
+  fetch('/api/data').catch(() => {});
+}
+setTimeout(prefetchCoreData, 2000);
 </script>
 </body>
 </html>
