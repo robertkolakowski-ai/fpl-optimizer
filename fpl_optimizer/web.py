@@ -191,20 +191,71 @@ def api_fixtures():
 
 @app.route("/api/user/<int:user_id>")
 def api_user(user_id):
-    """Fetch FPL user entry: manager name, team name, and leagues."""
+    """Fetch FPL user entry with full profile: chips, bank, transfers, history."""
     try:
         with httpx.Client(timeout=30) as client:
             entry = fetch_user_entry(client, user_id)
+            history = fetch_entry_history(client, user_id)
+
         manager_name = f"{entry.get('player_first_name', '')} {entry.get('player_last_name', '')}".strip()
         team_name = entry.get("name", "")
         leagues = []
         for league_type in ("classic", "h2h"):
             for lg in entry.get("leagues", {}).get(league_type, []):
                 leagues.append({"id": lg["id"], "name": lg["name"]})
+
+        # Profile data
+        overall_rank = entry.get("summary_overall_rank")
+        overall_points = entry.get("summary_overall_points", 0)
+        team_value = entry.get("last_deadline_value", 0) / 10.0
+        bank = entry.get("last_deadline_bank", 0) / 10.0
+
+        # Chips
+        chips_used = [
+            {"name": c.get("name", ""), "event": c.get("event", 0)}
+            for c in history.get("chips", [])
+        ]
+        chip_names_used = {c["name"] for c in chips_used}
+        all_chips = ["wildcard", "freehit", "bboost", "3xc"]
+        chips_available = [c for c in all_chips if c not in chip_names_used]
+
+        # Current GW from history
+        gw_history = history.get("current", [])
+        latest_gw = gw_history[-1] if gw_history else {}
+        gw_points = latest_gw.get("points", 0)
+        gw_rank = latest_gw.get("rank")
+        gw_transfers = latest_gw.get("event_transfers", 0)
+        gw_hits = latest_gw.get("event_transfers_cost", 0)
+
+        # Estimate free transfers
+        free_transfers = 1
+        if len(gw_history) >= 2:
+            prev_transfers = gw_history[-2].get("event_transfers", 0)
+            if prev_transfers == 0:
+                free_transfers = min(free_transfers + 1, 5)
+
+        # Season history (last 10 GWs for sparkline)
+        season_history = [
+            {"gw": h.get("event", 0), "points": h.get("points", 0), "rank": h.get("overall_rank", 0)}
+            for h in gw_history[-10:]
+        ]
+
         return jsonify({
             "manager_name": manager_name,
             "team_name": team_name,
             "leagues": leagues,
+            "overall_rank": overall_rank,
+            "overall_points": overall_points,
+            "team_value": round(team_value, 1),
+            "bank": round(bank, 1),
+            "gw_points": gw_points,
+            "gw_rank": gw_rank,
+            "gw_transfers": gw_transfers,
+            "gw_hits": gw_hits,
+            "free_transfers": free_transfers,
+            "chips_used": chips_used,
+            "chips_available": chips_available,
+            "season_history": season_history,
         })
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
@@ -1197,33 +1248,24 @@ def api_optimize():
 
 @app.route("/api/ownership")
 def api_ownership():
-    """Effective ownership modelling with captaincy estimates."""
+    """Enhanced EO modelling with personal risk, league comparison, and captain chart."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=1)
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
-        # Estimate captaincy rate: top owned players get captained more
-        # Simple model: captain rate ~ ownership * form ranking
         outfield = [p for p in players if p.position in (2, 3, 4) and p.selected_by_percent > 0]
         outfield.sort(key=lambda p: p.ep_next, reverse=True)
-
-        # Top ~10 players by ep_next get most captaincy
         captain_pool_total = sum(p.selected_by_percent for p in outfield[:10])
 
         result = []
         for rank, p in enumerate(outfield[:50]):
             ownership = p.selected_by_percent
-            # Estimated captaincy rate: proportional to ep_next share among top picks
             if rank < 10 and captain_pool_total > 0:
                 captain_rate = round((p.selected_by_percent / captain_pool_total) * 100, 1)
             else:
                 captain_rate = round(max(0, ownership * 0.02), 1)
-
-            # Effective ownership = ownership + captain_rate (captain doubles points)
             eo = round(ownership + captain_rate, 1)
-
-            # Net point swing: if you own and captain, positive. If you don't, negative.
             result.append({
                 "id": p.id,
                 "name": p.name,
@@ -1236,15 +1278,129 @@ def api_ownership():
                 "ep_next": round(p.ep_next, 2),
                 "form": p.form,
                 "total_points": p.total_points,
-                # Expected point swing if player hauls (scores 10+)
                 "haul_swing_own": round(10 * (1 - eo / 100), 2),
                 "haul_swing_miss": round(-10 * (eo / 100), 2),
             })
 
-        # Re-score with normal lookahead
+        # Personal risk exposure
+        personal_risk = None
+        user_id = request.args.get("user_id")
+        if user_id:
+            try:
+                uid = int(user_id)
+                squad_players, _ = load_user_team(uid, players, gameweeks)
+                squad_ids = {p.id for p in squad_players}
+
+                current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+                if current_gw is None:
+                    current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+                user_captain_id = None
+                if current_gw:
+                    try:
+                        with httpx.Client(timeout=30) as client:
+                            picks_data = fetch_user_picks_full(client, uid, current_gw.id)
+                        for pick in picks_data.get("picks", []):
+                            if pick.get("is_captain"):
+                                user_captain_id = pick["element"]
+                    except Exception:
+                        pass
+
+                for item in result:
+                    item["user_owns"] = item["id"] in squad_ids
+                    item["user_captains"] = item["id"] == user_captain_id
+
+                owned_eo = sum(r["effective_ownership"] for r in result if r["user_owns"])
+                top15_eo = sum(r["effective_ownership"] for r in result[:15]) or 1
+                shield_score = round(owned_eo / top15_eo * 100, 1)
+                attack_score = round(100 - shield_score, 1)
+
+                personal_risk = {
+                    "squad_ids": list(squad_ids),
+                    "captain_id": user_captain_id,
+                    "owned_eo_total": round(owned_eo, 1),
+                    "missed_eo_total": round(sum(r["effective_ownership"] for r in result if not r.get("user_owns")), 1),
+                    "shield_score": shield_score,
+                    "attack_score": attack_score,
+                    "recommendation": "SHIELD" if shield_score >= 60 else "ATTACK",
+                    "recommendation_text": (
+                        "Your team is template-heavy. Low variance, safe play."
+                        if shield_score >= 60
+                        else "Your team is differential. High variance, potential for big rank swings."
+                    ),
+                }
+            except Exception:
+                personal_risk = None
+
+        # League EO comparison
+        league_comparison = None
+        league_id = request.args.get("league_id")
+        if league_id and user_id:
+            try:
+                lid = int(league_id)
+                uid = int(user_id)
+                with httpx.Client(timeout=30) as client:
+                    league_data = fetch_league_standings(client, lid)
+
+                standings = league_data.get("standings", {}).get("results", [])[:10]
+                current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+                if current_gw is None:
+                    current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+
+                rival_ownership = []
+                if current_gw:
+                    with httpx.Client(timeout=30) as client:
+                        for entry in standings:
+                            eid = entry.get("entry")
+                            if eid == uid:
+                                continue
+                            try:
+                                rival_picks = fetch_user_picks_full(client, eid, current_gw.id)
+                                rival_ids = {p["element"] for p in rival_picks.get("picks", [])}
+                                rival_ownership.append({
+                                    "manager": entry.get("player_name", ""),
+                                    "entry_id": eid,
+                                    "player_ids": list(rival_ids),
+                                })
+                            except Exception:
+                                continue
+
+                top_ids = [r["id"] for r in result[:15]]
+                league_eo_grid = []
+                for pid in top_ids:
+                    p_info = next((r for r in result if r["id"] == pid), None)
+                    if not p_info:
+                        continue
+                    rival_count = sum(1 for ro in rival_ownership if pid in ro["player_ids"])
+                    league_eo_grid.append({
+                        "id": pid,
+                        "name": p_info["name"],
+                        "rivals_owning": rival_count,
+                        "total_rivals": len(rival_ownership),
+                        "league_ownership_pct": round(rival_count / max(len(rival_ownership), 1) * 100, 1),
+                    })
+
+                league_comparison = {
+                    "league_name": league_data.get("league", {}).get("name", ""),
+                    "rivals_checked": len(rival_ownership),
+                    "player_grid": league_eo_grid,
+                }
+            except Exception:
+                league_comparison = None
+
+        # Captain chart data
+        captain_chart = [
+            {"name": r["name"], "eo": r["effective_ownership"], "captain_rate": r["captain_rate"], "ep_next": r["ep_next"]}
+            for r in result[:8]
+        ]
+
         score_players(players, fixtures, gameweeks, teams, lookahead=5)
 
-        return jsonify({"players": result})
+        response = {"players": result, "captain_chart": captain_chart}
+        if personal_risk:
+            response["personal_risk"] = personal_risk
+        if league_comparison:
+            response["league_comparison"] = league_comparison
+        return jsonify(response)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1362,87 +1518,178 @@ def api_chip_strategy(user_id):
 
 @app.route("/api/rank-simulation/<int:user_id>")
 def api_rank_simulation(user_id):
-    """Monte Carlo rank simulation over upcoming GWs."""
+    """Enhanced Monte Carlo rank sim with per-player modelling, captain comparison, and scenarios."""
     try:
         num_sims = min(int(request.args.get("sims", 1000)), 5000)
         horizon = min(int(request.args.get("horizon", 5)), 10)
+        captain_id_param = request.args.get("captain_id")
+        alt_captain_id_param = request.args.get("alt_captain_id")
+        hits = int(request.args.get("hits", 0))
 
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=1)
+        player_map = {p.id: p for p in players}
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
         squad_players, bank = load_user_team(user_id, players, gameweeks)
 
-        # Get current rank
         with httpx.Client(timeout=30) as client:
             entry = fetch_user_entry(client, user_id)
         current_rank = entry.get("summary_overall_rank", 500000)
         current_points = entry.get("summary_overall_points", 0)
 
-        # Squad expected points per GW (sum of ep_next for starting XI)
-        squad_ep = sorted(squad_players, key=lambda p: p.ep_next, reverse=True)
-        # Approximate starting XI: best 11 by ep_next respecting 1 GK
-        gks = [p for p in squad_ep if p.position == 1]
-        outfield = [p for p in squad_ep if p.position != 1]
-        starting_ep = sum(p.ep_next for p in gks[:1]) + sum(p.ep_next for p in outfield[:10])
+        # Build starting XI
+        gks = [p for p in squad_players if p.position == 1]
+        outfield = sorted([p for p in squad_players if p.position != 1], key=lambda p: p.ep_next, reverse=True)
+        starting_xi = gks[:1] + outfield[:10]
 
-        # Average GW score across all managers (~50 pts)
-        avg_gw_score = 50.0
+        # Determine captain
+        captain_id = int(captain_id_param) if captain_id_param else None
+        if captain_id is None and starting_xi:
+            captain_id = max(starting_xi, key=lambda p: p.ep_next).id
 
-        # Run simulations
-        final_points = []
-        for _ in range(num_sims):
-            sim_total = current_points
-            for gw in range(horizon):
-                # Your score: normal distribution around ep_next with variance
-                my_score = max(0, random.gauss(starting_ep, starting_ep * 0.35))
-                sim_total += my_score
-            final_points.append(sim_total)
+        # Per-player variance model (position-dependent)
+        pos_variance = {1: 0.25, 2: 0.30, 3: 0.35, 4: 0.40}
 
-        final_points.sort(reverse=True)
+        def simulate_gw(xi, cap_id):
+            total = 0
+            for p in xi:
+                variance = p.ep_next * pos_variance.get(p.position, 0.35)
+                pts = max(0, random.gauss(p.ep_next, variance))
+                total += pts * (2 if p.id == cap_id else 1)
+            return total
 
-        # Estimate rank change based on points gained vs average
-        avg_total_gain = sum(final_points) / len(final_points) - current_points
-        avg_others_gain = avg_gw_score * horizon
+        # EO-adjusted average manager score
+        eo_players = sorted(
+            [p for p in players if p.position in (2, 3, 4) and p.selected_by_percent > 0],
+            key=lambda p: p.selected_by_percent, reverse=True
+        )
+        avg_gw_score = max(sum(p.ep_next * (p.selected_by_percent / 100) for p in eo_players[:50]), 40.0)
 
-        # Rough rank model: ~200 points per 100k ranks around top 500k
-        pts_per_100k = 200
-        rank_delta = -(avg_total_gain - avg_others_gain) / pts_per_100k * 100000
+        # Rank sensitivity by rank band
+        def sensitivity(rank):
+            if rank < 100000:
+                return 80
+            if rank < 500000:
+                return 150
+            if rank < 1000000:
+                return 200
+            return 300
 
-        # Percentiles
+        sens = sensitivity(current_rank)
+
+        def run_sim(cap_id, n):
+            results = []
+            for _ in range(n):
+                sim_total = current_points - (hits * 4)
+                for _ in range(horizon):
+                    sim_total += simulate_gw(starting_xi, cap_id)
+                results.append(sim_total)
+            results.sort(reverse=True)
+            return results
+
+        final_points = run_sim(captain_id, num_sims)
+
         p10 = final_points[int(num_sims * 0.9)]
         p25 = final_points[int(num_sims * 0.75)]
         p50 = final_points[int(num_sims * 0.5)]
         p75 = final_points[int(num_sims * 0.25)]
         p90 = final_points[int(num_sims * 0.1)]
 
-        # Build histogram buckets for chart
-        min_pts = min(final_points)
-        max_pts = max(final_points)
+        avg_total_gain = sum(final_points) / len(final_points) - current_points
+        avg_others_gain = avg_gw_score * horizon
+        rank_delta = -(avg_total_gain - avg_others_gain) / sens * 100000
+
+        def rank_from_pts(pts_total):
+            diff = pts_total - current_points - avg_others_gain
+            return max(1, round(current_rank - diff / sens * 100000))
+
+        scenarios = {
+            "pessimistic": {"points": round(p10, 1), "rank": rank_from_pts(p10)},
+            "expected": {"points": round(p50, 1), "rank": rank_from_pts(p50)},
+            "optimistic": {"points": round(p90, 1), "rank": rank_from_pts(p90)},
+        }
+
+        # Histogram
+        min_pts, max_pts = min(final_points), max(final_points)
         bucket_size = max(1, (max_pts - min_pts) / 20)
         buckets = []
         for i in range(20):
             lo = min_pts + i * bucket_size
             hi = lo + bucket_size
-            count = sum(1 for p in final_points if lo <= p < hi)
+            count = sum(1 for pt in final_points if lo <= pt < hi)
             buckets.append({"min": round(lo, 1), "max": round(hi, 1), "count": count})
 
-        return jsonify({
+        # Player contributions
+        player_contributions = []
+        for p in starting_xi:
+            multiplier = 2 if p.id == captain_id else 1
+            player_contributions.append({
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "ep_next": round(p.ep_next, 2),
+                "ep_contribution": round(p.ep_next * multiplier, 2),
+                "is_captain": p.id == captain_id,
+                "eo": round(p.selected_by_percent, 1),
+            })
+        player_contributions.sort(key=lambda x: x["ep_contribution"], reverse=True)
+
+        # Decision comparison
+        comparison = None
+        if alt_captain_id_param:
+            alt_id = int(alt_captain_id_param)
+            alt_points = run_sim(alt_id, num_sims)
+            alt_p50 = alt_points[int(num_sims * 0.5)]
+            alt_p10 = alt_points[int(num_sims * 0.9)]
+            alt_p90 = alt_points[int(num_sims * 0.1)]
+            prim_name = player_map.get(captain_id)
+            alt_name = player_map.get(alt_id)
+            comparison = {
+                "option_a": {
+                    "captain_id": captain_id,
+                    "captain_name": prim_name.name if prim_name else f"ID {captain_id}",
+                    "median_points": round(p50, 1),
+                    "p10": round(p10, 1),
+                    "p90": round(p90, 1),
+                    "projected_rank": rank_from_pts(p50),
+                },
+                "option_b": {
+                    "captain_id": alt_id,
+                    "captain_name": alt_name.name if alt_name else f"ID {alt_id}",
+                    "median_points": round(alt_p50, 1),
+                    "p10": round(alt_p10, 1),
+                    "p90": round(alt_p90, 1),
+                    "projected_rank": rank_from_pts(alt_p50),
+                },
+                "median_diff": round(p50 - alt_p50, 1),
+                "recommendation": "A" if p50 >= alt_p50 else "B",
+            }
+
+        response = {
             "current_rank": current_rank,
             "current_points": current_points,
-            "squad_ep_per_gw": round(starting_ep, 1),
+            "squad_ep_per_gw": round(sum(pc["ep_contribution"] for pc in player_contributions), 1),
             "horizon": horizon,
             "simulations": num_sims,
+            "hits": hits,
+            "captain_id": captain_id,
+            "captain_name": player_map[captain_id].name if captain_id and captain_id in player_map else None,
             "projected_points": {
-                "p10": round(p10, 1),
-                "p25": round(p25, 1),
-                "median": round(p50, 1),
-                "p75": round(p75, 1),
-                "p90": round(p90, 1),
+                "p10": round(p10, 1), "p25": round(p25, 1),
+                "median": round(p50, 1), "p75": round(p75, 1), "p90": round(p90, 1),
             },
+            "scenarios": scenarios,
             "projected_rank_change": round(rank_delta),
             "projected_rank": max(1, round(current_rank + rank_delta)),
             "histogram": buckets,
-        })
+            "player_contributions": player_contributions,
+        }
+        if comparison:
+            response["comparison"] = comparison
+
+        return jsonify(response)
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             return jsonify({"error": "User not found"}), 404

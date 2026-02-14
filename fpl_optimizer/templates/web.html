@@ -123,6 +123,22 @@
   .inline-spinner { display: none; width: 16px; height: 16px; border: 2px solid #2a2f3e; border-top-color: #4da6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   .inline-spinner.active { display: inline-block; }
 
+  /* Persistent user header bar */
+  .user-header-bar { display: none; background: #13161f; border-bottom: 1px solid #2a2f3e; padding: 0.4rem 1rem; align-items: center; gap: 1.2rem; font-size: 0.78rem; flex-wrap: wrap; }
+  .user-header-bar.active { display: flex; }
+  .user-header-bar .uhb-item { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+  .user-header-bar .uhb-label { color: #555; font-size: 0.65rem; text-transform: uppercase; }
+  .user-header-bar .uhb-value { color: #e6e6e6; font-weight: 600; }
+  .user-header-bar .uhb-value.green { color: #00ff87; }
+  .user-header-bar .uhb-value.blue { color: #4da6ff; }
+  .user-header-bar .uhb-value.gold { color: #ffd700; }
+  .user-header-bar .uhb-name { color: #00ff87; font-weight: 600; font-size: 0.85rem; }
+  .user-header-bar .uhb-sync { background: none; border: 1px solid #2a2f3e; color: #4da6ff; border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.72rem; cursor: pointer; margin-left: auto; transition: all 0.15s; }
+  .user-header-bar .uhb-sync:hover { border-color: #4da6ff; background: rgba(77,166,255,0.1); }
+  .chip-badge { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin: 0.1rem; }
+  .chip-badge.available { background: rgba(0,255,135,0.12); color: #00ff87; border: 1px solid rgba(0,255,135,0.3); }
+  .chip-badge.used { background: rgba(136,136,136,0.12); color: #555; border: 1px solid #2a2f3e; text-decoration: line-through; }
+
   /* Leagues */
   .leagues-section { display: none; margin-top: 0.8rem; }
   .leagues-section.active { display: block; }
@@ -760,6 +776,20 @@
     <div class="fixture-ticker" id="fixture-ticker">
       <div class="ticker-track" id="ticker-track"><span style="color:#555;font-size:0.75rem;">Loading fixtures...</span></div>
     </div>
+    <!-- Persistent User Header Bar -->
+    <div class="user-header-bar" id="user-header-bar">
+      <span class="uhb-name" id="uhb-name"></span>
+      <div class="uhb-item"><span class="uhb-label">Rank</span><span class="uhb-value blue" id="uhb-rank">-</span></div>
+      <div class="uhb-item"><span class="uhb-label">Points</span><span class="uhb-value green" id="uhb-points">-</span></div>
+      <div class="uhb-item"><span class="uhb-label">GW Pts</span><span class="uhb-value" id="uhb-gw-pts">-</span></div>
+      <div class="uhb-item"><span class="uhb-label">Value</span><span class="uhb-value gold" id="uhb-value">-</span></div>
+      <div class="uhb-item"><span class="uhb-label">Bank</span><span class="uhb-value gold" id="uhb-bank">-</span></div>
+      <div class="uhb-item"><span class="uhb-label">FTs</span><span class="uhb-value" id="uhb-fts">-</span></div>
+      <div class="uhb-item" id="uhb-chips-wrap"><span class="uhb-label">Chips</span><span id="uhb-chips"></span></div>
+      <button class="uhb-sync" onclick="syncUser()" id="uhb-sync-btn">&#x21bb; Sync</button>
+      <span class="inline-spinner" id="uhb-sync-spinner"></span>
+      <span style="color:#555;font-size:0.65rem;" id="uhb-last-sync"></span>
+    </div>
     <div class="container">
 
       <!-- ==================== DASHBOARD ==================== -->
@@ -1237,13 +1267,43 @@
           <span class="draft-badge">Effective Ownership</span>
         </div>
         <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Effective ownership with estimated captaincy rates. See point swing impact of owning or missing popular players.</p>
+
+        <!-- Shield vs Attack (shown when user loaded) -->
+        <div id="eo-personal" style="display:none;margin-bottom:1rem;">
+          <div class="stat-row" id="eo-risk-cards"></div>
+          <div class="section" style="padding:0.8rem;">
+            <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+              <button class="btn" id="eo-shield-btn" onclick="toggleEoMode('shield')" style="background:#4da6ff;color:#0e1117;font-size:0.8rem;padding:0.35rem 0.8rem;">Shield Mode</button>
+              <button class="btn-outline" id="eo-attack-btn" onclick="toggleEoMode('attack')" style="font-size:0.8rem;padding:0.35rem 0.8rem;">Attack Mode</button>
+              <span id="eo-mode-text" style="color:#888;font-size:0.82rem;flex:1;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Captain EO Chart -->
+        <div class="section" id="eo-chart-section" style="display:none;">
+          <div class="section-title blue">Captain EO Breakdown</div>
+          <canvas id="eo-captain-chart" width="700" height="280" style="max-width:100%;"></canvas>
+        </div>
+
+        <!-- League comparison -->
+        <div class="section" id="eo-league-section" style="display:none;">
+          <div class="section-title blue">Mini-League EO Comparison</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Player</th><th class="right">Global EO%</th><th class="right">Rivals Owning</th><th class="right">League Own%</th></tr></thead>
+              <tbody id="eo-league-body"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="loader" id="eo-loader"><div class="spinner"></div><div class="loader-text">Modelling ownership...</div></div>
         <div id="eo-error"></div>
         <div id="eo-content" style="display:none;">
           <div class="section">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Own%</th><th class="right">Capt%</th><th class="right">EO%</th><th class="right">EP</th><th class="right" style="color:#51cf66">Haul+</th><th class="right" style="color:#ff6b6b">Miss-</th></tr></thead>
+                <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Own%</th><th class="right">Capt%</th><th class="right">EO%</th><th class="right">EP</th><th class="right" style="color:#51cf66">Haul+</th><th class="right" style="color:#ff6b6b">Miss-</th><th>Status</th></tr></thead>
                 <tbody id="eo-body"></tbody>
               </table>
             </div>
@@ -1257,7 +1317,7 @@
           <h2>Rank Simulator</h2>
           <span class="draft-badge">Monte Carlo</span>
         </div>
-        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Simulate your expected rank after upcoming GWs based on squad xPts, EO, and variance.</p>
+        <p style="color:#888;font-size:0.82rem;margin-bottom:1rem;">Simulate your expected rank based on per-player variance, EO, and captain choice. Compare decisions before deadline.</p>
         <div class="filters">
           <div class="field" style="max-width:120px;">
             <label>Horizon</label>
@@ -1267,15 +1327,51 @@
               <option value="8">8 GWs</option>
             </select>
           </div>
+          <div class="field" style="max-width:150px;">
+            <label>Captain</label>
+            <select id="ranksim-captain"><option value="">Auto (best EP)</option></select>
+          </div>
+          <div class="field" style="max-width:150px;">
+            <label>Compare vs</label>
+            <select id="ranksim-alt-captain"><option value="">None</option></select>
+          </div>
+          <div class="field" style="max-width:80px;">
+            <label>Hits</label>
+            <select id="ranksim-hits">
+              <option value="0">0</option>
+              <option value="1">-4</option>
+              <option value="2">-8</option>
+              <option value="3">-12</option>
+            </select>
+          </div>
           <div class="field" style="flex:0 0 auto;"><label>&nbsp;</label><button class="btn" onclick="loadRankSim()">Simulate</button></div>
         </div>
         <div class="loader" id="ranksim-loader"><div class="spinner"></div><div class="loader-text">Running simulations...</div></div>
         <div id="ranksim-error"></div>
         <div id="ranksim-content" style="display:none;">
+          <!-- Scenario cards -->
+          <div class="stat-row" id="ranksim-scenarios"></div>
+          <!-- Summary stats -->
           <div class="stat-row" id="ranksim-summary"></div>
+          <!-- Decision comparison -->
+          <div class="section" id="ranksim-comparison" style="display:none;">
+            <div class="section-title blue">Decision Comparison</div>
+            <div id="ranksim-comparison-content"></div>
+          </div>
+          <!-- Histogram -->
           <div class="section">
             <div class="section-title blue">Points Distribution</div>
             <canvas id="ranksim-chart" width="700" height="260" style="max-width:100%;"></canvas>
+          </div>
+          <!-- Player contributions -->
+          <div class="section">
+            <div class="section-title">Player Contributions</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Player</th><th>Team</th><th>Pos</th><th class="right">EP/GW</th><th class="right">Contribution</th><th class="right">EO%</th><th></th></tr></thead>
+                <tbody id="ranksim-players"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1755,6 +1851,14 @@
           <div class="user-info" id="user-info">
             <div class="mgr">Manager: <span id="manager-name"></span></div>
             <div class="tm">Team: <span id="team-name"></span></div>
+            <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:0.5rem;">
+              <span style="color:#888;font-size:0.82rem;">Rank: <strong id="settings-rank" style="color:#4da6ff">-</strong></span>
+              <span style="color:#888;font-size:0.82rem;">Points: <strong id="settings-points" style="color:#00ff87">-</strong></span>
+              <span style="color:#888;font-size:0.82rem;">Value: <strong id="settings-value" style="color:#ffd700">-</strong></span>
+              <span style="color:#888;font-size:0.82rem;">Bank: <strong id="settings-bank" style="color:#ffd700">-</strong></span>
+              <span style="color:#888;font-size:0.82rem;">FTs: <strong id="settings-fts">-</strong></span>
+            </div>
+            <div id="settings-chips" style="margin-top:0.4rem;"></div>
           </div>
           <div class="recent-users" id="recent-users">
             <div class="sec-title">Recent managers</div>
@@ -2129,11 +2233,31 @@ renderRecentUsers();
 // ==================== PERSIST USER ID ====================
 (function restoreUser() {
   const saved = localStorage.getItem('fpl_user_id');
+  const cachedData = localStorage.getItem('fpl_user_data');
+
+  // Show cached data instantly while fresh fetch runs
+  if (saved && cachedData) {
+    try {
+      const cd = JSON.parse(cachedData);
+      $('uhb-name').textContent = cd.manager_name || '';
+      $('uhb-rank').textContent = cd.overall_rank ? cd.overall_rank.toLocaleString() : '-';
+      $('uhb-points').textContent = cd.overall_points || '-';
+      $('uhb-gw-pts').textContent = cd.gw_points || '-';
+      $('uhb-value').textContent = cd.team_value ? cd.team_value + 'M' : '-';
+      $('uhb-bank').textContent = cd.bank ? cd.bank + 'M' : '-';
+      $('uhb-fts').textContent = cd.free_transfers || '1';
+      $('user-header-bar').classList.add('active');
+      if (cd.last_sync) {
+        const ago = Math.round((Date.now() - cd.last_sync) / 60000);
+        $('uhb-last-sync').textContent = ago < 1 ? 'Synced just now' : `Synced ${ago}m ago`;
+      }
+    } catch(e) {}
+  }
+
   if (saved) {
     $('user-id').value = saved;
     setTimeout(async () => {
       await loadUser();
-      // Restore previously selected league
       const savedLeague = localStorage.getItem('fpl_league_id');
       if (savedLeague && loadedUserId) {
         const chip = document.querySelector(`.league-chip[data-id="${savedLeague}"]`);
@@ -2142,6 +2266,23 @@ renderRecentUsers();
     }, 100);
   }
 })();
+
+// Sync button handler
+async function syncUser() {
+  if (!loadedUserId) return;
+  $('uhb-sync-spinner').classList.add('active');
+  $('uhb-sync-btn').disabled = true;
+  $('user-id').value = loadedUserId;
+  try {
+    await loadUser();
+    dashLoaded = false;
+    const activePanel = document.querySelector('.nav-panel.active');
+    if (activePanel) switchNav(activePanel.id);
+  } finally {
+    $('uhb-sync-spinner').classList.remove('active');
+    $('uhb-sync-btn').disabled = false;
+  }
+}
 
 // ==================== FIXTURE TICKER ====================
 async function loadTicker() {
@@ -2209,6 +2350,45 @@ async function loadUser() {
     $('manager-name').textContent = data.manager_name;
     $('team-name').textContent = data.team_name;
     $('user-info').classList.add('active');
+
+    // Update persistent header bar
+    $('uhb-name').textContent = data.manager_name;
+    $('uhb-rank').textContent = data.overall_rank ? data.overall_rank.toLocaleString() : '-';
+    $('uhb-points').textContent = data.overall_points || '-';
+    $('uhb-gw-pts').textContent = data.gw_points || '-';
+    $('uhb-value').textContent = data.team_value ? data.team_value + 'M' : '-';
+    $('uhb-bank').textContent = data.bank ? data.bank + 'M' : '-';
+    $('uhb-fts').textContent = data.free_transfers || '1';
+    $('user-header-bar').classList.add('active');
+
+    // Chips display
+    const chipNameMap = {wildcard: 'WC', freehit: 'FH', bboost: 'BB', '3xc': 'TC'};
+    let chipsHtml = '';
+    if (data.chips_available) {
+      data.chips_available.forEach(c => { chipsHtml += `<span class="chip-badge available">${chipNameMap[c] || c}</span>`; });
+    }
+    if (data.chips_used) {
+      data.chips_used.forEach(c => { chipsHtml += `<span class="chip-badge used" title="Used GW${c.event}">${chipNameMap[c.name] || c.name}</span>`; });
+    }
+    $('uhb-chips').innerHTML = chipsHtml;
+    $('settings-chips').innerHTML = chipsHtml;
+
+    // Settings panel values
+    $('settings-rank').textContent = data.overall_rank ? data.overall_rank.toLocaleString() : '-';
+    $('settings-points').textContent = data.overall_points || '-';
+    $('settings-value').textContent = data.team_value ? data.team_value + 'M' : '-';
+    $('settings-bank').textContent = data.bank ? data.bank + 'M' : '-';
+    $('settings-fts').textContent = data.free_transfers || '1';
+
+    // Cache user data for instant restore
+    localStorage.setItem('fpl_user_data', JSON.stringify({
+      manager_name: data.manager_name, team_name: data.team_name,
+      overall_rank: data.overall_rank, overall_points: data.overall_points,
+      team_value: data.team_value, bank: data.bank, free_transfers: data.free_transfers,
+      gw_points: data.gw_points, chips_available: data.chips_available,
+      chips_used: data.chips_used, last_sync: Date.now(),
+    }));
+    $('uhb-last-sync').textContent = 'Synced just now';
 
     // Update dashboard welcome
     $('dash-title').textContent = `Welcome, ${data.manager_name}`;
@@ -4648,28 +4828,153 @@ async function loadChipStrategy() {
 }
 
 // ==================== #4 OWNERSHIP & EO ====================
+let eoMode = 'shield';
+function toggleEoMode(mode) {
+  eoMode = mode;
+  const shieldBtn = $('eo-shield-btn'), attackBtn = $('eo-attack-btn');
+  if (mode === 'shield') {
+    shieldBtn.style.background = '#4da6ff'; shieldBtn.style.color = '#0e1117'; shieldBtn.className = 'btn';
+    attackBtn.style.background = ''; attackBtn.style.color = ''; attackBtn.className = 'btn-outline';
+  } else {
+    attackBtn.style.background = '#ff6b6b'; attackBtn.style.color = '#0e1117'; attackBtn.className = 'btn';
+    shieldBtn.style.background = ''; shieldBtn.style.color = ''; shieldBtn.className = 'btn-outline';
+  }
+  $('eo-mode-text').textContent = mode === 'shield'
+    ? 'Showing players you MUST own to protect rank. Missing these = risk.'
+    : 'Showing differential opportunities. Owning these when they haul = big rank gain.';
+}
+
 async function loadOwnership() {
   const loader = $('eo-loader'), content = $('eo-content'), err = $('eo-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+  $('eo-personal').style.display = 'none';
+  $('eo-chart-section').style.display = 'none';
+  $('eo-league-section').style.display = 'none';
+
+  let url = '/api/ownership';
+  const params = [];
+  if (loadedUserId) params.push(`user_id=${loadedUserId}`);
+  const savedLeague = localStorage.getItem('fpl_league_id');
+  if (savedLeague && loadedUserId) params.push(`league_id=${savedLeague}`);
+  if (params.length) url += '?' + params.join('&');
+
   try {
-    const resp = await fetch('/api/ownership');
+    const resp = await fetch(url);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
-    $('eo-body').innerHTML = data.players.map((p, i) => `<tr>
-      <td>${i + 1}</td>
-      <td><strong>${p.name}</strong></td>
-      <td>${p.team_name}</td>
-      <td><span class="pos">${p.position_name}</span></td>
-      <td class="right">${p.ownership}%</td>
-      <td class="right" style="color:#ffd700">${p.captain_rate}%</td>
-      <td class="right" style="color:#4da6ff;font-weight:600">${p.effective_ownership}%</td>
-      <td class="right">${p.ep_next}</td>
-      <td class="right" style="color:#51cf66">+${p.haul_swing_own}</td>
-      <td class="right" style="color:#ff6b6b">${p.haul_swing_miss}</td>
-    </tr>`).join('');
+
+    // Main table with status column
+    $('eo-body').innerHTML = data.players.map((p, i) => {
+      const statusCol = p.user_owns !== undefined
+        ? (p.user_owns
+          ? `<td style="color:#00ff87">${p.user_captains ? '(C) Owned' : 'Owned'}</td>`
+          : `<td style="color:#ff6b6b">Missing</td>`)
+        : '<td>-</td>';
+      return `<tr${p.user_owns === false ? ' style="background:rgba(255,107,107,0.06)"' : ''}>
+        <td>${i + 1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td><span class="pos">${p.position_name}</span></td>
+        <td class="right">${p.ownership}%</td>
+        <td class="right" style="color:#ffd700">${p.captain_rate}%</td>
+        <td class="right" style="color:#4da6ff;font-weight:600">${p.effective_ownership}%</td>
+        <td class="right">${p.ep_next}</td>
+        <td class="right" style="color:#51cf66">+${p.haul_swing_own}</td>
+        <td class="right" style="color:#ff6b6b">${p.haul_swing_miss}</td>
+        ${statusCol}
+      </tr>`;
+    }).join('');
+
+    // Personal risk cards
+    if (data.personal_risk) {
+      const pr = data.personal_risk;
+      $('eo-risk-cards').innerHTML = `
+        <div class="stat-card"><div class="label">Shield Score</div><div class="value blue">${pr.shield_score}%</div></div>
+        <div class="stat-card"><div class="label">Attack Score</div><div class="value" style="color:#ff6b6b">${pr.attack_score}%</div></div>
+        <div class="stat-card"><div class="label">Recommendation</div><div class="value" style="color:${pr.recommendation === 'SHIELD' ? '#4da6ff' : '#ff6b6b'}">${pr.recommendation}</div></div>
+        <div class="stat-card"><div class="label">Owned EO Total</div><div class="value">${pr.owned_eo_total}%</div></div>
+      `;
+      $('eo-mode-text').textContent = pr.recommendation_text;
+      $('eo-personal').style.display = '';
+      toggleEoMode(pr.recommendation === 'SHIELD' ? 'shield' : 'attack');
+    }
+
+    // Captain EO chart
+    if (data.captain_chart && data.captain_chart.length) {
+      drawEoCaptainChart(data.captain_chart);
+      $('eo-chart-section').style.display = '';
+    }
+
+    // League comparison
+    if (data.league_comparison) {
+      const lc = data.league_comparison;
+      $('eo-league-body').innerHTML = lc.player_grid.map(p => {
+        const globalEo = data.players.find(dp => dp.id === p.id);
+        return `<tr>
+          <td><strong>${p.name}</strong></td>
+          <td class="right" style="color:#4da6ff">${globalEo ? globalEo.effective_ownership : '?'}%</td>
+          <td class="right">${p.rivals_owning} / ${p.total_rivals}</td>
+          <td class="right" style="color:#ffd700">${p.league_ownership_pct}%</td>
+        </tr>`;
+      }).join('');
+      $('eo-league-section').style.display = '';
+    }
+
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
   finally { loader.classList.remove('active'); }
+}
+
+function drawEoCaptainChart(captainData) {
+  const canvas = $('eo-captain-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const pad = { top: 20, right: 15, bottom: 60, left: 50 };
+  ctx.clearRect(0, 0, w, h);
+  const chartW = w - pad.left - pad.right, chartH = h - pad.top - pad.bottom;
+  const n = captainData.length;
+  const gap = chartW / n;
+  const barW = Math.min(gap * 0.35, 24);
+  const maxEO = Math.max(...captainData.map(d => d.eo), 50);
+
+  // Gridlines
+  for (let gi = 0; gi <= 4; gi++) {
+    const gy = pad.top + chartH - (gi / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(w - pad.right, gy);
+    ctx.strokeStyle = '#1a1f2e'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxEO * gi / 4) + '%', pad.left - 6, gy + 3);
+  }
+
+  captainData.forEach((d, ci) => {
+    const cx = pad.left + ci * gap + gap / 2;
+    // EO bar (blue)
+    const eoH = (d.eo / maxEO) * chartH;
+    const eoY = pad.top + chartH - eoH;
+    ctx.fillStyle = '#4da6ff88';
+    ctx.fillRect(cx - barW, eoY, barW, eoH);
+    // Captain rate bar (gold)
+    const capH = (d.captain_rate / maxEO) * chartH;
+    const capY = pad.top + chartH - capH;
+    ctx.fillStyle = '#ffd700aa';
+    ctx.fillRect(cx, capY, barW, capH);
+    // Value labels
+    ctx.fillStyle = '#e6e6e6'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(d.eo + '%', cx - barW / 2, eoY - 5);
+    ctx.fillStyle = '#ffd700'; ctx.fillText(d.captain_rate + '%', cx + barW / 2, capY - 5);
+    // Player name (rotated)
+    ctx.save(); ctx.translate(cx, h - pad.bottom + 8); ctx.rotate(-Math.PI / 5);
+    ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(d.name, 0, 0); ctx.restore();
+  });
+
+  // Legend
+  ctx.fillStyle = '#4da6ff'; ctx.fillRect(w - 150, 8, 12, 12);
+  ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('EO%', w - 134, 18);
+  ctx.fillStyle = '#ffd700'; ctx.fillRect(w - 80, 8, 12, 12);
+  ctx.fillStyle = '#888'; ctx.fillText('Capt%', w - 64, 18);
 }
 
 // ==================== #6 TRANSFER GAIN VS HIT ====================
@@ -4787,26 +5092,110 @@ async function loadFixtureSwing() {
 }
 
 // ==================== #9 RANK SIMULATOR ====================
+function populateRankSimCaptains(players) {
+  const sel1 = $('ranksim-captain'), sel2 = $('ranksim-alt-captain');
+  sel1.innerHTML = '<option value="">Auto (best EP)</option>';
+  sel2.innerHTML = '<option value="">None</option>';
+  if (!players) return;
+  players.forEach(p => {
+    const opt = `<option value="${p.id}">${p.name} (${p.ep_next})</option>`;
+    sel1.innerHTML += opt;
+    sel2.innerHTML += opt;
+  });
+}
+
 async function loadRankSim() {
   if (!loadedUserId) { $('ranksim-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('ranksim-loader'), content = $('ranksim-content'), err = $('ranksim-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
+
   const horizon = $('ranksim-horizon').value;
+  const captainId = $('ranksim-captain').value;
+  const altCaptainId = $('ranksim-alt-captain').value;
+  const hits = $('ranksim-hits').value;
+
+  let url = `/api/rank-simulation/${loadedUserId}?horizon=${horizon}&sims=2000&hits=${hits}`;
+  if (captainId) url += `&captain_id=${captainId}`;
+  if (altCaptainId) url += `&alt_captain_id=${altCaptainId}`;
+
   try {
-    const resp = await fetch(`/api/rank-simulation/${loadedUserId}?horizon=${horizon}&sims=2000`);
+    const resp = await fetch(url);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
     const pp = data.projected_points;
+    const sc = data.scenarios;
+
+    // Scenario cards
+    $('ranksim-scenarios').innerHTML = `
+      <div class="stat-card" style="border-top:3px solid #ff6b6b">
+        <div class="label">Pessimistic (P10)</div>
+        <div class="value" style="color:#ff6b6b">${sc.pessimistic.rank.toLocaleString()}</div>
+        <div style="color:#888;font-size:0.75rem">${sc.pessimistic.points} pts</div>
+      </div>
+      <div class="stat-card" style="border-top:3px solid #4da6ff">
+        <div class="label">Expected (P50)</div>
+        <div class="value blue">${sc.expected.rank.toLocaleString()}</div>
+        <div style="color:#888;font-size:0.75rem">${sc.expected.points} pts</div>
+      </div>
+      <div class="stat-card" style="border-top:3px solid #00ff87">
+        <div class="label">Optimistic (P90)</div>
+        <div class="value" style="color:#00ff87">${sc.optimistic.rank.toLocaleString()}</div>
+        <div style="color:#888;font-size:0.75rem">${sc.optimistic.points} pts</div>
+      </div>
+    `;
+
+    // Summary stats
     const rankDir = data.projected_rank_change <= 0 ? 'color:#00ff87' : 'color:#ff6b6b';
-    const rankArrow = data.projected_rank_change <= 0 ? '↑' : '↓';
+    const rankArrow = data.projected_rank_change <= 0 ? '\u2191' : '\u2193';
     $('ranksim-summary').innerHTML = `
       <div class="stat-card"><div class="label">Current Rank</div><div class="value blue">${data.current_rank.toLocaleString()}</div></div>
-      <div class="stat-card"><div class="label">Current Pts</div><div class="value">${data.current_points}</div></div>
+      <div class="stat-card"><div class="label">Captain</div><div class="value" style="color:#ffd700;font-size:0.9rem">${data.captain_name || 'Auto'}</div></div>
       <div class="stat-card"><div class="label">Squad EP/GW</div><div class="value">${data.squad_ep_per_gw}</div></div>
-      <div class="stat-card"><div class="label">Projected Rank</div><div class="value" style="${rankDir}">${rankArrow} ${data.projected_rank.toLocaleString()}</div></div>
-      <div class="stat-card"><div class="label">Median Pts</div><div class="value">${pp.median}</div></div>
-      <div class="stat-card"><div class="label">P10–P90</div><div class="value" style="font-size:0.9rem">${pp.p10} – ${pp.p90}</div></div>
+      <div class="stat-card"><div class="label">Hits Cost</div><div class="value" style="color:#ff6b6b">-${data.hits * 4}</div></div>
+      <div class="stat-card"><div class="label">P10\u2013P90 Range</div><div class="value" style="font-size:0.9rem">${pp.p10} \u2013 ${pp.p90}</div></div>
     `;
+
+    // Decision comparison
+    if (data.comparison) {
+      const c = data.comparison;
+      const winner = c.recommendation;
+      $('ranksim-comparison-content').innerHTML = `
+        <div class="stat-row">
+          <div class="stat-card" style="border-top:3px solid ${winner === 'A' ? '#00ff87' : '#2a2f3e'}">
+            <div class="label">Option A: ${c.option_a.captain_name} (C)</div>
+            <div class="value" style="color:${winner === 'A' ? '#00ff87' : '#4da6ff'}">${c.option_a.projected_rank.toLocaleString()}</div>
+            <div style="color:#888;font-size:0.75rem">Median: ${c.option_a.median_points} | Range: ${c.option_a.p10}\u2013${c.option_a.p90}</div>
+          </div>
+          <div class="stat-card" style="border-top:3px solid ${winner === 'B' ? '#00ff87' : '#2a2f3e'}">
+            <div class="label">Option B: ${c.option_b.captain_name} (C)</div>
+            <div class="value" style="color:${winner === 'B' ? '#00ff87' : '#4da6ff'}">${c.option_b.projected_rank.toLocaleString()}</div>
+            <div style="color:#888;font-size:0.75rem">Median: ${c.option_b.median_points} | Range: ${c.option_b.p10}\u2013${c.option_b.p90}</div>
+          </div>
+        </div>
+        <div style="text-align:center;color:#888;font-size:0.85rem;margin-top:0.5rem;">
+          Median difference: <strong style="color:#00ff87">${Math.abs(c.median_diff)} pts</strong> in favour of
+          <strong style="color:#ffd700">Option ${c.recommendation}</strong>
+        </div>
+      `;
+      $('ranksim-comparison').style.display = '';
+    } else {
+      $('ranksim-comparison').style.display = 'none';
+    }
+
+    // Player contributions
+    if (data.player_contributions) {
+      $('ranksim-players').innerHTML = data.player_contributions.map(p => `<tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.team_name}</td>
+        <td><span class="pos">${p.position_name}</span></td>
+        <td class="right">${p.ep_next}</td>
+        <td class="right score">${p.ep_contribution}</td>
+        <td class="right">${p.eo}%</td>
+        <td>${p.is_captain ? '<span style="color:#ffd700;font-weight:700">(C)</span>' : ''}</td>
+      </tr>`).join('');
+      populateRankSimCaptains(data.player_contributions);
+    }
+
     drawRankHistogram(data.histogram);
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
