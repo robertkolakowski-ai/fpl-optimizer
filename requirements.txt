@@ -1,0 +1,6 @@
+httpx
+pulp
+pandas
+rich
+jinja2
+flask

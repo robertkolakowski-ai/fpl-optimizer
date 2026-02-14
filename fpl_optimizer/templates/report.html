@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPL Optimizer Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0e1117; color: #e6e6e6; padding: 2rem; }
+  h1 { text-align: center; color: #00ff87; margin-bottom: 0.5rem; font-size: 1.8rem; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+  .summary { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+  .stat-card { background: #1a1f2e; border-radius: 8px; padding: 1rem 1.5rem; text-align: center; min-width: 140px; }
+  .stat-card .label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
+  .stat-card .value { color: #00ff87; font-size: 1.4rem; font-weight: bold; margin-top: 0.3rem; }
+  h2 { color: #00ff87; margin: 1.5rem 0 0.8rem; font-size: 1.2rem; border-bottom: 1px solid #2a2f3e; padding-bottom: 0.4rem; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  th { background: #1a1f2e; color: #00ff87; text-align: left; padding: 0.6rem 0.8rem; font-size: 0.8rem; text-transform: uppercase; }
+  td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #1a1f2e; font-size: 0.9rem; }
+  tr:hover { background: #1a1f2e; }
+  .pos { font-weight: bold; color: #4da6ff; }
+  .score { color: #00ff87; font-weight: bold; }
+  .cost { color: #ffd700; }
+  .out { color: #ff6b6b; }
+  .in { color: #51cf66; }
+  .right { text-align: right; }
+  .section { background: #13161f; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<h1>FPL Optimizer Report</h1>
+<p class="subtitle">Generated {{ generated_at }}</p>
+
+<div class="summary">
+  <div class="stat-card">
+    <div class="label">Total Cost</div>
+    <div class="value">{{ "%.1f"|format(squad.total_cost) }}M</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Remaining</div>
+    <div class="value">{{ "%.1f"|format(squad.budget_remaining) }}M</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Squad Score</div>
+    <div class="value">{{ "%.3f"|format(total_score) }}</div>
+  </div>
+</div>
+
+<div class="section">
+<h2>Starting XI</h2>
+<table>
+  <thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+  <tbody>
+  {% for p in squad.starting %}
+  <tr>
+    <td class="pos">{{ p.position_name }}</td>
+    <td>{{ p.name }}</td>
+    <td>{{ teams[p.team].short_name }}</td>
+    <td class="right cost">{{ "%.1f"|format(p.cost) }}</td>
+    <td class="right">{{ "%.1f"|format(p.form) }}</td>
+    <td class="right">{{ "%.1f"|format(p.points_per_game) }}</td>
+    <td class="right">{{ "%.1f"|format(p.xG) }}</td>
+    <td class="right">{{ "%.1f"|format(p.xA) }}</td>
+    <td class="right score">{{ "%.3f"|format(p.composite_score) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="section">
+<h2>Bench</h2>
+<table>
+  <thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+  <tbody>
+  {% for p in squad.bench %}
+  <tr>
+    <td class="pos">{{ p.position_name }}</td>
+    <td>{{ p.name }}</td>
+    <td>{{ teams[p.team].short_name }}</td>
+    <td class="right cost">{{ "%.1f"|format(p.cost) }}</td>
+    <td class="right score">{{ "%.3f"|format(p.composite_score) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if transfers %}
+<div class="section">
+<h2>Transfer Suggestions</h2>
+<table>
+  <thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost Change</th></tr></thead>
+  <tbody>
+  {% for s in transfers %}
+  <tr>
+    <td>{{ loop.index }}</td>
+    <td class="out">{{ s.player_out.name }} ({{ "%.1f"|format(s.player_out.cost) }})</td>
+    <td class="in">{{ s.player_in.name }} ({{ "%.1f"|format(s.player_in.cost) }})</td>
+    <td class="right score">+{{ "%.3f"|format(s.score_gain) }}</td>
+    <td class="right">{{ "%+.1f"|format(s.cost_change) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% for pos_name, pos_players in top_by_position.items() %}
+<div class="section">
+<h2>Top 10 {{ pos_name }}</h2>
+<table>
+  <thead><tr><th>#</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+  <tbody>
+  {% for p in pos_players %}
+  <tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ p.name }}</td>
+    <td>{{ teams[p.team].short_name }}</td>
+    <td class="right cost">{{ "%.1f"|format(p.cost) }}</td>
+    <td class="right">{{ "%.1f"|format(p.form) }}</td>
+    <td class="right">{{ "%.1f"|format(p.xG) }}</td>
+    <td class="right">{{ "%.1f"|format(p.xA) }}</td>
+    <td class="right score">{{ "%.3f"|format(p.composite_score) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endfor %}
+
+</body>
+</html>

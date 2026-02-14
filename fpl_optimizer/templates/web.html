@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPL Optimizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0e1117; color: #e6e6e6; min-height: 100vh; padding-bottom: 70px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+
+  /* Header */
+  .header { text-align: center; padding: 1.2rem 0 0.5rem; }
+  .header h1 { color: #00ff87; font-size: 1.6rem; margin-bottom: 0.2rem; }
+  .header .subtitle { color: #888; font-size: 0.85rem; }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .right { text-align: right; }
+  .pos { font-weight: bold; color: #4da6ff; }
+  .score { color: #00ff87; font-weight: bold; }
+  .cost { color: #ffd700; }
+  .out { color: #ff6b6b; }
+  .in { color: #51cf66; }
+
+  /* Fields & Buttons */
+  .field label { display: block; color: #888; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.3rem; letter-spacing: 0.03em; }
+  .field input, .field select { width: 100%; background: #0e1117; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.9rem; }
+  .field input:focus, .field select:focus { outline: none; border-color: #00ff87; }
+  .slider-value { color: #00ff87; font-weight: bold; }
+  input[type="range"] { -webkit-appearance: none; height: 6px; border-radius: 3px; background: #2a2f3e; border: none; padding: 0; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00ff87; cursor: pointer; }
+
+  .btn { background: #00ff87; color: #0e1117; border: none; border-radius: 6px; padding: 0.5rem 1.3rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-blue { background: #4da6ff; color: #0e1117; border: none; border-radius: 6px; padding: 0.5rem 1.3rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .btn-blue:hover { opacity: 0.85; }
+  .btn-blue:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+  .btn-outline { background: transparent; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+  .btn-outline:hover { border-color: #4da6ff; color: #4da6ff; }
+
+  /* User bar */
+  .user-bar { background: #13161f; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  .user-bar-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; }
+  .user-bar-header .title { color: #4da6ff; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .user-bar-row { display: flex; gap: 0.6rem; align-items: end; flex-wrap: wrap; }
+  .user-bar-row .field { flex: 0 1 180px; min-width: 120px; }
+  .user-info { display: none; margin-top: 0.8rem; padding: 0.6rem 0.8rem; background: #1a1f2e; border-radius: 6px; border-left: 3px solid #4da6ff; }
+  .user-info.active { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .user-info .mgr { font-weight: 500; }
+  .user-info .mgr span { color: #4da6ff; }
+  .user-info .tm { color: #888; font-size: 0.85rem; }
+  .user-error { display: none; margin-top: 0.5rem; color: #ff6b6b; font-size: 0.82rem; padding: 0.4rem 0.6rem; background: #2d1b1b; border-radius: 4px; }
+  .user-error.active { display: block; }
+  .help-text { color: #555; font-size: 0.72rem; margin-top: 0.2rem; }
+  .inline-spinner { display: none; width: 16px; height: 16px; border: 2px solid #2a2f3e; border-top-color: #4da6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .inline-spinner.active { display: inline-block; }
+
+  /* Leagues */
+  .leagues-section { display: none; margin-top: 0.8rem; }
+  .leagues-section.active { display: block; }
+  .leagues-section .sec-title { color: #4da6ff; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.4rem; font-weight: 600; }
+  .league-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .league-chip { background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+  .league-chip:hover { border-color: #4da6ff; background: #1e2640; }
+  .league-chip.active { border-color: #4da6ff; background: #1a2540; color: #4da6ff; }
+
+  .league-standings { display: none; margin-top: 0.8rem; }
+  .league-standings.active { display: block; }
+  .league-standings .league-title { color: #4da6ff; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+
+  /* Nav tabs */
+  .nav-tabs { display: flex; gap: 0; border-bottom: 2px solid #2a2f3e; margin-bottom: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-tab { padding: 0.6rem 1rem; cursor: pointer; color: #888; font-size: 0.85rem; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .nav-tab:hover { color: #e6e6e6; }
+  .nav-tab.active { color: #00ff87; border-bottom-color: #00ff87; }
+  .nav-panel { display: none; }
+  .nav-panel.active { display: block; }
+
+  /* Mobile bottom nav */
+  .bottom-nav { display: none; }
+  @media (max-width: 768px) {
+    .nav-tabs { display: none; }
+    .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #13161f; border-top: 1px solid #2a2f3e; z-index: 100; }
+    .bottom-nav .bnav-item { flex: 1; text-align: center; padding: 0.6rem 0.2rem; font-size: 0.7rem; color: #888; cursor: pointer; transition: color 0.15s; }
+    .bottom-nav .bnav-item.active { color: #00ff87; }
+    .bottom-nav .bnav-icon { font-size: 1.2rem; display: block; margin-bottom: 0.1rem; }
+  }
+
+  /* Sections & cards */
+  .section { background: #13161f; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+  .section-title { color: #00ff87; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.8rem; }
+  .section-title.blue { color: #4da6ff; }
+  .stat-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .stat-card { background: #1a1f2e; border-radius: 8px; padding: 0.7rem 1rem; text-align: center; flex: 1; min-width: 100px; }
+  .stat-card .label { color: #888; font-size: 0.7rem; text-transform: uppercase; }
+  .stat-card .value { color: #00ff87; font-size: 1.2rem; font-weight: bold; margin-top: 0.15rem; }
+  .stat-card .value.blue { color: #4da6ff; }
+  .stat-card .value.red { color: #ff6b6b; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  th { background: #1a1f2e; color: #00ff87; text-align: left; padding: 0.5rem 0.6rem; font-size: 0.72rem; text-transform: uppercase; position: sticky; top: 0; }
+  td { padding: 0.4rem 0.6rem; border-bottom: 1px solid #1a1f2e; font-size: 0.85rem; }
+  tr:hover { background: rgba(26,31,46,0.5); }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: #e6e6e6; }
+  th.sortable.sort-asc::after { content: " \u25B2"; font-size: 0.65rem; }
+  th.sortable.sort-desc::after { content: " \u25BC"; font-size: 0.65rem; }
+
+  /* Sub-tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #2a2f3e; margin-bottom: 0.8rem; overflow-x: auto; }
+  .tab { padding: 0.5rem 1rem; cursor: pointer; color: #888; font-size: 0.82rem; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .tab:hover { color: #e6e6e6; }
+  .tab.active { color: #00ff87; border-bottom-color: #00ff87; }
+  .tab.user-tab.active { color: #4da6ff; border-bottom-color: #4da6ff; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Loader */
+  .loader { display: none; text-align: center; padding: 2rem; }
+  .loader.active { display: block; }
+  .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #2a2f3e; border-top-color: #00ff87; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { color: #888; margin-top: 0.5rem; font-size: 0.82rem; }
+  .error-msg { background: #2d1b1b; border: 1px solid #ff6b6b; color: #ff6b6b; border-radius: 8px; padding: 0.8rem 1.2rem; text-align: center; margin: 1rem 0; }
+
+  /* Filters bar */
+  .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: end; }
+  .filters .field { flex: 1; min-width: 120px; }
+  .filters select, .filters input[type="text"] { width: 100%; background: #0e1117; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.9rem; }
+
+  /* Settings */
+  .settings { background: #1a1f2e; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
+
+  /* FDR Heatmap */
+  .fdr-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fdr-grid table { min-width: 600px; }
+  .fdr-grid th, .fdr-grid td { text-align: center; padding: 0.35rem 0.3rem; font-size: 0.78rem; }
+  .fdr-grid th { font-size: 0.7rem; }
+  .fdr-grid .team-col { text-align: left; font-weight: 600; min-width: 50px; position: sticky; left: 0; background: #1a1f2e; z-index: 1; }
+  .fdr-cell { border-radius: 4px; padding: 0.25rem 0.15rem; font-weight: 600; font-size: 0.75rem; line-height: 1.3; }
+  .fdr-1 { background: #375523; color: #e6e6e6; }
+  .fdr-2 { background: #01fc7a; color: #0e1117; }
+  .fdr-3 { background: #888; color: #fff; }
+  .fdr-4 { background: #ff6b6b; color: #fff; }
+  .fdr-5 { background: #a01818; color: #fff; }
+  .fdr-home { font-size: 0.65rem; }
+
+  /* Radar chart (canvas) */
+  .compare-container { display: flex; gap: 1rem; flex-wrap: wrap; align-items: start; }
+  .compare-container canvas { flex: 0 0 280px; max-width: 100%; }
+  .compare-table { flex: 1; min-width: 250px; }
+  .compare-search { display: flex; gap: 0.5rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem; }
+  .compare-search .field { flex: 1; min-width: 150px; }
+  .compare-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; min-height: 28px; }
+  .compare-chip { background: #1a1f2e; border: 1px solid #4da6ff; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.8rem; color: #4da6ff; display: flex; align-items: center; gap: 0.3rem; }
+  .compare-chip .remove { cursor: pointer; font-size: 1rem; line-height: 1; opacity: 0.7; }
+  .compare-chip .remove:hover { opacity: 1; }
+  .compare-results { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .compare-pick { background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+  .compare-pick:hover { border-color: #4da6ff; }
+
+  /* Price changes */
+  .price-card { display: flex; align-items: center; justify-content: space-between; background: #1a1f2e; border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 0.4rem; }
+  .price-card .player-info { flex: 1; }
+  .price-card .player-name { font-weight: 500; font-size: 0.85rem; }
+  .price-card .player-meta { color: #888; font-size: 0.75rem; }
+  .price-card .transfer-stat { text-align: right; min-width: 80px; }
+  .price-card .net-positive { color: #51cf66; font-weight: bold; }
+  .price-card .net-negative { color: #ff6b6b; font-weight: bold; }
+
+  /* Live points */
+  .live-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-top: 0.8rem; }
+  .live-card { background: #1a1f2e; border-radius: 8px; padding: 0.6rem; text-align: center; position: relative; }
+  .live-card.bench { opacity: 0.5; }
+  .live-card .lp-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.15rem; }
+  .live-card .lp-team { color: #888; font-size: 0.72rem; }
+  .live-card .lp-pts { font-size: 1.3rem; font-weight: bold; color: #00ff87; margin-top: 0.3rem; }
+  .live-card .lp-captain { position: absolute; top: 4px; right: 6px; font-size: 0.7rem; background: #ffd700; color: #0e1117; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; font-weight: bold; }
+  .live-card .lp-vice { position: absolute; top: 4px; right: 6px; font-size: 0.7rem; background: #888; color: #0e1117; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; font-weight: bold; }
+  .live-card .lp-detail { font-size: 0.7rem; color: #888; margin-top: 0.2rem; }
+
+  /* Rival comparison */
+  .rival-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.8rem; }
+  @media (max-width: 600px) { .rival-cols { grid-template-columns: 1fr; } }
+  .rival-col .rival-header { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid #2a2f3e; }
+  .rival-player { padding: 0.25rem 0; font-size: 0.82rem; display: flex; justify-content: space-between; }
+  .shared-list { margin-top: 0.5rem; }
+  .shared-list .shared-header { color: #888; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.3rem; }
+
+  /* Fixture cards */
+  .fixture-card { background: #1a1f2e; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between; }
+  .fixture-team { flex: 1; font-weight: 500; font-size: 0.85rem; }
+  .fixture-team.home { text-align: right; padding-right: 0.8rem; }
+  .fixture-team.away { text-align: left; padding-left: 0.8rem; }
+  .fixture-score { font-size: 1.1rem; font-weight: bold; color: #00ff87; min-width: 50px; text-align: center; }
+  .fixture-vs { font-size: 0.85rem; color: #888; min-width: 50px; text-align: center; }
+  .difficulty { display: inline-block; width: 20px; height: 20px; border-radius: 4px; text-align: center; line-height: 20px; font-size: 0.65rem; font-weight: bold; color: #fff; margin-left: 0.3rem; }
+  .difficulty.away-badge { margin-left: 0; margin-right: 0.3rem; }
+  .diff-1 { background: #375523; } .diff-2 { background: #01fc7a; color: #0e1117; } .diff-3 { background: #888; } .diff-4 { background: #ff6b6b; } .diff-5 { background: #a01818; }
+  .gw-header { color: #00ff87; font-size: 1rem; font-weight: 600; margin: 1.2rem 0 0.6rem; padding-bottom: 0.2rem; border-bottom: 1px solid #2a2f3e; }
+  .gw-badge { font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-weight: 500; }
+  .gw-badge.current { background: #00ff87; color: #0e1117; } .gw-badge.next { background: #4da6ff; color: #0e1117; } .gw-badge.finished { background: #2a2f3e; color: #888; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { padding: 0.5rem 0.5rem 2rem; }
+    .settings-grid { grid-template-columns: 1fr 1fr; }
+    .stat-card { min-width: 80px; padding: 0.5rem; }
+    .stat-card .value { font-size: 1rem; }
+    td { font-size: 0.78rem; padding: 0.35rem 0.4rem; }
+    th { font-size: 0.68rem; padding: 0.4rem; }
+    .section { padding: 0.8rem; }
+    .user-bar { padding: 0.8rem; }
+    .live-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>FPL Optimizer</h1>
+    <p class="subtitle">Fantasy Premier League analytics & squad optimization</p>
+  </div>
+
+  <!-- User Bar -->
+  <div class="user-bar">
+    <div class="user-bar-header">
+      <span class="title">My FPL Account</span>
+      <span class="inline-spinner" id="user-spinner"></span>
+    </div>
+    <div class="user-bar-row">
+      <div class="field">
+        <label>FPL User ID</label>
+        <input type="text" id="user-id" placeholder="e.g. 1234567" onkeydown="if(event.key==='Enter')loadUser()">
+        <div class="help-text">Find your ID in the FPL website URL</div>
+      </div>
+      <button class="btn-blue" id="load-user-btn" onclick="loadUser()">Load</button>
+    </div>
+    <div class="user-error" id="user-error"></div>
+    <div class="user-info" id="user-info">
+      <div class="mgr">Manager: <span id="manager-name"></span></div>
+      <div class="tm">Team: <span id="team-name"></span></div>
+    </div>
+    <div class="leagues-section" id="leagues-section">
+      <div class="sec-title">Leagues</div>
+      <div class="league-list" id="league-list"></div>
+    </div>
+    <div class="league-standings" id="league-standings">
+      <div class="league-title"><span id="league-title-text"></span> <span class="inline-spinner" id="league-spinner"></span></div>
+      <div class="table-wrap">
+        <table id="league-table" class="hidden">
+          <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="right">GW</th><th class="right">Total</th><th></th></tr></thead>
+          <tbody id="league-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-level nav (desktop) -->
+  <div class="nav-tabs" id="desktop-nav">
+    <div class="nav-tab active" data-nav="optimizer" onclick="switchNav('optimizer')">Optimizer</div>
+    <div class="nav-tab" data-nav="live" onclick="switchNav('live')">Live GW</div>
+    <div class="nav-tab" data-nav="players" onclick="switchNav('players')">Players</div>
+    <div class="nav-tab" data-nav="fdr" onclick="switchNav('fdr')">FDR</div>
+    <div class="nav-tab" data-nav="captain" onclick="switchNav('captain')">Captain</div>
+    <div class="nav-tab" data-nav="prices" onclick="switchNav('prices')">Prices</div>
+    <div class="nav-tab" data-nav="differentials" onclick="switchNav('differentials')">Differentials</div>
+    <div class="nav-tab" data-nav="compare" onclick="switchNav('compare')">Compare</div>
+    <div class="nav-tab" data-nav="fixtures" onclick="switchNav('fixtures')">Fixtures</div>
+  </div>
+
+  <!-- ==================== OPTIMIZER ==================== -->
+  <div class="nav-panel active" id="nav-optimizer">
+    <div class="settings">
+      <div class="section-title">Optimizer Settings</div>
+      <div class="settings-grid">
+        <div class="field">
+          <label>Budget: <span class="slider-value" id="budget-display">100.0</span>M</label>
+          <input type="range" id="budget" min="80" max="105" step="0.5" value="100">
+        </div>
+        <div class="field">
+          <label>Fixture Lookahead</label>
+          <select id="lookahead">
+            <option value="3">3 GWs</option>
+            <option value="5" selected>5 GWs</option>
+            <option value="8">8 GWs</option>
+            <option value="10">10 GWs</option>
+          </select>
+        </div>
+        <button class="btn" id="run-btn" onclick="runOptimizer()">Optimize</button>
+      </div>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <div class="loader-text">Fetching data & optimizing squad...</div>
+    </div>
+    <div id="error"></div>
+
+    <div id="results" class="hidden">
+      <div class="tabs" id="tab-bar">
+        <div class="tab active" data-tab="optimal" onclick="switchTab('optimal')">Optimal Squad</div>
+        <div class="tab" data-tab="top-players" onclick="switchTab('top-players')">Top Players</div>
+      </div>
+
+      <div class="tab-content active" id="tab-optimal">
+        <div class="stat-row" id="summary"></div>
+        <div class="section">
+          <div class="section-title">Starting XI</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+            <tbody id="starting-body"></tbody></table>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Bench</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+            <tbody id="bench-body"></tbody></table>
+          </div>
+        </div>
+        <div class="section hidden" id="transfers-section">
+          <div class="section-title">Transfer Suggestions</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
+            <tbody id="transfers-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-my-team">
+        <div class="stat-row" id="user-summary"></div>
+        <div class="section">
+          <div class="section-title blue">My Starting XI</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+            <tbody id="user-starting-body"></tbody></table>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title blue">My Bench</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+            <tbody id="user-bench-body"></tbody></table>
+          </div>
+        </div>
+        <div class="section hidden" id="user-transfers-section">
+          <div class="section-title blue">Suggested Transfers</div>
+          <div class="table-wrap">
+            <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
+            <tbody id="user-transfers-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-top-players">
+        <div id="top-players-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LIVE GW ==================== -->
+  <div class="nav-panel" id="nav-live">
+    <div class="section">
+      <div class="section-title blue">Live Gameweek Points</div>
+      <p id="live-no-user" style="color:#888;font-size:0.85rem;">Load your FPL User ID above to see live points.</p>
+      <div id="live-content" class="hidden">
+        <div class="stat-row" id="live-stats"></div>
+        <div class="section-title" style="margin-top:0.5rem">Starting XI</div>
+        <div class="live-grid" id="live-starting"></div>
+        <div class="section-title" style="margin-top:1rem;opacity:0.5">Bench</div>
+        <div class="live-grid" id="live-bench"></div>
+      </div>
+      <div class="loader" id="live-loader"><div class="spinner"></div><div class="loader-text">Loading live data...</div></div>
+    </div>
+  </div>
+
+  <!-- ==================== PLAYERS ==================== -->
+  <div class="nav-panel" id="nav-players">
+    <div class="section">
+      <div class="filters">
+        <div class="field" style="flex:2">
+          <label>Search</label>
+          <input type="text" id="player-search" placeholder="Player name..." oninput="debouncedLoadPlayers()">
+        </div>
+        <div class="field">
+          <label>Position</label>
+          <select id="player-pos-filter" onchange="loadPlayers()">
+            <option value="">All</option>
+            <option value="GK">GK</option>
+            <option value="DEF">DEF</option>
+            <option value="MID">MID</option>
+            <option value="FWD">FWD</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Team</label>
+          <select id="player-team-filter" onchange="loadPlayers()">
+            <option value="">All</option>
+          </select>
+        </div>
+      </div>
+      <div class="loader" id="players-loader"><div class="spinner"></div><div class="loader-text">Loading players...</div></div>
+      <div class="table-wrap">
+        <table id="players-table" class="hidden">
+          <thead><tr>
+            <th class="sortable sort-desc" data-sort="total_points" onclick="sortPlayers(this)">Pts</th>
+            <th>Pos</th>
+            <th class="sortable" data-sort="name" onclick="sortPlayers(this)">Player</th>
+            <th>Team</th>
+            <th class="sortable right" data-sort="cost" onclick="sortPlayers(this)">Cost</th>
+            <th class="sortable right" data-sort="form" onclick="sortPlayers(this)">Form</th>
+            <th class="sortable right" data-sort="points_per_game" onclick="sortPlayers(this)">PPG</th>
+            <th class="sortable right" data-sort="xG" onclick="sortPlayers(this)">xG</th>
+            <th class="sortable right" data-sort="xA" onclick="sortPlayers(this)">xA</th>
+            <th class="sortable right" data-sort="ict_index" onclick="sortPlayers(this)">ICT</th>
+            <th class="sortable right" data-sort="minutes" onclick="sortPlayers(this)">Min</th>
+          </tr></thead>
+          <tbody id="players-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FDR HEATMAP ==================== -->
+  <div class="nav-panel" id="nav-fdr">
+    <div class="section">
+      <div class="section-title">Fixture Difficulty Rating</div>
+      <div style="margin-bottom:0.8rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:0.75rem;color:#888;">KEY:</span>
+        <span class="fdr-cell fdr-1" style="padding:0.2rem 0.5rem;font-size:0.72rem;">1</span>
+        <span class="fdr-cell fdr-2" style="padding:0.2rem 0.5rem;font-size:0.72rem;">2</span>
+        <span class="fdr-cell fdr-3" style="padding:0.2rem 0.5rem;font-size:0.72rem;">3</span>
+        <span class="fdr-cell fdr-4" style="padding:0.2rem 0.5rem;font-size:0.72rem;">4</span>
+        <span class="fdr-cell fdr-5" style="padding:0.2rem 0.5rem;font-size:0.72rem;">5</span>
+        <span style="font-size:0.72rem;color:#888;margin-left:0.5rem;">(H) = Home</span>
+      </div>
+      <div class="loader" id="fdr-loader"><div class="spinner"></div><div class="loader-text">Loading FDR...</div></div>
+      <div class="fdr-grid" id="fdr-container"></div>
+    </div>
+  </div>
+
+  <!-- ==================== CAPTAIN PICKS ==================== -->
+  <div class="nav-panel" id="nav-captain">
+    <div class="section">
+      <div class="section-title">Captain Picks — Next GW</div>
+      <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
+      <div class="table-wrap">
+        <table id="captain-table" class="hidden">
+          <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
+          <tbody id="captain-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PRICE CHANGES ==================== -->
+  <div class="nav-panel" id="nav-prices">
+    <div class="section">
+      <div class="section-title" style="color:#51cf66">Price Risers</div>
+      <div class="loader" id="prices-loader"><div class="spinner"></div><div class="loader-text">Loading transfer data...</div></div>
+      <div id="risers-container"></div>
+      <div class="section-title" style="color:#ff6b6b;margin-top:1.5rem;">Price Fallers</div>
+      <div id="fallers-container"></div>
+    </div>
+  </div>
+
+  <!-- ==================== DIFFERENTIALS ==================== -->
+  <div class="nav-panel" id="nav-differentials">
+    <div class="section">
+      <div class="section-title">Differential Finder</div>
+      <div style="margin-bottom:1rem;display:flex;gap:0.8rem;align-items:end;flex-wrap:wrap;">
+        <div class="field" style="max-width:160px;">
+          <label>Max Ownership %</label>
+          <select id="diff-ownership" onchange="loadDifferentials()">
+            <option value="5">5%</option>
+            <option value="10" selected>10%</option>
+            <option value="15">15%</option>
+            <option value="20">20%</option>
+          </select>
+        </div>
+      </div>
+      <div class="loader" id="diff-loader"><div class="spinner"></div><div class="loader-text">Finding differentials...</div></div>
+      <div class="table-wrap">
+        <table id="diff-table" class="hidden">
+          <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Cost</th><th class="right">Pts</th><th class="right">Form</th><th class="right">PPG</th><th class="right">Own%</th><th class="right">Score</th></tr></thead>
+          <tbody id="diff-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== COMPARE ==================== -->
+  <div class="nav-panel" id="nav-compare">
+    <div class="section">
+      <div class="section-title">Player Comparison</div>
+      <div class="compare-search">
+        <div class="field">
+          <label>Search player</label>
+          <input type="text" id="compare-input" placeholder="Type a name..." oninput="debouncedCompareSearch()">
+        </div>
+      </div>
+      <div class="compare-results" id="compare-results"></div>
+      <div class="compare-chips" id="compare-chips"></div>
+      <div id="compare-output"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FIXTURES ==================== -->
+  <div class="nav-panel" id="nav-fixtures">
+    <div class="section">
+      <div style="margin-bottom:0.8rem;">
+        <label style="color:#888;font-size:0.75rem;text-transform:uppercase;margin-right:0.5rem;">Gameweek</label>
+        <select id="gw-filter" onchange="renderFixtures()" style="background:#0e1117;border:1px solid #2a2f3e;color:#e6e6e6;border-radius:6px;padding:0.5rem;font-size:0.9rem;min-width:180px;">
+          <option value="current">Current / Next</option>
+        </select>
+      </div>
+      <div class="loader" id="fixtures-loader"><div class="spinner"></div><div class="loader-text">Loading fixtures...</div></div>
+      <div id="fixtures-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom nav -->
+<div class="bottom-nav" id="bottom-nav">
+  <div class="bnav-item active" data-nav="optimizer" onclick="switchNav('optimizer')"><span class="bnav-icon">&#9889;</span>Optimize</div>
+  <div class="bnav-item" data-nav="live" onclick="switchNav('live')"><span class="bnav-icon">&#9654;</span>Live</div>
+  <div class="bnav-item" data-nav="fdr" onclick="switchNav('fdr')"><span class="bnav-icon">&#9632;</span>FDR</div>
+  <div class="bnav-item" data-nav="players" onclick="switchNav('players')"><span class="bnav-icon">&#9917;</span>Players</div>
+  <div class="bnav-item" data-nav="fixtures" onclick="switchNav('fixtures')"><span class="bnav-icon">&#128197;</span>More</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let teamsMap = {};
+let playersSort = { col: 'total_points', dir: 'desc' };
+let fixturesData = null;
+let playersLoaded = false;
+let fixturesLoaded = false;
+let debounceTimer = null;
+let compareTimer = null;
+let loadedUserId = null;
+let compareIds = [];
+let allPlayersCache = null;
+
+// ==================== PERSIST USER ID ====================
+(function restoreUser() {
+  const saved = localStorage.getItem('fpl_user_id');
+  if (saved) {
+    $('user-id').value = saved;
+    // Auto-load on page load
+    setTimeout(() => loadUser(), 100);
+  }
+})();
+
+// ==================== USER LOOKUP ====================
+async function loadUser() {
+  const idInput = $('user-id');
+  const rawId = idInput.value.trim();
+  if (!rawId) { idInput.focus(); return; }
+  const uid = parseInt(rawId);
+  if (isNaN(uid) || uid <= 0) {
+    showUserError('Please enter a valid numeric FPL User ID.');
+    return;
+  }
+
+  const btn = $('load-user-btn');
+  const spinner = $('user-spinner');
+  btn.disabled = true;
+  spinner.classList.add('active');
+  hideUserError();
+  $('user-info').classList.remove('active');
+  $('leagues-section').classList.remove('active');
+  $('league-standings').classList.remove('active');
+
+  try {
+    const resp = await fetch(`/api/user/${uid}`);
+    const data = await resp.json();
+    if (!resp.ok) { showUserError(data.error || 'Failed to load user'); return; }
+
+    loadedUserId = uid;
+    localStorage.setItem('fpl_user_id', String(uid));
+    $('manager-name').textContent = data.manager_name;
+    $('team-name').textContent = data.team_name;
+    $('user-info').classList.add('active');
+
+    if (data.leagues && data.leagues.length > 0) {
+      $('league-list').innerHTML = data.leagues.map(lg =>
+        `<div class="league-chip" data-id="${lg.id}" onclick="loadLeague(${lg.id}, this)">${lg.name}</div>`
+      ).join('');
+      $('leagues-section').classList.add('active');
+    }
+
+    // Show live tab hint
+    $('live-no-user').classList.add('hidden');
+  } catch (err) {
+    showUserError('Network error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.remove('active');
+  }
+}
+
+function showUserError(msg) { const el = $('user-error'); el.textContent = msg; el.classList.add('active'); }
+function hideUserError() { $('user-error').classList.remove('active'); }
+
+async function loadLeague(leagueId, chipEl) {
+  document.querySelectorAll('.league-chip').forEach(c => c.classList.remove('active'));
+  if (chipEl) chipEl.classList.add('active');
+
+  const standings = $('league-standings');
+  const spinnerEl = $('league-spinner');
+  const tableEl = $('league-table');
+  standings.classList.add('active');
+  spinnerEl.classList.add('active');
+  tableEl.classList.add('hidden');
+  $('league-title-text').textContent = 'Loading...';
+
+  try {
+    const resp = await fetch(`/api/league/${leagueId}`);
+    const data = await resp.json();
+    if (!resp.ok) { $('league-title-text').textContent = data.error || 'Failed'; return; }
+
+    $('league-title-text').textContent = data.league_name;
+    $('league-body').innerHTML = data.standings.map(s => `<tr>
+      <td>${s.rank}</td>
+      <td>${s.manager_name}</td>
+      <td>${s.team_name}</td>
+      <td class="right">${s.gw_points}</td>
+      <td class="right score">${s.total_points}</td>
+      <td>${loadedUserId ? `<span class="btn-outline" onclick="loadRival(${s.rank}, '${s.manager_name.replace(/'/g, "\\'")}', event)" style="font-size:0.7rem;padding:0.15rem 0.4rem;">vs</span>` : ''}</td>
+    </tr>`).join('');
+    tableEl.classList.remove('hidden');
+  } catch (err) {
+    $('league-title-text').textContent = 'Network error';
+  } finally {
+    spinnerEl.classList.remove('active');
+  }
+}
+
+// ==================== NAV ====================
+function switchNav(panel) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+
+  const dt = document.querySelector(`.nav-tab[data-nav="${panel}"]`);
+  if (dt) dt.classList.add('active');
+  const bn = document.querySelector(`.bnav-item[data-nav="${panel}"]`);
+  if (bn) bn.classList.add('active');
+  $('nav-' + panel).classList.add('active');
+
+  // Lazy load
+  if (panel === 'players' && !playersLoaded) loadMetadata().then(() => loadPlayers());
+  if (panel === 'fixtures' && !fixturesLoaded) loadMetadata().then(() => loadFixtures());
+  if (panel === 'fdr') loadFDR();
+  if (panel === 'captain') loadCaptainPicks();
+  if (panel === 'prices') loadPriceChanges();
+  if (panel === 'differentials') loadDifferentials();
+  if (panel === 'live') loadLive();
+}
+
+// ==================== METADATA ====================
+let metadataLoaded = false, metadataPromise = null;
+function loadMetadata() {
+  if (metadataLoaded) return Promise.resolve();
+  if (metadataPromise) return metadataPromise;
+  metadataPromise = fetch('/api/data').then(r => r.json()).then(data => {
+    if (data.error) throw new Error(data.error);
+    const sel = $('player-team-filter');
+    data.teams.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
+    data.teams.forEach(t => { teamsMap[t.id] = t; });
+    metadataLoaded = true;
+  }).catch(err => { metadataPromise = null; console.error(err); });
+  return metadataPromise;
+}
+
+// ==================== LIVE GW ====================
+let liveLoaded = false;
+async function loadLive() {
+  if (!loadedUserId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
+  $('live-no-user').classList.add('hidden');
+  const loader = $('live-loader');
+  loader.classList.add('active');
+  $('live-content').classList.add('hidden');
+
+  try {
+    const resp = await fetch(`/api/live/${loadedUserId}`);
+    const data = await resp.json();
+    if (!resp.ok) { $('live-content').innerHTML = `<div class="error-msg">${data.error}</div>`; $('live-content').classList.remove('hidden'); return; }
+
+    $('live-stats').innerHTML = `
+      <div class="stat-card"><div class="label">${data.gameweek_name}</div><div class="value blue">${data.total_live_points}${data.hits ? `<span style="font-size:0.7rem;color:#ff6b6b"> (-${data.hits})</span>` : ''}</div></div>
+      <div class="stat-card"><div class="label">On Bench</div><div class="value red">${data.points_on_bench}</div></div>
+      ${data.overall_rank ? `<div class="stat-card"><div class="label">Overall Rank</div><div class="value">${data.overall_rank.toLocaleString()}</div></div>` : ''}
+    `;
+
+    const starting = data.picks.filter(p => p.multiplier > 0);
+    const bench = data.picks.filter(p => p.multiplier === 0);
+
+    $('live-starting').innerHTML = starting.map(p => liveCard(p, false)).join('');
+    $('live-bench').innerHTML = bench.map(p => liveCard(p, true)).join('');
+    $('live-content').classList.remove('hidden');
+    liveLoaded = true;
+  } catch (err) {
+    $('live-content').innerHTML = `<div class="error-msg">Failed to load: ${err.message}</div>`;
+    $('live-content').classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function liveCard(p, isBench) {
+  let badge = '';
+  if (p.is_captain) badge = '<div class="lp-captain">C</div>';
+  else if (p.is_vice_captain) badge = '<div class="lp-vice">V</div>';
+  const details = [];
+  if (p.minutes > 0) details.push(`${p.minutes}'`);
+  if (p.goals > 0) details.push(`${p.goals}G`);
+  if (p.assists > 0) details.push(`${p.assists}A`);
+  if (p.bonus > 0) details.push(`${p.bonus}B`);
+  return `<div class="live-card${isBench ? ' bench' : ''}">
+    ${badge}
+    <div class="lp-name">${p.name}</div>
+    <div class="lp-team">${p.team_name} &middot; ${p.position_name}</div>
+    <div class="lp-pts">${p.live_points}</div>
+    ${details.length ? `<div class="lp-detail">${details.join(' &middot; ')}</div>` : ''}
+  </div>`;
+}
+
+// ==================== FDR HEATMAP ====================
+let fdrLoaded = false;
+async function loadFDR() {
+  if (fdrLoaded) return;
+  const loader = $('fdr-loader');
+  loader.classList.add('active');
+
+  try {
+    const resp = await fetch('/api/fdr?lookahead=8');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    let html = '<table><thead><tr><th class="team-col">Team</th>';
+    data.gw_ids.forEach(gw => { html += `<th>GW${gw}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    data.rows.forEach(row => {
+      html += `<tr><td class="team-col">${row.team_name}</td>`;
+      row.gws.forEach(fxList => {
+        if (fxList.length === 0) {
+          html += '<td>-</td>';
+        } else {
+          const cells = fxList.map(fx => {
+            const home = fx.is_home ? '<span class="fdr-home">(H)</span>' : '';
+            return `<div class="fdr-cell fdr-${fx.difficulty}">${fx.opponent} ${home}</div>`;
+          }).join('');
+          html += `<td>${cells}</td>`;
+        }
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+
+    $('fdr-container').innerHTML = html;
+    fdrLoaded = true;
+  } catch (err) {
+    $('fdr-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== CAPTAIN PICKS ====================
+let captainLoaded = false;
+async function loadCaptainPicks() {
+  if (captainLoaded) return;
+  const loader = $('captain-loader');
+  loader.classList.add('active');
+
+  try {
+    const resp = await fetch('/api/captain-picks');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    $('captain-body').innerHTML = data.picks.map((p, i) => `<tr${i === 0 ? ' style="background:#1a2a1a"' : ''}>
+      <td>${i === 0 ? '<span style="color:#ffd700;font-weight:bold">1</span>' : i + 1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.team_name}</td>
+      <td class="pos">${p.position_name}</td>
+      <td class="right">${p.form.toFixed(1)}</td>
+      <td class="right">${p.points_per_game.toFixed(1)}</td>
+      <td class="right">${p.xG.toFixed(2)}</td>
+      <td class="right">${p.xA.toFixed(2)}</td>
+      <td class="right"><span class="fdr-cell fdr-${Math.round((1 - p.fixture_difficulty) * 4) + 1}" style="padding:0.15rem 0.4rem;">${p.fixture_difficulty.toFixed(2)}</span></td>
+      <td class="right score">${p.composite_score.toFixed(3)}</td>
+    </tr>`).join('');
+    $('captain-table').classList.remove('hidden');
+    captainLoaded = true;
+  } catch (err) {
+    $('captain-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== PRICE CHANGES ====================
+let pricesLoaded = false;
+async function loadPriceChanges() {
+  if (pricesLoaded) return;
+  const loader = $('prices-loader');
+  loader.classList.add('active');
+
+  try {
+    const resp = await fetch('/api/price-changes');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    $('risers-container').innerHTML = data.risers.map(p => priceCard(p, true)).join('');
+    $('fallers-container').innerHTML = data.fallers.map(p => priceCard(p, false)).join('');
+    pricesLoaded = true;
+  } catch (err) {
+    $('risers-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function priceCard(p, isRiser) {
+  const net = p.net_transfers;
+  const cls = net > 0 ? 'net-positive' : (net < 0 ? 'net-negative' : '');
+  const changed = p.cost_change_event !== 0;
+  return `<div class="price-card">
+    <div class="player-info">
+      <div class="player-name">${p.name}${changed ? ` <span style="font-size:0.75rem;color:${p.cost_change_event > 0 ? '#51cf66' : '#ff6b6b'}">(${p.cost_change_event > 0 ? '+' : ''}${(p.cost_change_event / 10).toFixed(1)})</span>` : ''}</div>
+      <div class="player-meta">${p.team_name} &middot; ${p.position_name} &middot; ${p.cost.toFixed(1)}M &middot; ${p.selected_by_percent}%</div>
+    </div>
+    <div class="transfer-stat">
+      <div class="${cls}" style="font-size:0.9rem;">${net > 0 ? '+' : ''}${net.toLocaleString()}</div>
+      <div style="font-size:0.68rem;color:#888;">${isRiser ? `+${p.transfers_in.toLocaleString()} in` : `${p.transfers_out.toLocaleString()} out`}</div>
+    </div>
+  </div>`;
+}
+
+// ==================== DIFFERENTIALS ====================
+let diffLoaded = false;
+async function loadDifferentials() {
+  const loader = $('diff-loader');
+  loader.classList.add('active');
+  $('diff-table').classList.add('hidden');
+  diffLoaded = false;
+
+  try {
+    const own = $('diff-ownership').value;
+    const resp = await fetch(`/api/differentials?max_ownership=${own}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    $('diff-body').innerHTML = data.differentials.map((p, i) => `<tr>
+      <td>${i + 1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.team_name}</td>
+      <td class="pos">${p.position_name}</td>
+      <td class="right cost">${p.cost.toFixed(1)}</td>
+      <td class="right">${p.total_points}</td>
+      <td class="right">${p.form.toFixed(1)}</td>
+      <td class="right">${p.points_per_game.toFixed(1)}</td>
+      <td class="right" style="color:#4da6ff">${p.selected_by_percent}%</td>
+      <td class="right score">${p.composite_score.toFixed(3)}</td>
+    </tr>`).join('');
+    $('diff-table').classList.remove('hidden');
+    diffLoaded = true;
+  } catch (err) {
+    $('diff-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== PLAYER COMPARISON ====================
+function debouncedCompareSearch() {
+  clearTimeout(compareTimer);
+  compareTimer = setTimeout(compareSearch, 300);
+}
+
+async function compareSearch() {
+  const q = $('compare-input').value.trim();
+  if (q.length < 2) { $('compare-results').innerHTML = ''; return; }
+
+  // Use cached players list or fetch
+  if (!allPlayersCache) {
+    const resp = await fetch('/api/players?sort=total_points&dir=desc');
+    const data = await resp.json();
+    allPlayersCache = data.players;
+  }
+
+  const lower = q.toLowerCase();
+  const matches = allPlayersCache.filter(p => p.name.toLowerCase().includes(lower)).slice(0, 8);
+  $('compare-results').innerHTML = matches.map(p =>
+    `<div class="compare-pick" onclick="addCompare(${p.id}, '${p.name.replace(/'/g, "\\'")}')">${p.name} <span style="color:#888;font-size:0.72rem;">${p.team_name} ${p.position_name}</span></div>`
+  ).join('');
+}
+
+function addCompare(pid, name) {
+  if (compareIds.length >= 3 || compareIds.includes(pid)) return;
+  compareIds.push(pid);
+  renderCompareChips();
+  $('compare-input').value = '';
+  $('compare-results').innerHTML = '';
+  if (compareIds.length >= 2) runComparison();
+}
+
+function removeCompare(pid) {
+  compareIds = compareIds.filter(id => id !== pid);
+  renderCompareChips();
+  if (compareIds.length >= 2) runComparison();
+  else $('compare-output').innerHTML = '';
+}
+
+function renderCompareChips() {
+  if (!allPlayersCache) return;
+  $('compare-chips').innerHTML = compareIds.map(pid => {
+    const p = allPlayersCache.find(pl => pl.id === pid);
+    return `<div class="compare-chip">${p ? p.name : pid} <span class="remove" onclick="removeCompare(${pid})">&times;</span></div>`;
+  }).join('');
+}
+
+async function runComparison() {
+  try {
+    const resp = await fetch('/api/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player_ids: compareIds }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) { $('compare-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+
+    const ps = data.players;
+    const colors = ['#00ff87', '#4da6ff', '#ffd700'];
+
+    // Radar chart
+    const stats = ['form', 'points_per_game', 'xG', 'xA', 'ict_index', 'composite_score'];
+    const labels = ['Form', 'PPG', 'xG', 'xA', 'ICT', 'Score'];
+    // Normalize each stat to 0-1 across compared players
+    const maxes = stats.map(s => Math.max(...ps.map(p => p[s])) || 1);
+
+    let html = '<div class="compare-container">';
+    html += `<canvas id="radar-canvas" width="280" height="280"></canvas>`;
+    html += '<div class="compare-table"><div class="table-wrap"><table><thead><tr><th>Stat</th>';
+    ps.forEach((p, i) => { html += `<th style="color:${colors[i]}">${p.name}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    const rows = [
+      ['Position', ps.map(p => p.position_name)],
+      ['Team', ps.map(p => p.team_name)],
+      ['Cost', ps.map(p => p.cost.toFixed(1) + 'M')],
+      ['Total Pts', ps.map(p => String(p.total_points))],
+      ['Form', ps.map(p => p.form.toFixed(1))],
+      ['PPG', ps.map(p => p.points_per_game.toFixed(1))],
+      ['xG', ps.map(p => p.xG.toFixed(2))],
+      ['xA', ps.map(p => p.xA.toFixed(2))],
+      ['Goals', ps.map(p => String(p.goals))],
+      ['Assists', ps.map(p => String(p.assists))],
+      ['ICT', ps.map(p => p.ict_index.toFixed(1))],
+      ['Ownership', ps.map(p => p.selected_by_percent + '%')],
+      ['Score', ps.map(p => p.composite_score.toFixed(3))],
+    ];
+
+    rows.forEach(([label, vals]) => {
+      html += `<tr><td style="color:#888">${label}</td>`;
+      // Highlight best value
+      vals.forEach(v => { html += `<td class="right">${v}</td>`; });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div></div></div>';
+    $('compare-output').innerHTML = html;
+
+    // Draw radar
+    drawRadar(ps, stats, labels, maxes, colors);
+  } catch (err) {
+    $('compare-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  }
+}
+
+function drawRadar(players, stats, labels, maxes, colors) {
+  const canvas = $('radar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 140, cy = 140, r = 110;
+  const n = stats.length;
+  ctx.clearRect(0, 0, 280, 280);
+
+  // Draw grid
+  for (let ring = 1; ring <= 4; ring++) {
+    ctx.beginPath();
+    const rr = r * ring / 4;
+    for (let i = 0; i <= n; i++) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#2a2f3e';
+    ctx.stroke();
+  }
+
+  // Draw axes and labels
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+    ctx.strokeStyle = '#2a2f3e';
+    ctx.stroke();
+
+    // Label
+    const lx = cx + (r + 15) * Math.cos(angle);
+    const ly = cy + (r + 15) * Math.sin(angle);
+    ctx.fillStyle = '#888';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(labels[i], lx, ly);
+  }
+
+  // Draw player polygons
+  players.forEach((p, pi) => {
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const si = i % n;
+      const val = maxes[si] > 0 ? p[stats[si]] / maxes[si] : 0;
+      const angle = (Math.PI * 2 * si / n) - Math.PI / 2;
+      const x = cx + r * val * Math.cos(angle);
+      const y = cy + r * val * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = colors[pi];
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = colors[pi] + '22';
+    ctx.fill();
+  });
+}
+
+// ==================== RIVAL COMPARISON ====================
+async function loadRival(rank, name, event) {
+  event.stopPropagation();
+  if (!loadedUserId) return;
+
+  // We need the entry_id — extract from the standings API
+  // The league standings API doesn't return entry_id directly in our endpoint,
+  // so let's grab it from the row context — actually we need to update the league endpoint
+  // For now, use a prompt approach: ask for rival ID
+  const rivalId = prompt(`Enter FPL User ID for "${name}" to compare squads:`);
+  if (!rivalId) return;
+  const rid = parseInt(rivalId);
+  if (isNaN(rid)) return;
+
+  switchNav('compare'); // Reuse compare panel area
+  $('compare-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
+
+  try {
+    const resp = await fetch(`/api/rival/${rid}?user_id=${loadedUserId}`);
+    const data = await resp.json();
+    if (!resp.ok) { $('compare-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
+
+    let html = '<div class="section-title blue">Squad Comparison</div>';
+    html += '<div class="stat-row">';
+    html += `<div class="stat-card"><div class="label">${data.my_manager}</div><div class="value blue">${data.my_total_points}</div></div>`;
+    html += `<div class="stat-card"><div class="label">${data.rival_manager}</div><div class="value" style="color:#ffd700">${data.rival_total_points}</div></div>`;
+    html += `<div class="stat-card"><div class="label">Shared</div><div class="value">${data.shared.length}</div></div>`;
+    html += '</div>';
+
+    html += '<div class="rival-cols">';
+    html += '<div class="rival-col"><div class="rival-header" style="color:#4da6ff">Only in My Team</div>';
+    data.only_mine.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
+    html += '</div>';
+    html += '<div class="rival-col"><div class="rival-header" style="color:#ffd700">Only in Rival\'s Team</div>';
+    data.only_rival.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="cost">${p.cost.toFixed(1)}</span></div>`; });
+    html += '</div></div>';
+
+    if (data.shared.length > 0) {
+      html += '<div class="shared-list"><div class="shared-header">Shared Players</div>';
+      data.shared.forEach(p => { html += `<div class="rival-player"><span>${p.name} <span class="pos">${p.position_name}</span></span><span class="score">${p.total_points}pts</span></div>`; });
+      html += '</div>';
+    }
+
+    $('compare-output').innerHTML = html;
+  } catch (err) {
+    $('compare-output').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  }
+}
+
+// ==================== PLAYERS TAB ====================
+function debouncedLoadPlayers() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(loadPlayers, 300);
+}
+
+function loadPlayers() {
+  const loader = $('players-loader');
+  const table = $('players-table');
+  loader.classList.add('active');
+  table.classList.add('hidden');
+
+  const params = new URLSearchParams();
+  const search = $('player-search').value.trim();
+  const pos = $('player-pos-filter').value;
+  const team = $('player-team-filter').value;
+  if (search) params.set('search', search);
+  if (pos) params.set('position', pos);
+  if (team) params.set('team', team);
+  params.set('sort', playersSort.col);
+  params.set('dir', playersSort.dir);
+
+  fetch('/api/players?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      $('players-body').innerHTML = data.players.map(p => `<tr>
+        <td class="score">${p.total_points}</td>
+        <td class="pos">${p.position_name}</td>
+        <td>${p.name}</td>
+        <td>${p.team_name}</td>
+        <td class="right cost">${p.cost.toFixed(1)}</td>
+        <td class="right">${p.form.toFixed(1)}</td>
+        <td class="right">${p.points_per_game.toFixed(1)}</td>
+        <td class="right">${p.xG.toFixed(1)}</td>
+        <td class="right">${p.xA.toFixed(1)}</td>
+        <td class="right">${p.ict_index.toFixed(1)}</td>
+        <td class="right">${p.minutes}</td>
+      </tr>`).join('');
+      table.classList.remove('hidden');
+      playersLoaded = true;
+    })
+    .catch(err => {
+      $('players-body').innerHTML = `<tr><td colspan="11" style="text-align:center;color:#ff6b6b">${err.message}</td></tr>`;
+      table.classList.remove('hidden');
+    })
+    .finally(() => loader.classList.remove('active'));
+}
+
+function sortPlayers(th) {
+  const col = th.dataset.sort;
+  if (playersSort.col === col) playersSort.dir = playersSort.dir === 'desc' ? 'asc' : 'desc';
+  else { playersSort.col = col; playersSort.dir = col === 'name' ? 'asc' : 'desc'; }
+  document.querySelectorAll('#players-table th.sortable').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+  th.classList.add(playersSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+  loadPlayers();
+}
+
+// ==================== FIXTURES TAB ====================
+function loadFixtures() {
+  const loader = $('fixtures-loader');
+  loader.classList.add('active');
+  $('fixtures-container').innerHTML = '';
+
+  fetch('/api/fixtures').then(r => r.json()).then(data => {
+    if (data.error) throw new Error(data.error);
+    fixturesData = data.gameweeks;
+    const sel = $('gw-filter');
+    sel.innerHTML = '<option value="current">Current / Next</option>';
+    fixturesData.forEach(gw => {
+      const opt = document.createElement('option');
+      opt.value = gw.gameweek;
+      let label = gw.name;
+      if (gw.is_current) label += ' (Current)';
+      else if (gw.is_next) label += ' (Next)';
+      else if (gw.finished) label += ' (Finished)';
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    fixturesLoaded = true;
+    renderFixtures();
+  }).catch(err => {
+    $('fixtures-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
+  }).finally(() => loader.classList.remove('active'));
+}
+
+function diffBadge(diff, extra) {
+  return `<span class="difficulty diff-${diff} ${extra || ''}">${diff}</span>`;
+}
+
+function renderFixtures() {
+  if (!fixturesData) return;
+  const filter = $('gw-filter').value;
+  const container = $('fixtures-container');
+
+  let gwsToShow;
+  if (filter === 'current') {
+    gwsToShow = fixturesData.filter(gw => gw.is_current || gw.is_next);
+    if (!gwsToShow.length) gwsToShow = fixturesData.filter(gw => !gw.finished).slice(0, 1);
+  } else {
+    gwsToShow = fixturesData.filter(gw => gw.gameweek === parseInt(filter));
+  }
+
+  if (!gwsToShow.length) { container.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">No fixtures.</p>'; return; }
+
+  let html = '';
+  for (const gw of gwsToShow) {
+    let badge = gw.is_current ? '<span class="gw-badge current">Current</span>' : gw.is_next ? '<span class="gw-badge next">Next</span>' : gw.finished ? '<span class="gw-badge finished">Finished</span>' : '';
+    html += `<div class="gw-header">${gw.name}${badge}</div>`;
+    for (const f of gw.fixtures) {
+      const mid = f.finished && f.home_score !== null
+        ? `<div class="fixture-score">${f.home_score} - ${f.away_score}</div>`
+        : '<div class="fixture-vs">vs</div>';
+      html += `<div class="fixture-card">
+        <div class="fixture-team home">${f.home_team_name} ${diffBadge(f.home_difficulty)}</div>
+        ${mid}
+        <div class="fixture-team away">${diffBadge(f.away_difficulty, 'away-badge')} ${f.away_team_name}</div>
+      </div>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+// ==================== OPTIMIZER ====================
+$('budget').addEventListener('input', e => {
+  $('budget-display').textContent = parseFloat(e.target.value).toFixed(1);
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('#tab-bar .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#nav-optimizer .tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`#tab-bar .tab[data-tab="${tab}"]`).classList.add('active');
+  $('tab-' + tab).classList.add('active');
+}
+
+function teamName(id) { const t = teamsMap[id]; return t ? t.short_name : id; }
+
+function playerRow(p, full) {
+  if (full) return `<tr><td class="pos">${p.position_name}</td><td>${p.name}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right">${p.form.toFixed(1)}</td><td class="right">${p.points_per_game.toFixed(1)}</td><td class="right">${p.xG.toFixed(1)}</td><td class="right">${p.xA.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
+  return `<tr><td class="pos">${p.position_name}</td><td>${p.name}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
+}
+
+function transferRow(t, i) {
+  return `<tr><td>${i+1}</td><td class="out">${t.player_out.name} (${t.player_out.cost.toFixed(1)})</td><td class="in">${t.player_in.name} (${t.player_in.cost.toFixed(1)})</td><td class="right score">+${t.score_gain.toFixed(3)}</td><td class="right">${t.cost_change >= 0 ? '+' : ''}${t.cost_change.toFixed(1)}</td></tr>`;
+}
+
+function renderSummary(el, sq) {
+  el.innerHTML = `<div class="stat-card"><div class="label">Cost</div><div class="value">${sq.total_cost.toFixed(1)}M</div></div>
+    <div class="stat-card"><div class="label">Remaining</div><div class="value">${sq.budget_remaining.toFixed(1)}M</div></div>
+    <div class="stat-card"><div class="label">Score</div><div class="value">${sq.total_score.toFixed(3)}</div></div>`;
+}
+
+function renderSquad(sEl, bEl, sq) {
+  sEl.innerHTML = sq.starting.map(p => playerRow(p, true)).join('');
+  bEl.innerHTML = sq.bench.map(p => playerRow(p, false)).join('');
+}
+
+function renderTransfers(sec, body, tf) {
+  if (tf && tf.length > 0) { sec.classList.remove('hidden'); body.innerHTML = tf.map((t,i) => transferRow(t,i)).join(''); }
+  else sec.classList.add('hidden');
+}
+
+async function runOptimizer() {
+  const btn = $('run-btn');
+  const loader = $('loader');
+  const results = $('results');
+  const errorEl = $('error');
+  const userId = loadedUserId ? String(loadedUserId) : $('user-id').value.trim();
+
+  btn.disabled = true;
+  loader.classList.add('active');
+  results.classList.add('hidden');
+  errorEl.innerHTML = '';
+
+  try {
+    const resp = await fetch('/api/optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ budget: parseFloat($('budget').value), lookahead: parseInt($('lookahead').value), user_id: userId || null }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { errorEl.innerHTML = `<div class="error-msg">${data.error || 'Error'}</div>`; return; }
+
+    for (const [tid, t] of Object.entries(data.teams)) teamsMap[tid] = t;
+
+    renderSummary($('summary'), data.squad);
+    renderSquad($('starting-body'), $('bench-body'), data.squad);
+    renderTransfers($('transfers-section'), $('transfers-body'), data.transfers);
+
+    const myTeamTab = document.querySelector('#tab-bar .tab[data-tab="my-team"]');
+    if (data.user_team && !data.user_team.error) {
+      if (!myTeamTab) {
+        const tab = document.createElement('div');
+        tab.className = 'tab user-tab';
+        tab.dataset.tab = 'my-team';
+        tab.onclick = () => switchTab('my-team');
+        tab.textContent = 'My Team';
+        $('tab-bar').insertBefore(tab, document.querySelector('#tab-bar .tab[data-tab="top-players"]'));
+      }
+      renderSummary($('user-summary'), data.user_team.squad);
+      renderSquad($('user-starting-body'), $('user-bench-body'), data.user_team.squad);
+      renderTransfers($('user-transfers-section'), $('user-transfers-body'), data.user_team.transfers);
+    } else if (myTeamTab) myTeamTab.remove();
+
+    const tpc = $('top-players-container');
+    tpc.innerHTML = '';
+    for (const [posName, players] of Object.entries(data.top_by_position)) {
+      tpc.innerHTML += `<div class="section"><div class="section-title">Top 10 ${posName}</div><div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+        <tbody>${players.map((p,i) => `<tr><td>${i+1}</td><td>${p.name}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right">${p.form.toFixed(1)}</td><td class="right">${p.xG.toFixed(1)}</td><td class="right">${p.xA.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`).join('')}</tbody>
+        </table></div></div>`;
+    }
+
+    results.classList.remove('hidden');
+    switchTab('optimal');
+  } catch (err) {
+    errorEl.innerHTML = `<div class="error-msg">Network error: ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    loader.classList.remove('active');
+  }
+}
+</script>
+</body>
+</html>
