@@ -90,6 +90,8 @@ class Player:
     red_cards: int = 0
     own_goals: int = 0
     starts: int = 0
+    rotation_risk: float = 0.0
+    projected_minutes: float = 0.0
 
     @property
     def position_name(self) -> str:

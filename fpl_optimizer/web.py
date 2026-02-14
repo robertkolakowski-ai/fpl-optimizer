@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import time
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from flask import Flask, jsonify, render_template, request
 
 import httpx
 
-from .analyzer import score_players
+from .analyzer import compute_projected_minutes, compute_rotation_risk, score_players
 from .api import (
     fetch_entry_history,
     fetch_league_standings,
@@ -45,6 +46,9 @@ SORT_FIELDS = {
     "name", "team", "position", "cost", "total_points", "minutes",
     "goals", "assists", "clean_sheets", "bonus", "form",
     "points_per_game", "xG", "xA", "ict_index", "composite_score",
+    "bps", "xG_per90", "xA_per90", "xGI_per90", "expected_goal_involvements",
+    "selected_by_percent", "influence", "creativity", "threat",
+    "goals_conceded", "saves", "ep_next",
 }
 
 
@@ -95,6 +99,36 @@ def api_players():
         search = request.args.get("search", "").strip().lower()
         if search:
             result = [p for p in result if search in p.name.lower()]
+
+        # Filter by price range
+        price_min = request.args.get("price_min", "")
+        price_max = request.args.get("price_max", "")
+        if price_min:
+            try:
+                result = [p for p in result if p.cost >= float(price_min)]
+            except ValueError:
+                pass
+        if price_max:
+            try:
+                result = [p for p in result if p.cost <= float(price_max)]
+            except ValueError:
+                pass
+
+        # Filter by form range
+        form_min = request.args.get("form_min", "")
+        if form_min:
+            try:
+                result = [p for p in result if p.form >= float(form_min)]
+            except ValueError:
+                pass
+
+        # Filter by ownership range
+        own_max = request.args.get("own_max", "")
+        if own_max:
+            try:
+                result = [p for p in result if p.selected_by_percent <= float(own_max)]
+            except ValueError:
+                pass
 
         # Sort
         sort_by = request.args.get("sort", "total_points")
@@ -381,21 +415,41 @@ def api_fdr():
 
 @app.route("/api/captain-picks")
 def api_captain_picks():
-    """Top captain picks for the upcoming gameweek."""
+    """Top captain picks with expected value for chart display."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
-        score_players(players, fixtures, gameweeks, lookahead=1)
+        score_players(players, fixtures, gameweeks, teams, lookahead=1)
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        # Count fixtures per team for the next GW (DGW detection)
+        current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+        if current_gw is None:
+            current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+        team_fixture_count: dict[int, int] = {}
+        if current_gw:
+            for f in fixtures:
+                if f.gameweek == current_gw.id:
+                    team_fixture_count[f.home_team] = team_fixture_count.get(f.home_team, 0) + 1
+                    team_fixture_count[f.away_team] = team_fixture_count.get(f.away_team, 0) + 1
 
         # Outfield players sorted by composite score (1-GW lookahead)
         candidates = sorted(
             [p for p in players if p.position in (2, 3, 4)],
             key=lambda p: p.composite_score,
             reverse=True,
-        )[:10]
+        )[:15]
 
         picks = []
         for p in candidates:
+            num_fixtures = team_fixture_count.get(p.team, 1)
+            # Captain EV = ep_next * 2 (captain multiplier) * fixture multiplier
+            # For DGW players, ep_next already accounts for double fixtures
+            captain_ev = round(p.ep_next * 2, 2)
+            # Breakdown components for chart
+            form_component = round(p.form * 0.3, 2)
+            fixture_component = round(p.fixture_difficulty * 3, 2)
+            xg_component = round((p.xG + p.xA) * 0.4, 2)
+
             picks.append({
                 "id": p.id,
                 "name": p.name,
@@ -409,10 +463,19 @@ def api_captain_picks():
                 "fixture_difficulty": round(p.fixture_difficulty, 2),
                 "composite_score": round(p.composite_score, 3),
                 "selected_by_percent": p.selected_by_percent,
+                "ep_next": round(p.ep_next, 2),
+                "captain_ev": captain_ev,
+                "num_fixtures": num_fixtures,
+                "is_dgw": num_fixtures >= 2,
+                "ev_breakdown": {
+                    "form": form_component,
+                    "fixture": fixture_component,
+                    "xgi": xg_component,
+                },
             })
 
         # Re-score with normal lookahead to not affect cache
-        score_players(players, fixtures, gameweeks, lookahead=5)
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
 
         return jsonify({"picks": picks})
     except Exception as e:
@@ -460,7 +523,7 @@ def api_differentials():
     """High-performing players with low ownership."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
-        score_players(players, fixtures, gameweeks, lookahead=5)
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
         max_ownership = float(request.args.get("max_ownership", 10.0))
@@ -491,17 +554,99 @@ def api_differentials():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/rotation-risk")
+def api_rotation_risk():
+    """Players flagged as rotation risks."""
+    try:
+        players, teams, _, _ = _get_cached_data()
+        compute_rotation_risk(players)
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        risky = sorted(
+            [p for p in players if p.rotation_risk >= 0.2],
+            key=lambda p: p.rotation_risk,
+            reverse=True,
+        )[:40]
+
+        return jsonify({
+            "players": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "team_name": teams_dict.get(p.team, "???"),
+                    "position_name": p.position_name,
+                    "rotation_risk": round(p.rotation_risk, 2),
+                    "starts": p.starts,
+                    "minutes": p.minutes,
+                    "chance_of_playing": p.chance_of_playing,
+                    "news": p.news,
+                    "selected_by_percent": p.selected_by_percent,
+                    "cost": p.cost,
+                    "form": p.form,
+                    "total_points": p.total_points,
+                }
+                for p in risky
+            ]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/minutes-projection")
+def api_minutes_projection():
+    """Projected minutes per GW for all players."""
+    try:
+        players, teams, gameweeks, _ = _get_cached_data()
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        result = list(players)
+
+        # Filter by position
+        pos_filter = request.args.get("position", "").upper()
+        if pos_filter and pos_filter in POS_MAP:
+            result = [p for p in result if p.position == POS_MAP[pos_filter]]
+
+        # Only players with meaningful minutes
+        min_minutes = int(request.args.get("min_minutes", 200))
+        result = [p for p in result if p.minutes >= min_minutes]
+
+        result.sort(key=lambda p: p.projected_minutes, reverse=True)
+        result = result[:50]
+
+        return jsonify({
+            "players": [{
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "minutes": p.minutes,
+                "starts": p.starts,
+                "projected_minutes": p.projected_minutes,
+                "rotation_risk": round(p.rotation_risk, 2),
+                "chance_of_playing": p.chance_of_playing,
+                "form": p.form,
+                "total_points": p.total_points,
+                "news": p.news,
+            } for p in result]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/compare", methods=["POST"])
 def api_compare():
-    """Compare 2-3 players side by side."""
+    """Compare 2-4 players side by side."""
     try:
         data = request.get_json(force=True)
         player_ids = data.get("player_ids", [])
-        if len(player_ids) < 2 or len(player_ids) > 3:
-            return jsonify({"error": "Provide 2-3 player IDs"}), 400
+        if len(player_ids) < 2 or len(player_ids) > 4:
+            return jsonify({"error": "Provide 2-4 player IDs"}), 400
 
         players, teams, gameweeks, fixtures = _get_cached_data()
-        score_players(players, fixtures, gameweeks, lookahead=5)
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
@@ -521,13 +666,24 @@ def api_compare():
                 "points_per_game": p.points_per_game,
                 "xG": p.xG,
                 "xA": p.xA,
+                "xG_per90": round(p.xG_per90, 2),
+                "xA_per90": round(p.xA_per90, 2),
+                "expected_goal_involvements": round(p.expected_goal_involvements, 2),
                 "goals": p.goals,
                 "assists": p.assists,
                 "clean_sheets": p.clean_sheets,
+                "goals_conceded": p.goals_conceded,
                 "bonus": p.bonus,
+                "bps": p.bps,
                 "minutes": p.minutes,
+                "starts": p.starts,
                 "ict_index": p.ict_index,
+                "influence": round(p.influence, 1),
+                "creativity": round(p.creativity, 1),
+                "threat": round(p.threat, 1),
+                "saves": p.saves,
                 "selected_by_percent": p.selected_by_percent,
+                "ep_next": round(p.ep_next, 1),
                 "composite_score": round(p.composite_score, 3),
                 "fixture_difficulty": round(p.fixture_difficulty, 2),
             })
@@ -815,7 +971,7 @@ def api_transfer_planner(user_id):
     """Returns user's current squad with full player data for the transfer planner."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
-        score_players(players, fixtures, gameweeks, lookahead=5)
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
@@ -949,10 +1105,15 @@ def api_optimize():
     budget = float(data.get("budget", 100.0))
     lookahead = int(data.get("lookahead", 5))
     user_id = data.get("user_id", "").strip() if data.get("user_id") else ""
+    risk_mode = data.get("risk_mode", "balanced")
+    if risk_mode not in ("safe", "balanced", "aggressive"):
+        risk_mode = "balanced"
 
     try:
         players, teams, gameweeks, fixtures = load_data()
-        score_players(players, fixtures, gameweeks, lookahead=lookahead)
+        score_players(players, fixtures, gameweeks, teams, lookahead=lookahead)
+        # Compute rotation risk (needed for safe mode scoring)
+        compute_rotation_risk(players)
 
         # If user ID provided, load their team and suggest transfers
         user_team_info = None
@@ -981,7 +1142,7 @@ def api_optimize():
                 user_team_info = {"error": str(e)}
 
         # Always run the full optimizer for the "optimal squad" section
-        squad = select_squad(players, budget=budget)
+        squad = select_squad(players, budget=budget, risk_mode=risk_mode)
         transfer_list = suggest_transfers(squad, players, budget=budget)
 
         # Top 10 per position
@@ -1002,6 +1163,7 @@ def api_optimize():
             "transfers": [t.to_dict() for t in transfer_list],
             "top_by_position": top_by_position,
             "teams": teams_dict,
+            "risk_mode": risk_mode,
         }
 
         if user_team_info:
@@ -1009,5 +1171,257 @@ def api_optimize():
 
         return jsonify(result)
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/ownership")
+def api_ownership():
+    """Effective ownership modelling with captaincy estimates."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=1)
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        # Estimate captaincy rate: top owned players get captained more
+        # Simple model: captain rate ~ ownership * form ranking
+        outfield = [p for p in players if p.position in (2, 3, 4) and p.selected_by_percent > 0]
+        outfield.sort(key=lambda p: p.ep_next, reverse=True)
+
+        # Top ~10 players by ep_next get most captaincy
+        captain_pool_total = sum(p.selected_by_percent for p in outfield[:10])
+
+        result = []
+        for rank, p in enumerate(outfield[:50]):
+            ownership = p.selected_by_percent
+            # Estimated captaincy rate: proportional to ep_next share among top picks
+            if rank < 10 and captain_pool_total > 0:
+                captain_rate = round((p.selected_by_percent / captain_pool_total) * 100, 1)
+            else:
+                captain_rate = round(max(0, ownership * 0.02), 1)
+
+            # Effective ownership = ownership + captain_rate (captain doubles points)
+            eo = round(ownership + captain_rate, 1)
+
+            # Net point swing: if you own and captain, positive. If you don't, negative.
+            result.append({
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "ownership": ownership,
+                "captain_rate": captain_rate,
+                "effective_ownership": eo,
+                "ep_next": round(p.ep_next, 2),
+                "form": p.form,
+                "total_points": p.total_points,
+                # Expected point swing if player hauls (scores 10+)
+                "haul_swing_own": round(10 * (1 - eo / 100), 2),
+                "haul_swing_miss": round(-10 * (eo / 100), 2),
+            })
+
+        # Re-score with normal lookahead
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+
+        return jsonify({"players": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/transfer-gain/<int:user_id>")
+def api_transfer_gain(user_id):
+    """Transfer gain vs hit cost chart data for a user's squad."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        player_map = {p.id: p for p in players}
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        squad_players, bank = load_user_team(user_id, players, gameweeks)
+        squad_ids = {p.id for p in squad_players}
+
+        team_counts: dict[int, int] = {}
+        for p in squad_players:
+            team_counts[p.team] = team_counts.get(p.team, 0) + 1
+
+        # Evaluate every possible single transfer
+        transfers = []
+        for out_p in squad_players:
+            remaining_budget = bank + out_p.cost
+            for candidate in players:
+                if candidate.id in squad_ids:
+                    continue
+                if candidate.position != out_p.position:
+                    continue
+                if candidate.cost > remaining_budget:
+                    continue
+                if candidate.team != out_p.team and team_counts.get(candidate.team, 0) >= 3:
+                    continue
+
+                pts_gain = candidate.ep_next - out_p.ep_next
+                score_gain = candidate.composite_score - out_p.composite_score
+                if score_gain <= 0:
+                    continue
+
+                transfers.append({
+                    "out_name": out_p.name,
+                    "out_team": teams_dict.get(out_p.team, "???"),
+                    "out_cost": out_p.cost,
+                    "out_ep": round(out_p.ep_next, 2),
+                    "in_name": candidate.name,
+                    "in_team": teams_dict.get(candidate.team, "???"),
+                    "in_cost": candidate.cost,
+                    "in_ep": round(candidate.ep_next, 2),
+                    "position_name": out_p.position_name,
+                    "pts_gain": round(pts_gain, 2),
+                    "score_gain": round(score_gain, 3),
+                    "cost_change": round(candidate.cost - out_p.cost, 1),
+                    "net_gain_free": round(pts_gain, 2),
+                    "net_gain_hit": round(pts_gain - 4, 2),
+                    "worth_hit": pts_gain > 4,
+                })
+
+        transfers.sort(key=lambda t: t["pts_gain"], reverse=True)
+        return jsonify({"transfers": transfers[:30], "hit_cost": 4, "bank": round(bank, 1)})
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/multi-gw/<int:user_id>")
+def api_multi_gw(user_id):
+    """Multi-gameweek transfer plan."""
+    try:
+        horizon = int(request.args.get("horizon", 6))
+        horizon = max(3, min(6, horizon))
+
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=1)
+
+        squad_players, bank = load_user_team(user_id, players, gameweeks)
+
+        from .multi_gw import plan_transfers
+        plan = plan_transfers(squad_players, players, fixtures, gameweeks,
+                              teams, bank, horizon)
+
+        return jsonify({"plan": plan, "horizon": horizon, "bank": round(bank, 1)})
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/chip-strategy/<int:user_id>")
+def api_chip_strategy(user_id):
+    """Chip strategy recommendations."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        squad_players, bank = load_user_team(user_id, players, gameweeks)
+
+        from .multi_gw import recommend_chips
+        recs = recommend_chips(squad_players, players, fixtures, gameweeks, teams)
+
+        return jsonify(recs)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/rank-simulation/<int:user_id>")
+def api_rank_simulation(user_id):
+    """Monte Carlo rank simulation over upcoming GWs."""
+    try:
+        num_sims = min(int(request.args.get("sims", 1000)), 5000)
+        horizon = min(int(request.args.get("horizon", 5)), 10)
+
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=1)
+
+        squad_players, bank = load_user_team(user_id, players, gameweeks)
+
+        # Get current rank
+        with httpx.Client(timeout=30) as client:
+            entry = fetch_user_entry(client, user_id)
+        current_rank = entry.get("summary_overall_rank", 500000)
+        current_points = entry.get("summary_overall_points", 0)
+
+        # Squad expected points per GW (sum of ep_next for starting XI)
+        squad_ep = sorted(squad_players, key=lambda p: p.ep_next, reverse=True)
+        # Approximate starting XI: best 11 by ep_next respecting 1 GK
+        gks = [p for p in squad_ep if p.position == 1]
+        outfield = [p for p in squad_ep if p.position != 1]
+        starting_ep = sum(p.ep_next for p in gks[:1]) + sum(p.ep_next for p in outfield[:10])
+
+        # Average GW score across all managers (~50 pts)
+        avg_gw_score = 50.0
+
+        # Run simulations
+        final_points = []
+        for _ in range(num_sims):
+            sim_total = current_points
+            for gw in range(horizon):
+                # Your score: normal distribution around ep_next with variance
+                my_score = max(0, random.gauss(starting_ep, starting_ep * 0.35))
+                sim_total += my_score
+            final_points.append(sim_total)
+
+        final_points.sort(reverse=True)
+
+        # Estimate rank change based on points gained vs average
+        avg_total_gain = sum(final_points) / len(final_points) - current_points
+        avg_others_gain = avg_gw_score * horizon
+
+        # Rough rank model: ~200 points per 100k ranks around top 500k
+        pts_per_100k = 200
+        rank_delta = -(avg_total_gain - avg_others_gain) / pts_per_100k * 100000
+
+        # Percentiles
+        p10 = final_points[int(num_sims * 0.9)]
+        p25 = final_points[int(num_sims * 0.75)]
+        p50 = final_points[int(num_sims * 0.5)]
+        p75 = final_points[int(num_sims * 0.25)]
+        p90 = final_points[int(num_sims * 0.1)]
+
+        # Build histogram buckets for chart
+        min_pts = min(final_points)
+        max_pts = max(final_points)
+        bucket_size = max(1, (max_pts - min_pts) / 20)
+        buckets = []
+        for i in range(20):
+            lo = min_pts + i * bucket_size
+            hi = lo + bucket_size
+            count = sum(1 for p in final_points if lo <= p < hi)
+            buckets.append({"min": round(lo, 1), "max": round(hi, 1), "count": count})
+
+        return jsonify({
+            "current_rank": current_rank,
+            "current_points": current_points,
+            "squad_ep_per_gw": round(starting_ep, 1),
+            "horizon": horizon,
+            "simulations": num_sims,
+            "projected_points": {
+                "p10": round(p10, 1),
+                "p25": round(p25, 1),
+                "median": round(p50, 1),
+                "p75": round(p75, 1),
+                "p90": round(p90, 1),
+            },
+            "projected_rank_change": round(rank_delta),
+            "projected_rank": max(1, round(current_rank + rank_delta)),
+            "histogram": buckets,
+        })
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
