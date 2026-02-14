@@ -9,6 +9,7 @@ import httpx
 
 from .analyzer import score_players
 from .api import (
+    fetch_entry_history,
     fetch_league_standings,
     fetch_live_gameweek,
     fetch_user_entry,
@@ -585,6 +586,139 @@ def api_rival(rival_id):
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/transfer-planner/<int:user_id>")
+def api_transfer_planner(user_id):
+    """Returns user's current squad with full player data for the transfer planner."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, lookahead=5)
+        player_map = {p.id: p for p in players}
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+
+        current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+        if current_gw is None:
+            current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+        if current_gw is None:
+            return jsonify({"error": "Cannot determine current gameweek"}), 400
+
+        with httpx.Client(timeout=30) as client:
+            entry = fetch_user_entry(client, user_id)
+            picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
+            history = fetch_entry_history(client, user_id)
+
+        bank = entry.get("last_deadline_bank", 0) / 10.0
+        team_value = entry.get("last_deadline_value", 0) / 10.0
+
+        # Determine free transfers from history
+        current_history = None
+        for h in history.get("current", []):
+            if h.get("event") == current_gw.id:
+                current_history = h
+                break
+        # FPL doesn't expose free transfers directly; estimate from entry
+        free_transfers = 1  # default
+
+        picks = picks_data.get("picks", [])
+        squad = []
+        for pick in picks:
+            pid = pick["element"]
+            p = player_map.get(pid)
+            if not p:
+                continue
+            selling_price = pick.get("selling_price", p.cost * 10) / 10.0
+            squad.append({
+                "id": p.id,
+                "name": p.name,
+                "team": p.team,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position": p.position,
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "selling_price": round(selling_price, 1),
+                "total_points": p.total_points,
+                "form": p.form,
+                "points_per_game": p.points_per_game,
+                "xG": p.xG,
+                "xA": p.xA,
+                "selected_by_percent": p.selected_by_percent,
+                "composite_score": round(p.composite_score, 3),
+                "photo": p.photo,
+                "news": p.news,
+                "chance_of_playing": p.chance_of_playing,
+                "cost_change_event": p.cost_change_event,
+                "transfers_in_event": p.transfers_in_event,
+                "transfers_out_event": p.transfers_out_event,
+                "multiplier": pick.get("multiplier", 1),
+            })
+
+        # Build replacement candidates grouped by position
+        # For each position, top 30 players by composite score not in squad
+        squad_ids = {pick["element"] for pick in picks}
+        replacements = {}
+        for pos in [1, 2, 3, 4]:
+            pos_name = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[pos]
+            candidates = sorted(
+                [p for p in players if p.position == pos and p.id not in squad_ids],
+                key=lambda p: p.composite_score,
+                reverse=True,
+            )[:30]
+            replacements[pos_name] = [{
+                "id": p.id,
+                "name": p.name,
+                "team": p.team,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position": p.position,
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "total_points": p.total_points,
+                "form": p.form,
+                "points_per_game": p.points_per_game,
+                "xG": p.xG,
+                "xA": p.xA,
+                "selected_by_percent": p.selected_by_percent,
+                "transfers_in_event": p.transfers_in_event,
+                "transfers_out_event": p.transfers_out_event,
+                "cost_change_event": p.cost_change_event,
+                "composite_score": round(p.composite_score, 3),
+                "photo": p.photo,
+            } for p in candidates]
+
+        # Most transferred in/out (top 10 each)
+        most_in = sorted(players, key=lambda p: p.transfers_in_event, reverse=True)[:10]
+        most_out = sorted(players, key=lambda p: p.transfers_out_event, reverse=True)[:10]
+
+        def transfer_info(p):
+            return {
+                "id": p.id,
+                "name": p.name,
+                "team_name": teams_dict.get(p.team, "???"),
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "form": p.form,
+                "selected_by_percent": p.selected_by_percent,
+                "transfers_in_event": p.transfers_in_event,
+                "transfers_out_event": p.transfers_out_event,
+                "cost_change_event": p.cost_change_event,
+            }
+
+        return jsonify({
+            "squad": squad,
+            "bank": round(bank, 1),
+            "team_value": round(team_value, 1),
+            "free_transfers": free_transfers,
+            "gameweek": current_gw.id,
+            "replacements": replacements,
+            "most_transferred_in": [transfer_info(p) for p in most_in],
+            "most_transferred_out": [transfer_info(p) for p in most_out],
+        })
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found or data not available"}), 404
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500

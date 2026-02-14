@@ -410,6 +410,79 @@
   @media (max-width: 480px) {
     .settings-grid { grid-template-columns: 1fr; }
   }
+
+  /* ==================== TRANSFER PLANNER ==================== */
+  .tp-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; }
+  @media (max-width: 900px) { .tp-layout { grid-template-columns: 1fr; } }
+
+  .tp-budget-bar { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tp-budget-card { background: #1a1f2e; border-radius: 8px; padding: 0.6rem 1rem; text-align: center; flex: 1; min-width: 90px; }
+  .tp-budget-card .tp-label { color: #888; font-size: 0.68rem; text-transform: uppercase; }
+  .tp-budget-card .tp-val { font-size: 1.1rem; font-weight: bold; color: #00ff87; margin-top: 0.1rem; }
+  .tp-budget-card .tp-val.blue { color: #4da6ff; }
+  .tp-budget-card .tp-val.red { color: #ff6b6b; }
+  .tp-budget-card .tp-val.gold { color: #ffd700; }
+
+  .tp-squad-list { margin-bottom: 1rem; }
+  .tp-player { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid #1a1f2e; transition: background 0.15s; }
+  .tp-player:hover { background: rgba(26,31,46,0.5); }
+  .tp-player .tp-photo { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #2a2f3e; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .tp-player .tp-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .tp-player .tp-info { flex: 1; min-width: 0; }
+  .tp-player .tp-name { font-weight: 500; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tp-player .tp-meta { color: #888; font-size: 0.72rem; }
+  .tp-player .tp-stats { display: flex; gap: 0.6rem; flex-shrink: 0; font-size: 0.78rem; }
+  .tp-player .tp-sell-btn { background: #ff6b6b; color: #fff; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.72rem; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+  .tp-player .tp-sell-btn:hover { opacity: 0.85; }
+  .tp-player .tp-undo-btn { background: #4da6ff; color: #fff; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.72rem; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+  .tp-player .tp-undo-btn:hover { opacity: 0.85; }
+  .tp-player.tp-sold { opacity: 0.4; }
+  .tp-player.tp-new { border-left: 3px solid #51cf66; background: rgba(81,207,102,0.05); }
+
+  .tp-replacement-panel { display: none; background: #13161f; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #2a2f3e; }
+  .tp-replacement-panel.active { display: block; }
+  .tp-replacement-panel .tp-rp-title { color: #4da6ff; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between; }
+  .tp-replacement-panel .tp-rp-close { cursor: pointer; color: #888; font-size: 1.1rem; }
+  .tp-replacement-panel .tp-rp-close:hover { color: #e6e6e6; }
+  .tp-rp-filters { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .tp-rp-filters input, .tp-rp-filters select { background: #0e1117; border: 1px solid #2a2f3e; color: #e6e6e6; border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.78rem; }
+  .tp-rp-list { max-height: 300px; overflow-y: auto; }
+  .tp-rp-list::-webkit-scrollbar { width: 4px; }
+  .tp-rp-list::-webkit-scrollbar-thumb { background: #2a2f3e; border-radius: 2px; }
+
+  .tp-buy-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-bottom: 1px solid #1a1f2e; font-size: 0.8rem; transition: background 0.15s; cursor: pointer; }
+  .tp-buy-row:hover { background: rgba(81,207,102,0.08); }
+  .tp-buy-row .tp-buy-name { flex: 1; font-weight: 500; }
+  .tp-buy-row .tp-buy-meta { color: #888; font-size: 0.72rem; margin-right: 0.5rem; }
+  .tp-buy-row .tp-buy-btn { background: #51cf66; color: #0e1117; border: none; border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.72rem; cursor: pointer; font-weight: 600; }
+  .tp-buy-row .tp-buy-btn:hover { opacity: 0.85; }
+
+  .tp-price-indicator { font-size: 0.65rem; font-weight: 600; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  .tp-price-up { background: rgba(81,207,102,0.15); color: #51cf66; }
+  .tp-price-down { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+
+  .tp-transfer-summary { margin-bottom: 1rem; }
+  .tp-transfer-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; background: #1a1f2e; border-radius: 6px; margin-bottom: 0.3rem; font-size: 0.82rem; }
+  .tp-transfer-item .tp-arrow { color: #00ff87; font-weight: bold; margin: 0 0.2rem; }
+
+  .tp-intel-section { margin-bottom: 1rem; }
+  .tp-intel-title { color: #00ff87; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .tp-intel-item { display: flex; align-items: center; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid #1a1f2e; font-size: 0.78rem; }
+  .tp-intel-item:last-child { border-bottom: none; }
+  .tp-intel-item .tp-intel-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 0.5rem; }
+  .tp-intel-item .tp-intel-val { font-weight: 600; flex-shrink: 0; }
+
+  /* Confirm modal */
+  .tp-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; align-items: center; justify-content: center; }
+  .tp-modal-overlay.active { display: flex; }
+  .tp-modal { background: #13161f; border: 1px solid #2a2f3e; border-radius: 12px; padding: 1.5rem; max-width: 480px; width: 90%; max-height: 80vh; overflow-y: auto; }
+  .tp-modal h3 { color: #00ff87; margin-bottom: 1rem; font-size: 1rem; }
+  .tp-modal .tp-modal-transfers { margin-bottom: 1rem; }
+  .tp-modal .tp-modal-cost { background: #1a1f2e; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
+  .tp-modal .tp-modal-row { display: flex; justify-content: space-between; padding: 0.2rem 0; font-size: 0.85rem; }
+  .tp-modal .tp-modal-row.total { border-top: 1px solid #2a2f3e; margin-top: 0.3rem; padding-top: 0.4rem; font-weight: 600; }
+  .tp-modal .tp-modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+  .tp-modal .tp-modal-actions .btn-cancel { background: #2a2f3e; color: #e6e6e6; border: none; border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.85rem; }
 </style>
 </head>
 <body>
@@ -455,6 +528,7 @@
         <span class="si-arrow">&#9654;</span>
       </div>
       <div class="sidebar-sub" id="sub-transfers">
+        <div class="sidebar-sub-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">Transfer Planner</div>
         <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Suggestions</div>
         <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
       </div>
@@ -714,6 +788,92 @@
             <div class="table-wrap">
               <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
               <tbody id="user-transfers-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TRANSFERS: PLANNER ==================== -->
+      <div class="nav-panel" id="nav-transfers-planner">
+        <div class="section">
+          <div class="section-title">Transfer Planner</div>
+          <p id="tp-no-user" style="color:#888;font-size:0.85rem;">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to plan transfers.</p>
+          <div id="tp-content" class="hidden">
+            <div class="tp-budget-bar" id="tp-budget-bar">
+              <div class="tp-budget-card"><div class="tp-label">Bank</div><div class="tp-val" id="tp-bank">0.0</div></div>
+              <div class="tp-budget-card"><div class="tp-label">Selling</div><div class="tp-val blue" id="tp-selling">0.0</div></div>
+              <div class="tp-budget-card"><div class="tp-label">Buying</div><div class="tp-val red" id="tp-buying">0.0</div></div>
+              <div class="tp-budget-card"><div class="tp-label">Remaining</div><div class="tp-val gold" id="tp-remaining">0.0</div></div>
+              <div class="tp-budget-card"><div class="tp-label">Hits</div><div class="tp-val red" id="tp-hits">0</div></div>
+            </div>
+
+            <div class="tp-transfer-summary" id="tp-transfer-summary"></div>
+
+            <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <button class="btn" id="tp-confirm-btn" onclick="showTransferModal()" disabled>Confirm Transfers</button>
+              <button class="btn-outline" onclick="resetTransfers()">Reset All</button>
+              <span id="tp-free-label" style="color:#888;font-size:0.78rem;align-self:center;"></span>
+            </div>
+
+            <div class="tp-layout">
+              <div>
+                <!-- Squad -->
+                <div class="section" style="padding:0.8rem;">
+                  <div class="section-title blue" style="margin-bottom:0.4rem;">Your Squad</div>
+                  <div class="tp-squad-list" id="tp-squad"></div>
+                </div>
+
+                <!-- Replacement picker -->
+                <div class="tp-replacement-panel" id="tp-replacement-panel">
+                  <div class="tp-rp-title">
+                    <span id="tp-rp-label">Pick a replacement</span>
+                    <span class="tp-rp-close" onclick="closeReplacementPanel()">&times;</span>
+                  </div>
+                  <div class="tp-rp-filters">
+                    <input type="text" id="tp-rp-search" placeholder="Search..." oninput="filterReplacements()">
+                    <select id="tp-rp-sort" onchange="filterReplacements()">
+                      <option value="composite_score">Score</option>
+                      <option value="form">Form</option>
+                      <option value="total_points">Points</option>
+                      <option value="cost">Cost (low)</option>
+                      <option value="selected_by_percent">Ownership</option>
+                    </select>
+                  </div>
+                  <div class="tp-rp-list" id="tp-rp-list"></div>
+                </div>
+              </div>
+
+              <!-- Intelligence Rail -->
+              <div>
+                <div class="section" style="padding:0.8rem;">
+                  <div class="tp-intel-section">
+                    <div class="tp-intel-title">Most Transferred In</div>
+                    <div id="tp-intel-in"></div>
+                  </div>
+                  <div class="tp-intel-section">
+                    <div class="tp-intel-title" style="color:#ff6b6b;">Most Transferred Out</div>
+                    <div id="tp-intel-out"></div>
+                  </div>
+                  <div class="tp-intel-section">
+                    <div class="tp-intel-title" style="color:#4da6ff;">Form Ranking (Your Squad)</div>
+                    <div id="tp-intel-form"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="loader" id="tp-loader"><div class="spinner"></div><div class="loader-text">Loading transfer data...</div></div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div class="tp-modal-overlay" id="tp-modal-overlay" onclick="if(event.target===this)closeTransferModal()">
+          <div class="tp-modal">
+            <h3>Confirm Transfers</h3>
+            <div class="tp-modal-transfers" id="tp-modal-transfers"></div>
+            <div class="tp-modal-cost" id="tp-modal-cost"></div>
+            <div class="tp-modal-actions">
+              <button class="btn-cancel" onclick="closeTransferModal()">Cancel</button>
+              <button class="btn" onclick="confirmTransfers()">Confirm</button>
             </div>
           </div>
         </div>
@@ -1115,6 +1275,7 @@ function switchNav(panelId) {
   if (panelId === 'nav-news-prices') loadPriceChanges();
   if (panelId === 'nav-news-differentials') loadDifferentials();
   if (panelId === 'nav-team-live') loadLive();
+  if (panelId === 'nav-transfers-planner') loadTransferPlanner();
   if (panelId === 'nav-dashboard') loadDashboard();
 }
 
@@ -2476,6 +2637,351 @@ async function runOptimizer() {
     btn.disabled = false;
     loader.classList.remove('active');
   }
+}
+
+// ==================== TRANSFER PLANNER ====================
+let tpData = null;  // raw API data
+let tpTransfers = [];  // [{out: playerObj, in: playerObj}]
+let tpSellingPlayer = null;  // player being sold (awaiting replacement pick)
+let tpLoaded = false;
+
+async function loadTransferPlanner() {
+  if (!loadedUserId) { $('tp-no-user').classList.remove('hidden'); $('tp-content').classList.add('hidden'); return; }
+  $('tp-no-user').classList.add('hidden');
+
+  if (tpLoaded) { $('tp-content').classList.remove('hidden'); return; }
+
+  const loader = $('tp-loader');
+  loader.classList.add('active');
+  $('tp-content').classList.add('hidden');
+
+  try {
+    const resp = await fetch(`/api/transfer-planner/${loadedUserId}`);
+    const data = await resp.json();
+    if (!resp.ok) { $('tp-content').innerHTML = `<div class="error-msg">${data.error}</div>`; $('tp-content').classList.remove('hidden'); return; }
+
+    tpData = data;
+    tpTransfers = [];
+    tpSellingPlayer = null;
+    renderTransferPlanner();
+    $('tp-content').classList.remove('hidden');
+    tpLoaded = true;
+  } catch (err) {
+    $('tp-content').innerHTML = `<div class="error-msg">Failed: ${err.message}</div>`;
+    $('tp-content').classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function renderTransferPlanner() {
+  if (!tpData) return;
+
+  const freeTransfers = tpData.free_transfers || 1;
+  const numTransfers = tpTransfers.length;
+  const hits = Math.max(0, numTransfers - freeTransfers) * 4;
+
+  // Calculate budget
+  let sellingTotal = 0;
+  let buyingTotal = 0;
+  tpTransfers.forEach(t => {
+    sellingTotal += t.out.selling_price || t.out.cost;
+    buyingTotal += t.in.cost;
+  });
+  const bank = tpData.bank;
+  const remaining = bank + sellingTotal - buyingTotal;
+
+  $('tp-bank').textContent = bank.toFixed(1) + 'M';
+  $('tp-selling').textContent = sellingTotal.toFixed(1) + 'M';
+  $('tp-buying').textContent = buyingTotal.toFixed(1) + 'M';
+  $('tp-remaining').textContent = remaining.toFixed(1) + 'M';
+  $('tp-remaining').style.color = remaining < 0 ? '#ff6b6b' : '#ffd700';
+  $('tp-hits').textContent = hits > 0 ? `-${hits}` : '0';
+  $('tp-hits').style.color = hits > 0 ? '#ff6b6b' : '#00ff87';
+  $('tp-free-label').textContent = `Free transfers: ${freeTransfers} | Used: ${numTransfers}`;
+
+  // Enable/disable confirm button
+  $('tp-confirm-btn').disabled = tpTransfers.length === 0 || remaining < 0;
+
+  // Render transfer summary
+  if (tpTransfers.length > 0) {
+    $('tp-transfer-summary').innerHTML = tpTransfers.map((t, i) => `
+      <div class="tp-transfer-item">
+        <span class="out">${t.out.name} (${(t.out.selling_price || t.out.cost).toFixed(1)}M)</span>
+        <span class="tp-arrow">&#8594;</span>
+        <span class="in">${t.in.name} (${t.in.cost.toFixed(1)}M)</span>
+        <span style="margin-left:auto;cursor:pointer;color:#ff6b6b;font-size:0.9rem;" onclick="undoTransfer(${i})" title="Remove">&times;</span>
+      </div>
+    `).join('');
+  } else {
+    $('tp-transfer-summary').innerHTML = '';
+  }
+
+  // Build current squad view (original minus sold, plus bought)
+  const soldIds = new Set(tpTransfers.map(t => t.out.id));
+  const boughtPlayers = tpTransfers.map(t => t.in);
+
+  // Group by position
+  const posOrder = [1, 2, 3, 4];
+  const posNames = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'};
+
+  let squadHtml = '';
+  for (const pos of posOrder) {
+    const origPlayers = tpData.squad.filter(p => p.position === pos);
+    const newPlayers = boughtPlayers.filter(p => p.position === pos);
+
+    squadHtml += `<div style="font-size:0.7rem;color:#888;text-transform:uppercase;padding:0.3rem 0.6rem;margin-top:0.3rem;">${posNames[pos]}</div>`;
+
+    for (const p of origPlayers) {
+      const isSold = soldIds.has(p.id);
+      const photoUrl = p.photo ? `${PHOTO_BASE}${p.photo}.png` : '';
+      const photoHtml = photoUrl
+        ? `<img src="${photoUrl}" onerror="this.parentElement.innerHTML='&#9917;'" style="width:100%;height:100%;object-fit:cover;object-position:top;">`
+        : '&#9917;';
+
+      let priceIndicator = '';
+      if (p.cost_change_event && p.cost_change_event > 0) priceIndicator = '<span class="tp-price-indicator tp-price-up">&#9650;</span>';
+      else if (p.cost_change_event && p.cost_change_event < 0) priceIndicator = '<span class="tp-price-indicator tp-price-down">&#9660;</span>';
+
+      let injuryFlag = '';
+      if (p.news || (p.chance_of_playing !== null && p.chance_of_playing !== undefined && p.chance_of_playing < 100)) {
+        const cop = p.chance_of_playing;
+        const color = (cop !== null && cop !== undefined && cop <= 25) ? '#ff6b6b' : '#ffaa00';
+        injuryFlag = `<span style="color:${color};font-size:0.65rem;font-weight:bold;" title="${p.news || cop + '% chance'}">!</span>`;
+      }
+
+      const btn = isSold
+        ? `<button class="tp-undo-btn" onclick="undoSell(${p.id})">Undo</button>`
+        : `<button class="tp-sell-btn" onclick="startSell(${p.id})">Sell</button>`;
+
+      squadHtml += `<div class="tp-player${isSold ? ' tp-sold' : ''}">
+        <div class="tp-photo">${photoHtml}</div>
+        <div class="tp-info">
+          <div class="tp-name">${p.name} ${injuryFlag} ${priceIndicator}</div>
+          <div class="tp-meta">${p.team_name} &middot; ${p.cost.toFixed(1)}M &middot; ${p.selected_by_percent}% own &middot; Form: ${p.form}</div>
+        </div>
+        <div class="tp-stats">
+          <span class="score">${p.composite_score}</span>
+        </div>
+        ${btn}
+      </div>`;
+    }
+
+    // Show bought players for this position
+    for (const p of newPlayers) {
+      squadHtml += `<div class="tp-player tp-new">
+        <div class="tp-photo">${p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'" style="width:100%;height:100%;object-fit:cover;object-position:top;">` : '&#9917;'}</div>
+        <div class="tp-info">
+          <div class="tp-name">${p.name} <span style="color:#51cf66;font-size:0.65rem;">NEW</span></div>
+          <div class="tp-meta">${p.team_name} &middot; ${p.cost.toFixed(1)}M &middot; ${p.selected_by_percent}% own &middot; Form: ${p.form}</div>
+        </div>
+        <div class="tp-stats"><span class="score">${p.composite_score}</span></div>
+      </div>`;
+    }
+  }
+  $('tp-squad').innerHTML = squadHtml;
+
+  // Intelligence rail
+  renderTransferIntel();
+}
+
+function renderTransferIntel() {
+  if (!tpData) return;
+
+  // Most transferred in
+  $('tp-intel-in').innerHTML = tpData.most_transferred_in.map(p => {
+    let priceInd = '';
+    if (p.cost_change_event > 0) priceInd = '<span class="tp-price-indicator tp-price-up">&#9650;</span>';
+    return `<div class="tp-intel-item">
+      <span class="tp-intel-name">${p.name} ${priceInd}</span>
+      <span class="tp-intel-val" style="color:#51cf66">+${p.transfers_in_event.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+
+  // Most transferred out
+  $('tp-intel-out').innerHTML = tpData.most_transferred_out.map(p => {
+    let priceInd = '';
+    if (p.cost_change_event < 0) priceInd = '<span class="tp-price-indicator tp-price-down">&#9660;</span>';
+    return `<div class="tp-intel-item">
+      <span class="tp-intel-name">${p.name} ${priceInd}</span>
+      <span class="tp-intel-val" style="color:#ff6b6b">${p.transfers_out_event.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+
+  // Form ranking of current squad
+  const soldIds = new Set(tpTransfers.map(t => t.out.id));
+  const currentSquad = [...tpData.squad.filter(p => !soldIds.has(p.id)), ...tpTransfers.map(t => t.in)];
+  const byForm = [...currentSquad].sort((a, b) => b.form - a.form);
+  $('tp-intel-form').innerHTML = byForm.map(p => {
+    const isNew = tpTransfers.some(t => t.in.id === p.id);
+    return `<div class="tp-intel-item">
+      <span class="tp-intel-name">${p.name}${isNew ? ' <span style="color:#51cf66;font-size:0.6rem;">NEW</span>' : ''}</span>
+      <span class="tp-intel-val" style="color:#4da6ff">${p.form}</span>
+    </div>`;
+  }).join('');
+}
+
+function startSell(playerId) {
+  const player = tpData.squad.find(p => p.id === playerId);
+  if (!player) return;
+
+  // Check if already sold
+  if (tpTransfers.some(t => t.out.id === playerId)) return;
+
+  tpSellingPlayer = player;
+  const posName = player.position_name;
+
+  $('tp-rp-label').textContent = `Replace ${player.name} (${posName} - ${player.cost.toFixed(1)}M)`;
+  $('tp-rp-search').value = '';
+
+  const panel = $('tp-replacement-panel');
+  panel.classList.add('active');
+
+  filterReplacements();
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function filterReplacements() {
+  if (!tpSellingPlayer || !tpData) return;
+
+  const pos = tpSellingPlayer.position_name;
+  let candidates = tpData.replacements[pos] || [];
+
+  // Exclude already-bought players and current squad
+  const squadIds = new Set(tpData.squad.map(p => p.id));
+  const boughtIds = new Set(tpTransfers.map(t => t.in.id));
+  candidates = candidates.filter(p => !squadIds.has(p.id) && !boughtIds.has(p.id));
+
+  // Search filter
+  const search = ($('tp-rp-search').value || '').trim().toLowerCase();
+  if (search) {
+    candidates = candidates.filter(p => p.name.toLowerCase().includes(search) || p.team_name.toLowerCase().includes(search));
+  }
+
+  // Sort
+  const sortBy = $('tp-rp-sort').value;
+  if (sortBy === 'cost') {
+    candidates.sort((a, b) => a.cost - b.cost);
+  } else {
+    candidates.sort((a, b) => (b[sortBy] || 0) - (a[sortBy] || 0));
+  }
+
+  // Calculate available budget for this position
+  const bank = tpData.bank;
+  let sellingTotal = (tpSellingPlayer.selling_price || tpSellingPlayer.cost);
+  tpTransfers.forEach(t => {
+    sellingTotal += (t.out.selling_price || t.out.cost);
+    sellingTotal -= t.in.cost;
+  });
+  const maxBudget = bank + sellingTotal;
+
+  // Store candidates for click handler
+  window._tpCandidates = candidates;
+
+  $('tp-rp-list').innerHTML = candidates.map((p, idx) => {
+    const affordable = p.cost <= maxBudget;
+    let priceInd = '';
+    if (p.cost_change_event > 0) priceInd = '<span class="tp-price-indicator tp-price-up" style="margin-left:0.3rem;">&#9650;</span>';
+    else if (p.cost_change_event < 0) priceInd = '<span class="tp-price-indicator tp-price-down" style="margin-left:0.3rem;">&#9660;</span>';
+
+    const netTransfers = p.transfers_in_event - p.transfers_out_event;
+    const netColor = netTransfers > 0 ? '#51cf66' : netTransfers < 0 ? '#ff6b6b' : '#888';
+
+    return `<div class="tp-buy-row" style="${affordable ? '' : 'opacity:0.4;'}">
+      <span class="tp-buy-name">${p.name}${priceInd}</span>
+      <span class="tp-buy-meta">${p.team_name} &middot; <span class="cost">${p.cost.toFixed(1)}M</span> &middot; ${p.selected_by_percent}% &middot; F:${p.form} &middot; <span style="color:${netColor}">${netTransfers > 0 ? '+' : ''}${netTransfers.toLocaleString()}</span></span>
+      <span style="color:#00ff87;font-size:0.72rem;font-weight:600;min-width:35px;text-align:right;">${p.composite_score}</span>
+      ${affordable ? `<button class="tp-buy-btn" onclick="buyPlayerByIdx(${idx})">Buy</button>` : '<span style="color:#ff6b6b;font-size:0.68rem;">$$</span>'}
+    </div>`;
+  }).join('');
+}
+
+function buyPlayerByIdx(idx) {
+  if (!window._tpCandidates || !window._tpCandidates[idx]) return;
+  buyPlayer(window._tpCandidates[idx]);
+}
+
+function buyPlayer(player) {
+  if (!tpSellingPlayer) return;
+
+  tpTransfers.push({
+    out: tpSellingPlayer,
+    in: player,
+  });
+
+  tpSellingPlayer = null;
+  closeReplacementPanel();
+  renderTransferPlanner();
+}
+
+function closeReplacementPanel() {
+  $('tp-replacement-panel').classList.remove('active');
+  tpSellingPlayer = null;
+}
+
+function undoSell(playerId) {
+  tpTransfers = tpTransfers.filter(t => t.out.id !== playerId);
+  renderTransferPlanner();
+}
+
+function undoTransfer(index) {
+  tpTransfers.splice(index, 1);
+  renderTransferPlanner();
+}
+
+function resetTransfers() {
+  tpTransfers = [];
+  tpSellingPlayer = null;
+  closeReplacementPanel();
+  renderTransferPlanner();
+}
+
+function showTransferModal() {
+  if (tpTransfers.length === 0) return;
+
+  const freeTransfers = tpData.free_transfers || 1;
+  const hits = Math.max(0, tpTransfers.length - freeTransfers) * 4;
+  let sellingTotal = 0, buyingTotal = 0;
+  tpTransfers.forEach(t => {
+    sellingTotal += t.out.selling_price || t.out.cost;
+    buyingTotal += t.in.cost;
+  });
+  const remaining = tpData.bank + sellingTotal - buyingTotal;
+
+  $('tp-modal-transfers').innerHTML = tpTransfers.map(t => `
+    <div class="tp-transfer-item">
+      <span class="out">${t.out.name} (${(t.out.selling_price || t.out.cost).toFixed(1)}M)</span>
+      <span class="tp-arrow">&#8594;</span>
+      <span class="in">${t.in.name} (${t.in.cost.toFixed(1)}M)</span>
+    </div>
+  `).join('');
+
+  $('tp-modal-cost').innerHTML = `
+    <div class="tp-modal-row"><span>Bank before</span><span>${tpData.bank.toFixed(1)}M</span></div>
+    <div class="tp-modal-row"><span>Total selling</span><span style="color:#51cf66">+${sellingTotal.toFixed(1)}M</span></div>
+    <div class="tp-modal-row"><span>Total buying</span><span style="color:#ff6b6b">-${buyingTotal.toFixed(1)}M</span></div>
+    ${hits > 0 ? `<div class="tp-modal-row"><span>Transfer hits</span><span style="color:#ff6b6b">-${hits} pts</span></div>` : ''}
+    <div class="tp-modal-row total"><span>Bank after</span><span style="color:#ffd700">${remaining.toFixed(1)}M</span></div>
+  `;
+
+  $('tp-modal-overlay').classList.add('active');
+}
+
+function closeTransferModal() {
+  $('tp-modal-overlay').classList.remove('active');
+}
+
+function confirmTransfers() {
+  // This is a planning tool - save to localStorage for reference
+  const plan = tpTransfers.map(t => ({
+    out: { id: t.out.id, name: t.out.name, cost: t.out.selling_price || t.out.cost },
+    in: { id: t.in.id, name: t.in.name, cost: t.in.cost },
+  }));
+  localStorage.setItem(`fpl_transfer_plan_${loadedUserId}`, JSON.stringify(plan));
+  closeTransferModal();
+
+  // Show confirmation message
+  $('tp-transfer-summary').innerHTML += `<div style="color:#51cf66;font-size:0.82rem;margin-top:0.5rem;padding:0.5rem;background:#1a2a1a;border-radius:6px;">Transfer plan saved! Go to the FPL website to make these transfers.</div>`;
 }
 </script>
 </body>
