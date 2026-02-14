@@ -107,6 +107,19 @@
   .user-error { display: none; margin-top: 0.5rem; color: #ff6b6b; font-size: 0.82rem; padding: 0.4rem 0.6rem; background: #2d1b1b; border-radius: 4px; }
   .user-error.active { display: block; }
   .help-text { color: #555; font-size: 0.72rem; margin-top: 0.2rem; }
+
+  /* Recent users dropdown */
+  .recent-users { margin-top: 0.6rem; }
+  .recent-users .sec-title { color: #888; font-size: 0.72rem; text-transform: uppercase; margin-bottom: 0.35rem; letter-spacing: 0.03em; }
+  .recent-user-list { display: flex; flex-direction: column; gap: 0.25rem; }
+  .recent-user-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.7rem; background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .recent-user-item:hover { border-color: #4da6ff; background: #1e2640; }
+  .recent-user-item.current { border-color: #00ff87; background: rgba(0,255,135,0.06); }
+  .recent-user-item .ru-name { flex: 1; font-size: 0.85rem; font-weight: 500; }
+  .recent-user-item .ru-team { color: #888; font-size: 0.78rem; }
+  .recent-user-item .ru-id { color: #555; font-size: 0.72rem; font-family: monospace; }
+  .recent-user-item .ru-remove { color: #555; font-size: 0.85rem; padding: 0 0.3rem; cursor: pointer; transition: color 0.15s; }
+  .recent-user-item .ru-remove:hover { color: #ff6b6b; }
   .inline-spinner { display: none; width: 16px; height: 16px; border: 2px solid #2a2f3e; border-top-color: #4da6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   .inline-spinner.active { display: inline-block; }
 
@@ -1417,6 +1430,10 @@
             <div class="mgr">Manager: <span id="manager-name"></span></div>
             <div class="tm">Team: <span id="team-name"></span></div>
           </div>
+          <div class="recent-users" id="recent-users">
+            <div class="sec-title">Recent managers</div>
+            <div class="recent-user-list" id="recent-user-list"></div>
+          </div>
         </div>
 
         <!-- Optimizer defaults -->
@@ -1726,6 +1743,51 @@ function loadDashLeagueRank() {
   }).catch(() => {});
 }
 
+// ==================== RECENT USERS ====================
+function getRecentUsers() {
+  try { return JSON.parse(localStorage.getItem('fpl_recent_users') || '[]'); }
+  catch { return []; }
+}
+function saveRecentUser(id, name, teamName) {
+  let list = getRecentUsers().filter(u => u.id !== id);
+  list.unshift({ id, name, teamName });
+  if (list.length > 8) list = list.slice(0, 8);
+  localStorage.setItem('fpl_recent_users', JSON.stringify(list));
+  renderRecentUsers();
+}
+function removeRecentUser(id, evt) {
+  evt.stopPropagation();
+  let list = getRecentUsers().filter(u => u.id !== id);
+  localStorage.setItem('fpl_recent_users', JSON.stringify(list));
+  if (loadedUserId === id) {
+    // If removed user is current, clear active user reference in storage
+    const saved = localStorage.getItem('fpl_user_id');
+    if (saved && parseInt(saved) === id) localStorage.removeItem('fpl_user_id');
+  }
+  renderRecentUsers();
+}
+function selectRecentUser(id) {
+  $('user-id').value = id;
+  loadUser();
+}
+function renderRecentUsers() {
+  const list = getRecentUsers();
+  const container = $('recent-user-list');
+  const section = $('recent-users');
+  if (!list.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  container.innerHTML = list.map(u => {
+    const isCurrent = loadedUserId === u.id ? ' current' : '';
+    return `<div class="recent-user-item${isCurrent}" onclick="selectRecentUser(${u.id})">
+      <span class="ru-name">${u.name}</span>
+      <span class="ru-team">${u.teamName}</span>
+      <span class="ru-id">#${u.id}</span>
+      <span class="ru-remove" onclick="removeRecentUser(${u.id}, event)" title="Remove">&times;</span>
+    </div>`;
+  }).join('');
+}
+renderRecentUsers();
+
 // ==================== PERSIST USER ID ====================
 (function restoreUser() {
   const saved = localStorage.getItem('fpl_user_id');
@@ -1805,6 +1867,7 @@ async function loadUser() {
     loadedUserId = uid;
     dashLoaded = false; // Reset so dashboard reloads with new user
     localStorage.setItem('fpl_user_id', String(uid));
+    saveRecentUser(uid, data.manager_name, data.team_name);
     $('manager-name').textContent = data.manager_name;
     $('team-name').textContent = data.team_name;
     $('user-info').classList.add('active');
