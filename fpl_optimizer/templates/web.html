@@ -27,6 +27,16 @@
   .sidebar-brand h1 { font-family: 'Space Grotesk', sans-serif; color: #00E676; font-size: 1.3rem; margin-bottom: 0.1rem; text-shadow: 0 0 20px rgba(0,230,118,0.15); }
   .sidebar-brand .subtitle { color: #667788; font-size: 0.72rem; }
 
+  /* ==================== LOGO MONOGRAM ==================== */
+  .logo-monogram { display: flex; align-items: center; gap: 0.15rem; }
+  .logo-fpl { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #F0F0F0; font-size: 1.45rem; letter-spacing: -0.5px; line-height: 1; }
+  .logo-o { width: 32px; height: 32px; flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(0,230,118,0.25)); }
+  .logo-sub { font-family: 'Space Grotesk', sans-serif; font-weight: 500; color: #8899AA; font-size: 1.1rem; letter-spacing: -0.3px; line-height: 1; margin-left: -0.1rem; }
+  .mobile-topbar .logo-monogram { gap: 0.1rem; }
+  .mobile-topbar .logo-fpl { font-size: 1.15rem; }
+  .mobile-topbar .logo-o { width: 24px; height: 24px; }
+  .mobile-topbar .logo-sub { font-size: 0.88rem; }
+
   .sidebar-nav { flex: 1; padding: 0.6rem 0; }
   .sidebar-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 1.2rem; color: #8899AA; font-size: 0.88rem; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; user-select: none; }
   .sidebar-item:hover { color: #F0F0F0; background: rgba(255,255,255,0.03); }
@@ -71,8 +81,9 @@
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
-    .main-content { margin-left: 0; padding-top: 50px; }
+    .main-content { margin-left: 0; padding-top: 50px; padding-bottom: 68px; }
     .mobile-topbar { display: flex; }
+    .hamburger { display: none; }
     .fixture-ticker { top: 50px; }
   }
 
@@ -209,6 +220,16 @@
   .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #00E676; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loader-text { color: #8899AA; margin-top: 0.5rem; font-size: 0.82rem; }
+
+  /* Skeleton loading shimmer */
+  .skeleton { background: linear-gradient(90deg, #1B2D45 25%, #233a56 50%, #1B2D45 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; min-height: 1em; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .skeleton-row { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .skeleton-row .skeleton { height: 14px; flex: 1; }
+  .skeleton-row .skeleton:first-child { max-width: 40%; }
+  .skeleton-card { background: rgba(27,45,69,0.5); border-radius: 12px; padding: 1rem; margin-bottom: 0.6rem; }
+  .skeleton-card .skeleton { margin-bottom: 0.5rem; height: 12px; }
+  .skeleton-card .skeleton:first-child { width: 60%; height: 16px; }
   .error-msg { background: #2d1b1b; border: 1px solid #FF5252; color: #FF5252; border-radius: 8px; padding: 0.8rem 1.2rem; text-align: center; margin: 1rem 0; }
 
   /* Filters bar */
@@ -513,9 +534,25 @@
     .settings-grid { grid-template-columns: 1fr 1fr; }
     .stat-card { min-width: 80px; padding: 0.5rem; }
     .stat-card .value { font-size: 1rem; }
-    td { font-size: 0.78rem; padding: 0.35rem 0.4rem; }
+    td { font-size: 0.78rem; padding: 0.35rem 0.4rem; min-height: 44px; }
     th { font-size: 0.68rem; padding: 0.4rem; }
+    th.sortable { min-height: 44px; cursor: pointer; }
     .section { padding: 0.8rem; }
+    /* Touch targets: 44px minimum */
+    .sidebar-sub-item { min-height: 44px; display: flex; align-items: center; }
+    .btn, .btn-blue, .btn-sm, .btn-outline { min-height: 44px; }
+    .league-chip { min-height: 44px; }
+    /* Prevent iOS auto-zoom on input focus */
+    .field input, .field select { font-size: 16px; }
+    .tp-rp-filters input, .tp-rp-filters select { font-size: 16px; }
+    .filters input, .filters select { font-size: 16px; }
+    select, input[type="text"], input[type="number"] { font-size: 16px; }
+    /* Larger slider thumb on mobile */
+    input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
+    input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; }
+    /* Spacing between tappable elements */
+    .filters { gap: 8px; }
+    .tp-budget-bar { gap: 8px; }
   }
   @media (max-width: 480px) {
     .settings-grid { grid-template-columns: 1fr; }
@@ -751,6 +788,122 @@
   .demo-banner .btn { font-size: 0.78rem; padding: 0.35rem 1rem; }
   .demo-dismiss { color: #667788; font-size: 1.2rem; cursor: pointer; padding: 0 0.3rem; line-height: 1; }
   .demo-dismiss:hover { color: #FF5252; }
+
+  /* ==================== BOTTOM NAVIGATION (MOBILE) ==================== */
+  .bottom-nav { display: none; }
+  .more-menu-mobile { display: none; }
+  .more-menu-overlay { display: none; }
+
+  @media (max-width: 768px) {
+    .bottom-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, #1B2D45 0%, #0D1B2A 100%);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 300;
+    }
+    .bottom-nav button {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; background: none; border: none; color: #667788;
+      cursor: pointer; padding: 6px 0; transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-nav button.active { color: #00E676; }
+    .bn-icon { font-size: 1.3rem; line-height: 1; }
+    .bn-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+
+    /* More menu slide-up */
+    .more-menu-overlay.active { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 280; }
+    .more-menu-mobile.active {
+      display: block; position: fixed; bottom: 60px; left: 0; right: 0;
+      max-height: 55vh; background: #1B2D45;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px 16px 0 0; z-index: 290;
+      overflow-y: auto; padding: 0.8rem 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+      animation: mmSlideUp 0.25s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    @keyframes mmSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .mm-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 1rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.4rem;
+    }
+    .mm-header span { color: #8899AA; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .mm-close { background: none; border: none; color: #667788; font-size: 1.3rem; cursor: pointer; padding: 0.2rem; }
+    .mm-close:hover { color: #FF5252; }
+    .mm-group-title { color: #667788; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.5rem 1rem 0.2rem; }
+    .mm-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.65rem 1rem; color: #8899AA; font-size: 0.88rem;
+      cursor: pointer; transition: all 0.15s; min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mm-item:hover, .mm-item:active { color: #F0F0F0; background: rgba(255,255,255,0.04); }
+    .mm-item .mm-icon { font-size: 1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+    .mm-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.3rem 1rem; }
+
+    /* ==================== TABLE CARD-MODE (MOBILE) ==================== */
+    .table-wrap.card-mode table,
+    .table-wrap.card-mode thead,
+    .table-wrap.card-mode tbody,
+    .table-wrap.card-mode tr,
+    .table-wrap.card-mode td { display: block; }
+    .table-wrap.card-mode thead { display: none; }
+    .table-wrap.card-mode table { min-width: 0; }
+    .table-wrap.card-mode tr {
+      background: rgba(27,45,69,0.7);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+    .table-wrap.card-mode td {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.2rem 0; border: none; text-align: right;
+    }
+    .table-wrap.card-mode td::before {
+      content: attr(data-label);
+      color: #8899AA; font-size: 0.72rem; font-weight: 600;
+      text-align: left; margin-right: 0.5rem; flex-shrink: 0;
+    }
+    /* First td in card = player name, make it prominent */
+    .table-wrap.card-mode tr td:first-child {
+      font-size: 0.95rem; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 0.4rem; margin-bottom: 0.2rem;
+    }
+
+    /* ==================== FROZEN COLUMN SHADOW (MOBILE) ==================== */
+    .fdr-grid .team-col,
+    .sched-grid .team-col { box-shadow: 4px 0 8px rgba(0,0,0,0.3); }
+
+    /* ==================== MOBILE CONTENT PRIORITIZATION ==================== */
+    /* Dashboard: secondary sections behind accordion */
+    .dash-rail .dash-section { border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; margin-bottom: 0.5rem; }
+    .dash-rail .dash-section-title {
+      cursor: pointer; padding: 0.7rem; margin: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dash-rail .dash-section-title::after { content: '\25BC'; font-size: 0.6rem; color: #667788; transition: transform 0.2s; }
+    .dash-rail .dash-section-title.collapsed::after { transform: rotate(-90deg); }
+    .dash-rail .dash-section .dash-rail-list { padding: 0 0.7rem 0.7rem; }
+    .dash-rail .dash-section .dash-rail-list.collapsed { display: none; }
+
+    /* Quick links: full-width stack */
+    .dash-bottom-grid { grid-template-columns: 1fr !important; }
+
+    /* Sticky optimize CTA */
+    .sticky-optimize {
+      position: fixed; bottom: 68px; left: 0; right: 0;
+      padding: 0.6rem 1rem; background: linear-gradient(180deg, transparent, #0D1B2A 30%);
+      z-index: 250; display: none;
+    }
+    .sticky-optimize.visible { display: block; }
+    .sticky-optimize .btn { width: 100%; padding: 0.75rem; font-size: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -758,7 +911,24 @@
 <!-- Mobile top bar -->
 <div class="mobile-topbar">
   <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
-  <span class="brand">FPL Optimizer</span>
+  <div class="logo-monogram">
+    <span class="logo-fpl">FPL</span>
+    <svg class="logo-o" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="20" cy="20" r="16" stroke="#00E676" stroke-width="2.5" opacity="0.9"/>
+      <line x1="20" y1="20" x2="20" y2="4" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+      <line x1="20" y1="20" x2="35.2" y2="15.1" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+      <line x1="20" y1="20" x2="29.4" y2="32.9" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+      <line x1="20" y1="20" x2="10.6" y2="32.9" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+      <line x1="20" y1="20" x2="4.8" y2="15.1" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+      <polygon points="20,6.4 28.4,17.3 28.9,32.3 16.2,25.2 9.4,16.5" fill="rgba(0,230,118,0.2)" stroke="#00E676" stroke-width="1.3" stroke-linejoin="round"/>
+      <circle cx="20" cy="6.4" r="1.5" fill="#00E676"/>
+      <circle cx="28.4" cy="17.3" r="1.5" fill="#00E676"/>
+      <circle cx="28.9" cy="32.3" r="1.5" fill="#00E676"/>
+      <circle cx="16.2" cy="25.2" r="1.5" fill="#00E676"/>
+      <circle cx="9.4" cy="16.5" r="1.5" fill="#00E676"/>
+    </svg>
+    <span class="logo-sub">ptimizer</span>
+  </div>
 </div>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
@@ -767,7 +937,26 @@
   <!-- ==================== SIDEBAR ==================== -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <h1>FPL Optimizer</h1>
+      <h1>
+        <div class="logo-monogram">
+          <span class="logo-fpl">FPL</span>
+          <svg class="logo-o" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" stroke="#00E676" stroke-width="2.5" opacity="0.9"/>
+            <line x1="20" y1="20" x2="20" y2="4" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <line x1="20" y1="20" x2="35.2" y2="15.1" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <line x1="20" y1="20" x2="29.4" y2="32.9" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <line x1="20" y1="20" x2="10.6" y2="32.9" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <line x1="20" y1="20" x2="4.8" y2="15.1" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <polygon points="20,6.4 28.4,17.3 28.9,32.3 16.2,25.2 9.4,16.5" fill="rgba(0,230,118,0.2)" stroke="#00E676" stroke-width="1.3" stroke-linejoin="round"/>
+            <circle cx="20" cy="6.4" r="1.5" fill="#00E676"/>
+            <circle cx="28.4" cy="17.3" r="1.5" fill="#00E676"/>
+            <circle cx="28.9" cy="32.3" r="1.5" fill="#00E676"/>
+            <circle cx="16.2" cy="25.2" r="1.5" fill="#00E676"/>
+            <circle cx="9.4" cy="16.5" r="1.5" fill="#00E676"/>
+          </svg>
+          <span class="logo-sub">ptimizer</span>
+        </div>
+      </h1>
       <div class="subtitle">Fantasy Premier League analytics</div>
     </div>
 
@@ -2031,6 +2220,22 @@ function toggleSidebar() {
   overlay.classList.toggle('active');
 }
 
+function toggleMoreMenu() {
+  const menu = $('more-menu');
+  const overlay = $('more-menu-overlay');
+  const btn = $('bn-more-btn');
+  const isOpen = menu.classList.contains('active');
+  if (isOpen) {
+    menu.classList.remove('active');
+    overlay.classList.remove('active');
+    if (btn) btn.classList.remove('active');
+  } else {
+    menu.classList.add('active');
+    overlay.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+}
+
 function toggleSidebarSub(subId, parentItem) {
   const sub = $(subId);
   const arrow = parentItem.querySelector('.si-arrow');
@@ -2044,6 +2249,44 @@ function toggleSidebarSub(subId, parentItem) {
     sub.classList.add('open');
     if (arrow) arrow.classList.add('open');
   }
+}
+
+// Card-mode: add data-label attributes to table cells for mobile card layout
+function applyCardLabels(tableEl) {
+  if (!tableEl) return;
+  const wrap = tableEl.closest('.table-wrap');
+  if (wrap) wrap.classList.add('card-mode');
+  const headers = Array.from(tableEl.querySelectorAll('thead th')).map(th => th.textContent.trim());
+  tableEl.querySelectorAll('tbody tr').forEach(tr => {
+    tr.querySelectorAll('td').forEach((td, i) => {
+      if (headers[i]) td.setAttribute('data-label', headers[i]);
+    });
+  });
+}
+
+// Skeleton loading: generate placeholder rows
+function showSkeleton(containerId, count) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({length: count}, () =>
+    `<div class="skeleton-card"><div class="skeleton" style="width:60%;height:16px"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>`
+  ).join('');
+}
+
+// Dashboard accordion for mobile rail sections
+function initDashAccordions() {
+  if (window.innerWidth > 768) return;
+  document.querySelectorAll('.dash-rail .dash-section-title').forEach(title => {
+    if (title._accordionInit) return;
+    title._accordionInit = true;
+    title.classList.add('collapsed');
+    const list = title.nextElementSibling;
+    if (list) list.classList.add('collapsed');
+    title.addEventListener('click', () => {
+      title.classList.toggle('collapsed');
+      if (list) list.classList.toggle('collapsed');
+    });
+  });
 }
 
 function switchNav(panelId) {
@@ -2078,9 +2321,21 @@ function switchNav(panelId) {
     if (sidebarItem) sidebarItem.classList.add('active');
   }
 
-  // Close mobile sidebar
+  // Close mobile sidebar & more menu
   $('sidebar').classList.remove('open');
   $('sidebar-overlay').classList.remove('active');
+  const moreMenu = $('more-menu');
+  if (moreMenu && moreMenu.classList.contains('active')) {
+    moreMenu.classList.remove('active');
+    $('more-menu-overlay').classList.remove('active');
+    const moreBtn = $('bn-more-btn');
+    if (moreBtn) moreBtn.classList.remove('active');
+  }
+
+  // Update bottom nav active state
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+  const bnBtn = document.querySelector(`.bottom-nav button[data-nav="${panelId}"]`);
+  if (bnBtn) bnBtn.classList.add('active');
 
   // Lazy load data
   if (panelId === 'nav-playerstats-table' && !playersLoaded) loadMetadata().then(() => loadPlayers());
@@ -2104,6 +2359,16 @@ function switchNav(panelId) {
   if (panelId === 'nav-fixtures-swing') loadFixtureSwing();
   if (panelId === 'nav-news-ownership') loadOwnership();
   if (panelId === 'nav-news-ranksim') { /* manual button */ }
+
+  // Sticky optimize CTA on mobile
+  const stickyOpt = $('sticky-optimize');
+  if (stickyOpt) {
+    if (panelId === 'nav-transfers-optimizer' && window.innerWidth <= 768) {
+      stickyOpt.classList.add('visible');
+    } else {
+      stickyOpt.classList.remove('visible');
+    }
+  }
 }
 
 // ==================== DASHBOARD ====================
@@ -2275,6 +2540,7 @@ function loadDashboard() {
     }
 
     dashLoaded = true;
+    initDashAccordions();
   }).catch(err => {
     console.error('Dashboard load error:', err);
   }).finally(() => {
@@ -3187,6 +3453,7 @@ async function loadCaptainPicks() {
       <td class="right score">${p.composite_score.toFixed(3)}</td>
     </tr>`).join('');
     $('captain-table').classList.remove('hidden');
+    applyCardLabels($('captain-table'));
     drawCaptainEVChart(data.picks);
     $('captain-ev-section').classList.remove('hidden');
     captainLoaded = true;
@@ -3325,6 +3592,7 @@ async function loadDifferentials() {
       <td class="right score">${p.composite_score.toFixed(3)}</td>
     </tr>`).join('');
     $('diff-table').classList.remove('hidden');
+    applyCardLabels($('diff-table'));
     diffLoaded = true;
   } catch (err) {
     $('diff-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
@@ -3363,6 +3631,7 @@ async function loadRotationRisk() {
       </tr>`;
     }).join('');
     $('rotation-table').classList.remove('hidden');
+    applyCardLabels($('rotation-table'));
     rotationLoaded = true;
   } catch (err) {
     $('rotation-body').innerHTML = `<tr><td colspan="10" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
@@ -3775,6 +4044,7 @@ function renderPlayersBody(players) {
       <td class="right" style="color:#4da6ff">${p.selected_by_percent}%</td>
     </tr>`).join('');
   }
+  applyCardLabels($('players-table'));
 }
 
 function loadPlayers() {
@@ -3923,6 +4193,10 @@ function renderSummary(el, sq) {
 function renderSquad(sEl, bEl, sq) {
   sEl.innerHTML = sq.starting.map(p => playerRow(p, true)).join('');
   bEl.innerHTML = sq.bench.map(p => playerRow(p, false)).join('');
+  const sTable = sEl.closest('table');
+  const bTable = bEl.closest('table');
+  if (sTable) applyCardLabels(sTable);
+  if (bTable) applyCardLabels(bTable);
 }
 
 function renderTransfers(sec, body, tf) {
@@ -4520,6 +4794,7 @@ function renderOptaTable(players, view) {
   const config = views[view] || views.bps;
   thead.innerHTML = `<tr>${config.headers.map((h, i) => `<th${i >= 4 ? ' class="right"' : ''}>${h}</th>`).join('')}</tr>`;
   tbody.innerHTML = players.map((p, i) => config.row(p, i)).join('');
+  applyCardLabels($('opta-table'));
 }
 
 // ==================== FIXTURE SCHEDULE ====================
@@ -4797,6 +5072,7 @@ function switchWaiverPos(pos, el) {
     <td class="right">${rotBadge(p.rotation_risk)}</td>
     <td class="right score">${p.waiver_score}</td>
   </tr>`).join('');
+  applyCardLabels($('waiver-pos-body').closest('table'));
 }
 
 // ==================== MY DRAFT ROSTER ====================
@@ -5026,6 +5302,7 @@ async function loadOwnership() {
         ${statusCol}
       </tr>`;
     }).join('');
+    applyCardLabels($('eo-body').closest('table'));
 
     // Personal risk cards
     if (data.personal_risk) {
@@ -5142,6 +5419,7 @@ async function loadTransferGain() {
         <td class="right">${t.worth_hit ? '<span style="color:#00E676;font-weight:700">YES</span>' : '<span style="color:#FF5252">NO</span>'}</td>
       </tr>`;
     }).join('');
+    applyCardLabels($('gain-body').closest('table'));
     // Chart
     drawGainChart(data.transfers.slice(0, 15), data.hit_cost);
     content.style.display = '';
@@ -5384,5 +5662,84 @@ function prefetchCoreData() {
 }
 setTimeout(prefetchCoreData, 2000);
 </script>
+
+<!-- ==================== BOTTOM NAVIGATION (MOBILE) ==================== -->
+<!-- Sticky Optimize CTA (mobile only, visible on optimizer tab) -->
+<div class="sticky-optimize" id="sticky-optimize">
+  <button class="btn" onclick="runOptimizer()">Optimize Squad</button>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
+    <span class="bn-icon">&#9733;</span><span class="bn-label">Home</span>
+  </button>
+  <button data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
+    <span class="bn-icon">&#8644;</span><span class="bn-label">Transfers</span>
+  </button>
+  <button data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">
+    <span class="bn-icon">&#128197;</span><span class="bn-label">Fixtures</span>
+  </button>
+  <button data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">
+    <span class="bn-icon">&#128202;</span><span class="bn-label">Stats</span>
+  </button>
+  <button id="bn-more-btn" onclick="toggleMoreMenu()">
+    <span class="bn-icon">&#8943;</span><span class="bn-label">More</span>
+  </button>
+</nav>
+
+<div class="more-menu-overlay" id="more-menu-overlay" onclick="toggleMoreMenu()"></div>
+<div class="more-menu-mobile" id="more-menu">
+  <div class="mm-header">
+    <span>More</span>
+    <button class="mm-close" onclick="toggleMoreMenu()">&times;</button>
+  </div>
+
+  <div class="mm-group-title">Team</div>
+  <div class="mm-item" onclick="switchNav('nav-team-live')"><span class="mm-icon">&#9889;</span> Live GW</div>
+  <div class="mm-item" onclick="switchNav('nav-team-myteam')"><span class="mm-icon">&#9917;</span> My Team</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Transfers</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Suggestions</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-optimizer')"><span class="mm-icon">&#128736;</span> Squad Optimizer</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-multigw')"><span class="mm-icon">&#128197;</span> Multi-GW Planner</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-chips')"><span class="mm-icon">&#127183;</span> Chip Strategy</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-gain')"><span class="mm-icon">&#128200;</span> Gain vs Hit</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Leagues</div>
+  <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> Standings</div>
+  <div class="mm-item" onclick="switchNav('nav-leagues-rival')"><span class="mm-icon">&#9876;</span> Rival Comparison</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Fixtures</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Schedule & CS%</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-list')"><span class="mm-icon">&#128203;</span> Fixture List</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-swing')"><span class="mm-icon">&#128260;</span> Swing & Rotation</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Player Stats</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-opta')"><span class="mm-icon">&#128202;</span> Opta Stats & BPS</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-compare')"><span class="mm-icon">&#8596;</span> Compare</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">News & Analysis</div>
+  <div class="mm-item" onclick="switchNav('nav-news-captain')"><span class="mm-icon">&#169;</span> Captain Picks</div>
+  <div class="mm-item" onclick="switchNav('nav-news-prices')"><span class="mm-icon">&#128176;</span> Price Changes</div>
+  <div class="mm-item" onclick="switchNav('nav-news-differentials')"><span class="mm-icon">&#128142;</span> Differentials</div>
+  <div class="mm-item" onclick="switchNav('nav-news-rotation')"><span class="mm-icon">&#128260;</span> Rotation Risk</div>
+  <div class="mm-item" onclick="switchNav('nav-news-ownership')"><span class="mm-icon">&#128101;</span> Ownership & EO</div>
+  <div class="mm-item" onclick="switchNav('nav-news-ranksim')"><span class="mm-icon">&#128200;</span> Rank Simulator</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Draft</div>
+  <div class="mm-item" onclick="switchNav('nav-draft-rankings')"><span class="mm-icon">&#128221;</span> Draft Rankings</div>
+  <div class="mm-item" onclick="switchNav('nav-draft-waiver')"><span class="mm-icon">&#128260;</span> Waiver Wire</div>
+  <div class="mm-item" onclick="switchNav('nav-draft-roster')"><span class="mm-icon">&#128203;</span> My Roster</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-item" onclick="switchNav('nav-settings')"><span class="mm-icon">&#9881;</span> Settings</div>
+</div>
+
 </body>
 </html>
