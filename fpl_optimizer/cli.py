@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> None:
     # Fetch data
     print("Fetching FPL data...")
     try:
-        players, teams, gameweeks, fixtures = load_data()
+        players, teams, gameweeks, fixtures, _cw = load_data()
     except Exception as e:
         print(f"Error fetching data: {e}", file=sys.stderr)
         sys.exit(1)

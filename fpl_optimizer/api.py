@@ -26,6 +26,7 @@ def parse_teams(data: dict) -> dict[int, Team]:
             id=t["id"],
             name=t["name"],
             short_name=t["short_name"],
+            code=t.get("code", 0),
         )
     return teams
 
@@ -190,7 +191,7 @@ def load_user_team(
     return squad_players, bank
 
 
-def load_data() -> tuple[list[Player], dict[int, Team], list[Gameweek], list[Fixture]]:
+def load_data() -> tuple[list[Player], dict[int, Team], list[Gameweek], list[Fixture], list[dict]]:
     with httpx.Client(timeout=30) as client:
         bootstrap = fetch_bootstrap(client)
         raw_fixtures = fetch_fixtures(client)
@@ -199,5 +200,6 @@ def load_data() -> tuple[list[Player], dict[int, Team], list[Gameweek], list[Fix
     gameweeks = parse_gameweeks(bootstrap)
     players = parse_players(bootstrap)
     fixtures = parse_fixtures(raw_fixtures)
+    chip_windows = bootstrap.get("chips", [])
 
-    return players, teams, gameweeks, fixtures
+    return players, teams, gameweeks, fixtures, chip_windows

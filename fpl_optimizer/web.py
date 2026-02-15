@@ -35,10 +35,47 @@ def _get_cached_data():
     if _cache.get("data") and now - _cache.get("ts", 0) < _CACHE_TTL:
         return _cache["data"]
 
-    players, teams, gameweeks, fixtures = load_data()
+    players, teams, gameweeks, fixtures, chip_windows = load_data()
     _cache["data"] = (players, teams, gameweeks, fixtures)
+    _cache["chip_windows"] = chip_windows
     _cache["ts"] = now
     return players, teams, gameweeks, fixtures
+
+
+def _get_chip_windows() -> list[dict]:
+    """Return chip window definitions from cached bootstrap data."""
+    if not _cache.get("chip_windows"):
+        _get_cached_data()  # populates chip_windows as side-effect
+    return _cache.get("chip_windows", [])
+
+
+def _compute_chips_status(chip_windows: list[dict], user_chips_history: list[dict]) -> tuple[list[dict], list[str]]:
+    """Compute chips_used and chips_available from bootstrap windows and user history.
+
+    Each chip window (e.g. wildcard GW2-19, wildcard GW20-38) is a separate slot.
+    A chip is available if the user hasn't used it in that window.
+    """
+    chips_used = []
+    chips_available = []
+    for window in chip_windows:
+        name = window["name"]
+        start = window["start_event"]
+        stop = window["stop_event"]
+        # Check if user used this chip in this window
+        used_in_window = None
+        for usage in user_chips_history:
+            if usage.get("name") == name and start <= usage.get("event", 0) <= stop:
+                used_in_window = usage
+                break
+        if used_in_window:
+            chips_used.append({
+                "name": name,
+                "event": used_in_window["event"],
+                "window": f"GW{start}-{stop}",
+            })
+        else:
+            chips_available.append(name)
+    return chips_used, chips_available
 
 
 DEMO_USER_ID = 0
@@ -129,6 +166,63 @@ def api_data():
                      "is_current": gw.is_current, "is_next": gw.is_next}
                     for gw in gameweeks]
         return jsonify({"teams": teams_list, "gameweeks": gw_list})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>")
+def api_player_detail(player_id):
+    """Detailed player view with fixture ticker and composite breakdown."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+
+        player_map = {p.id: p for p in players}
+        p = player_map.get(player_id)
+        if not p:
+            return jsonify({"error": "Player not found"}), 404
+
+        teams_dict = {tid: t.short_name for tid, t in teams.items()}
+        teams_code_dict = {tid: t.code for tid, t in teams.items()}
+
+        # Build fixture ticker (next 6 GWs)
+        current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+        if current_gw is None:
+            current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+
+        fixture_ticker = []
+        if current_gw:
+            for f in fixtures:
+                if f.gameweek is None or f.gameweek < current_gw.id or f.gameweek >= current_gw.id + 6:
+                    continue
+                if f.home_team == p.team:
+                    fixture_ticker.append({
+                        "gw": f.gameweek, "opponent": teams_dict.get(f.away_team, "???"),
+                        "is_home": True, "difficulty": f.home_difficulty,
+                    })
+                elif f.away_team == p.team:
+                    fixture_ticker.append({
+                        "gw": f.gameweek, "opponent": teams_dict.get(f.home_team, "???"),
+                        "is_home": False, "difficulty": f.away_difficulty,
+                    })
+
+        return jsonify({
+            "player": p.to_dict(),
+            "team_name": teams_dict.get(p.team, "???"),
+            "team_code": teams_code_dict.get(p.team, 0),
+            "fixture_ticker": sorted(fixture_ticker, key=lambda x: x["gw"]),
+            "composite_breakdown": {
+                "form": round(p.form, 2),
+                "ppg": round(p.points_per_game, 2),
+                "xG": round(p.xG, 2),
+                "xA": round(p.xA, 2),
+                "fixture_ease": round(p.fixture_difficulty, 2),
+                "rotation_risk": round(p.rotation_risk, 2),
+                "projected_minutes": p.projected_minutes,
+            },
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -271,7 +365,7 @@ def api_user(user_id):
                 "gw_hits": 0,
                 "free_transfers": 2,
                 "chips_used": [],
-                "chips_available": ["wildcard", "freehit", "bboost", "3xc"],
+                "chips_available": ["wildcard", "freehit", "bboost", "3xc", "wildcard", "freehit", "bboost", "3xc"],
                 "season_history": [
                     {"gw": i, "points": 40 + (i * 3) + (i % 3) * 8, "rank": 300000 - i * 5000}
                     for i in range(1, 11)
@@ -297,14 +391,11 @@ def api_user(user_id):
         team_value = entry.get("last_deadline_value", 0) / 10.0
         bank = entry.get("last_deadline_bank", 0) / 10.0
 
-        # Chips
-        chips_used = [
-            {"name": c.get("name", ""), "event": c.get("event", 0)}
-            for c in history.get("chips", [])
-        ]
-        chip_names_used = {c["name"] for c in chips_used}
-        all_chips = ["wildcard", "freehit", "bboost", "3xc"]
-        chips_available = [c for c in all_chips if c not in chip_names_used]
+        # Chips — use bootstrap window definitions to handle 2-per-season chips
+        chip_windows = _get_chip_windows()
+        chips_used, chips_available = _compute_chips_status(
+            chip_windows, history.get("chips", [])
+        )
 
         # Current GW from history
         gw_history = history.get("current", [])
@@ -1296,7 +1387,7 @@ def api_optimize():
         risk_mode = "balanced"
 
     try:
-        players, teams, gameweeks, fixtures = load_data()
+        players, teams, gameweeks, fixtures, _cw = load_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=lookahead)
         # Compute rotation risk (needed for safe mode scoring)
         compute_rotation_risk(players)
@@ -1530,12 +1621,117 @@ def api_ownership():
         return jsonify({"error": str(e)}), 500
 
 
+def _build_reasoning(out_p, in_p):
+    """Build short reasoning text for a transfer suggestion."""
+    reasons = []
+    fd_diff = in_p.fixture_difficulty - out_p.fixture_difficulty
+    if fd_diff > 0.15:
+        reasons.append(f"Better fixtures ahead (+{fd_diff:.0%} easier)")
+    xgi_diff = (in_p.xG + in_p.xA) - (out_p.xG + out_p.xA)
+    if xgi_diff > 0.5:
+        reasons.append(f"Higher xGI ({in_p.xG + in_p.xA:.1f} vs {out_p.xG + out_p.xA:.1f})")
+    if in_p.form > out_p.form + 1.0:
+        reasons.append(f"Better form ({in_p.form} vs {out_p.form})")
+    if out_p.rotation_risk > 0.3:
+        reasons.append(f"{out_p.name} rotation risk ({out_p.rotation_risk:.0%})")
+    if in_p.minutes > out_p.minutes * 1.2 and out_p.minutes > 0:
+        reasons.append("More minutes played")
+    return "; ".join(reasons[:3]) if reasons else "Higher composite score"
+
+
+@app.route("/api/squad-analysis/<int:user_id>")
+def api_squad_analysis(user_id):
+    """Squad health summary: score, fixture outlook, strengths and weaknesses."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        player_map = {p.id: p for p in players}
+
+        if user_id == DEMO_USER_ID:
+            squad_players, bank = _demo_user_team()
+        else:
+            squad_players, bank = load_user_team(user_id, players, gameweeks)
+
+        if not squad_players:
+            return jsonify({"error": "No squad data available"}), 404
+
+        # Squad score: avg composite_score as percentile (0-100)
+        all_scores = sorted(p.composite_score for p in players if p.minutes > 0)
+        squad_avg = sum(p.composite_score for p in squad_players) / len(squad_players)
+        # Percentile: what fraction of all players score below squad_avg
+        below = sum(1 for s in all_scores if s < squad_avg)
+        squad_score = round(below / max(len(all_scores), 1) * 100)
+
+        # Fixture outlook
+        avg_fixture = sum(p.fixture_difficulty for p in squad_players) / len(squad_players)
+        if avg_fixture > 0.6:
+            fixture_outlook = "favorable"
+        elif avg_fixture > 0.4:
+            fixture_outlook = "neutral"
+        else:
+            fixture_outlook = "tough"
+
+        # Weaknesses and strengths
+        weaknesses = []
+        strengths = []
+        pos_names = {1: "Goalkeepers", 2: "Defense", 3: "Midfield", 4: "Attack"}
+        for pos in (1, 2, 3, 4):
+            group = [p for p in squad_players if p.position == pos]
+            if not group:
+                continue
+            avg_fd = sum(p.fixture_difficulty for p in group) / len(group)
+            avg_rot = sum(p.rotation_risk for p in group) / len(group)
+            avg_cs = sum(p.composite_score for p in group) / len(group)
+            if avg_fd < 0.35:
+                weaknesses.append({
+                    "area": pos_names[pos].lower(),
+                    "description": f"{pos_names[pos]} facing tough fixtures (avg ease {avg_fd:.0%})",
+                    "severity": "high",
+                })
+            elif avg_fd > 0.65:
+                strengths.append({
+                    "area": pos_names[pos].lower(),
+                    "description": f"{pos_names[pos]} have favorable fixtures (avg ease {avg_fd:.0%})",
+                })
+            if avg_rot > 0.3:
+                weaknesses.append({
+                    "area": pos_names[pos].lower(),
+                    "description": f"{pos_names[pos]} have high rotation risk (avg {avg_rot:.0%})",
+                    "severity": "medium",
+                })
+
+        # Check for injured/flagged players
+        flagged = [p for p in squad_players if p.chance_of_playing is not None and p.chance_of_playing < 100]
+        if flagged:
+            weaknesses.append({
+                "area": "availability",
+                "description": f"{len(flagged)} player{'s' if len(flagged) > 1 else ''} flagged with injury/doubt",
+                "severity": "high" if any(p.chance_of_playing is not None and p.chance_of_playing < 50 for p in flagged) else "medium",
+            })
+
+        return jsonify({
+            "squad_score": squad_score,
+            "fixture_outlook": fixture_outlook,
+            "fixture_outlook_score": round(avg_fixture, 2),
+            "weaknesses": weaknesses,
+            "strengths": strengths,
+        })
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/transfer-gain/<int:user_id>")
 def api_transfer_gain(user_id):
     """Transfer gain vs hit cost chart data for a user's squad."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
@@ -1572,10 +1768,12 @@ def api_transfer_gain(user_id):
                 breakeven_gws = round(4 / pts_gain, 1) if pts_gain > 0 else 99
 
                 transfers.append({
+                    "out_id": out_p.id,
                     "out_name": out_p.name,
                     "out_team": teams_dict.get(out_p.team, "???"),
                     "out_cost": out_p.cost,
                     "out_ep": round(out_p.ep_next, 2),
+                    "in_id": candidate.id,
                     "in_name": candidate.name,
                     "in_team": teams_dict.get(candidate.team, "???"),
                     "in_cost": candidate.cost,
@@ -1588,6 +1786,7 @@ def api_transfer_gain(user_id):
                     "net_gain_hit": round(pts_gain - 4, 2),
                     "worth_hit": pts_gain > 4,
                     "breakeven_gws": breakeven_gws,
+                    "reasoning": _build_reasoning(out_p, candidate),
                 })
 
         transfers.sort(key=lambda t: t["pts_gain"], reverse=True)

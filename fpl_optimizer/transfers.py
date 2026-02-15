@@ -13,11 +13,14 @@ class TransferSuggestion:
     cost_change: float
 
     def to_dict(self) -> dict:
+        pts_gain = round(self.player_in.ep_next - self.player_out.ep_next, 2)
         return {
             "player_out": self.player_out.to_dict(),
             "player_in": self.player_in.to_dict(),
             "score_gain": round(self.score_gain, 3),
             "cost_change": round(self.cost_change, 1),
+            "pts_gain": pts_gain,
+            "breakeven_gws": round(4 / max(pts_gain, 0.01), 1) if pts_gain > 0 else 99,
         }
 
 

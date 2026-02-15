@@ -8,6 +8,7 @@ class Team:
     id: int
     name: str
     short_name: str
+    code: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)

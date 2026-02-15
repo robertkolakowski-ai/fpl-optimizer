@@ -502,6 +502,34 @@
   .dash-card .dc-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
   .dash-card .dc-desc { color: #8899AA; font-size: 0.78rem; }
 
+  /* Onboarding card */
+  .onboarding-card { background: rgba(27,45,69,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0,230,118,0.2); text-align: center; max-width: 520px; margin: 0 auto 0.5rem; }
+  .ob-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .ob-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; color: #F0F0F0; }
+  .ob-benefits { text-align: left; margin: 0 auto 1.5rem; display: inline-block; }
+  .ob-benefit { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; font-size: 0.88rem; color: #AABBCC; }
+  .ob-check { color: #00E676; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+  .ob-actions { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+  .ob-demo-link { color: #8899AA; font-size: 0.82rem; text-decoration: underline; }
+  .ob-demo-link:hover { color: #4da6ff; }
+
+  /* Player cards for mobile My Team (Item 6) */
+  .player-card-list { display: none; flex-direction: column; gap: 0.4rem; }
+  .player-card {
+    background: rgba(27,45,69,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px; padding: 0.6rem 0.8rem; border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 0.6rem; cursor: pointer; transition: border-color 0.2s;
+  }
+  .player-card:hover { border-color: rgba(0,230,118,0.3); }
+  .player-card .pc-kit { width: 28px; flex-shrink: 0; text-align: center; }
+  .player-card .pc-main { flex: 1; min-width: 0; }
+  .player-card .pc-name { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-card .pc-meta { color: #8899AA; font-size: 0.72rem; }
+  .player-card .pc-stats { display: flex; gap: 0.5rem; font-size: 0.72rem; margin-top: 0.2rem; flex-wrap: wrap; }
+  .player-card .pc-expand { display: none; width: 100%; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.72rem; color: #8899AA; }
+  .player-card .pc-expand.open { display: block; }
+  .player-card .pc-score { text-align: right; font-weight: 700; color: #00E676; font-size: 1rem; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+
   /* Coming soon placeholder */
   .coming-soon { text-align: center; padding: 3rem 1rem; }
   .coming-soon .cs-icon { font-size: 3rem; margin-bottom: 1rem; }
@@ -809,6 +837,8 @@
   .demo-banner .btn { font-size: 0.78rem; padding: 0.35rem 1rem; }
   .demo-dismiss { color: #667788; font-size: 1.2rem; cursor: pointer; padding: 0 0.3rem; line-height: 1; }
   .demo-dismiss:hover { color: #FF5252; }
+  .demo-inline-notice { background: linear-gradient(90deg, rgba(77,166,255,0.08), rgba(0,230,118,0.04)); border: 1px solid rgba(77,166,255,0.2); border-radius: 8px; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 0.8rem; color: #8899AA; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .demo-inline-notice .demo-badge { font-size: 0.6rem; }
 
   /* ==================== BOTTOM NAVIGATION (MOBILE) ==================== */
   .bottom-nav { display: none; }
@@ -917,6 +947,14 @@
     .dash-bottom-grid { grid-template-columns: 1fr !important; }
 
     /* Sticky optimize CTA */
+    .sticky-connect-cta {
+      display: none; position: fixed; bottom: 60px; left: 0; right: 0;
+      background: linear-gradient(135deg, #1B2D45, #0D1B2A); border-top: 1px solid rgba(0,230,118,0.3);
+      padding: 0.5rem 1rem; z-index: 240; align-items: center; justify-content: space-between;
+      gap: 0.5rem; font-size: 0.8rem; color: #8899AA;
+    }
+    .sticky-connect-cta.visible { display: flex; }
+    .sticky-connect-cta .btn { flex-shrink: 0; }
     .sticky-optimize {
       position: fixed; bottom: 68px; left: 0; right: 0;
       padding: 0.6rem 1rem; background: linear-gradient(180deg, transparent, #0D1B2A 30%);
@@ -924,7 +962,71 @@
     }
     .sticky-optimize.visible { display: block; }
     .sticky-optimize .btn { width: 100%; padding: 0.75rem; font-size: 1rem; }
+    /* Mobile: show cards, hide tables in My Team */
+    .myteam-mobile-cards { display: flex !important; }
+    .myteam-desktop-table { display: none !important; }
   }
+  @media (min-width: 769px) {
+    .myteam-mobile-cards { display: none !important; }
+  }
+
+  /* Item 15: Sticky headers + frozen columns */
+  .table-wrap { max-height: 70vh; overflow: auto; }
+  .table-wrap th { position: sticky; top: 0; z-index: 2; background: #1B2D45; }
+  .table-freeze td:first-child, .table-freeze th:first-child {
+    position: sticky; left: 0; z-index: 2; background: #1B2D45;
+  }
+  .table-freeze th:first-child { z-index: 3; }
+
+  /* Item 16: Column selector */
+  .column-selector { position: relative; display: inline-block; margin-bottom: 0.5rem; }
+  .column-popover {
+    position: absolute; top: 100%; left: 0; z-index: 50;
+    background: #1B2D45; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 0.6rem; min-width: 200px;
+    max-height: 300px; overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: none;
+  }
+  .column-popover.open { display: block; }
+  .column-popover label { display: block; padding: 0.25rem 0; font-size: 0.8rem; color: #AABBCC; cursor: pointer; }
+  .column-popover label:hover { color: #F0F0F0; }
+  .column-popover input[type="checkbox"] { margin-right: 0.4rem; accent-color: #00E676; }
+
+  /* Player drilldown modal (Item 17) */
+  .player-modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .player-modal-overlay.hidden { display: none; }
+  .player-modal {
+    background: #1B2D45; border-radius: 16px; max-width: 480px; width: 100%;
+    max-height: 85vh; overflow-y: auto; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 0.6rem; right: 0.8rem;
+    background: none; border: none; color: #8899AA; font-size: 1.5rem; cursor: pointer; z-index: 1;
+  }
+  .modal-close:hover { color: #FF5252; }
+  .pm-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .pm-photo { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.06); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .pm-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .pm-name { font-size: 1.1rem; font-weight: 700; }
+  .pm-meta { color: #8899AA; font-size: 0.82rem; }
+  .pm-fixtures { display: flex; gap: 0.3rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .pm-fixture { text-align: center; padding: 0.3rem 0.5rem; border-radius: 6px; font-size: 0.72rem; line-height: 1.3; }
+  .pm-fixture .gw-label { font-size: 0.6rem; opacity: 0.7; display: block; }
+  .pm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin-bottom: 1rem; }
+  .pm-stat { background: rgba(13,27,42,0.5); border-radius: 8px; padding: 0.5rem; text-align: center; }
+  .pm-stat .label { font-size: 0.65rem; color: #8899AA; margin-bottom: 0.2rem; }
+  .pm-stat .value { font-size: 0.95rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .pm-breakdown { margin-top: 0.8rem; }
+  .pm-breakdown-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; font-size: 0.78rem; }
+  .pm-breakdown-label { width: 100px; color: #8899AA; flex-shrink: 0; }
+  .pm-breakdown-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .pm-breakdown-fill { height: 100%; border-radius: 3px; background: #00E676; transition: width 0.3s; }
+  .pm-breakdown-val { width: 40px; text-align: right; font-family: 'JetBrains Mono', monospace; }
 </style>
 </head>
 <body>
@@ -1145,15 +1247,27 @@
         <div id="demo-banner" class="demo-banner hidden">
           <div class="demo-banner-content">
             <span class="demo-badge">DEMO</span>
-            <span class="demo-text">You're viewing sample data. Enter your FPL ID to see your own team.</span>
-            <button class="btn btn-sm" onclick="switchNav('nav-settings');$('user-id').focus();">Try with your team &rarr;</button>
-            <span class="demo-dismiss" onclick="hideDemoBanner()">&times;</span>
+            <span class="demo-text">You're viewing sample data — this is not your real team.</span>
+            <button class="btn btn-sm" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect your team &rarr;</button>
           </div>
         </div>
 
-        <!-- Empty state: quick links (visible when no user loaded) -->
+        <!-- Onboarding: shown when no user connected -->
         <div id="dash-empty-state">
-          <div class="dash-grid">
+          <div class="onboarding-card">
+            <div class="ob-icon">&#9917;</div>
+            <h3 class="ob-title">Connect your FPL team to unlock your dashboard</h3>
+            <div class="ob-benefits">
+              <div class="ob-benefit"><span class="ob-check">&#10003;</span> See your live squad and points in real time</div>
+              <div class="ob-benefit"><span class="ob-check">&#10003;</span> Get personalized transfer suggestions with expected points gain</div>
+              <div class="ob-benefit"><span class="ob-check">&#10003;</span> Track your rank, league position and chip strategy</div>
+            </div>
+            <div class="ob-actions">
+              <button class="btn" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect My Team</button>
+              <a href="#" class="ob-demo-link" onclick="activateDemo();return false;">or try with demo data</a>
+            </div>
+          </div>
+          <div class="dash-grid" style="margin-top:1rem;">
             <div class="dash-card" onclick="switchNav('nav-transfers-optimizer')">
               <div class="dc-icon">&#9889;</div>
               <div class="dc-title">Squad Optimizer</div>
@@ -1173,16 +1287,6 @@
               <div class="dc-icon">&#128202;</div>
               <div class="dc-title">Player Stats</div>
               <div class="dc-desc">Search and filter all players</div>
-            </div>
-            <div class="dash-card" onclick="switchNav('nav-news-prices')">
-              <div class="dc-icon">&#128176;</div>
-              <div class="dc-title">Price Changes</div>
-              <div class="dc-desc">Track risers and fallers</div>
-            </div>
-            <div class="dash-card" onclick="switchNav('nav-settings')">
-              <div class="dc-icon">&#9881;</div>
-              <div class="dc-title">Settings</div>
-              <div class="dc-desc">Load your FPL ID to unlock all features</div>
             </div>
           </div>
         </div>
@@ -1289,25 +1393,46 @@
           </div>
         </div>
         <div id="myteam-content" class="hidden">
+          <!-- Squad analysis summary (Item 3) -->
+          <div id="squad-analysis" class="hidden">
+            <div class="section" style="border-left: 3px solid #00E676;">
+              <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <div id="squad-score-display" style="text-align:center;min-width:70px;">
+                  <div style="font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;" id="squad-score-value">--</div>
+                  <div style="font-size:0.7rem;color:#8899AA;">Squad Score</div>
+                </div>
+                <div style="flex:1;min-width:200px;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                    <span style="font-size:0.8rem;font-weight:600;">Fixture Outlook:</span>
+                    <span id="squad-fixture-badge" class="chip-badge"></span>
+                  </div>
+                  <div id="squad-weaknesses"></div>
+                  <div id="squad-strengths"></div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="stat-row" id="user-summary"></div>
           <div class="section">
             <div class="section-title blue">My Starting XI</div>
-            <div class="table-wrap">
-              <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+            <div class="table-wrap myteam-desktop-table">
+              <table class="table-freeze"><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
               <tbody id="user-starting-body"></tbody></table>
             </div>
+            <div class="player-card-list myteam-mobile-cards" id="user-starting-cards"></div>
           </div>
           <div class="section">
             <div class="section-title blue">My Bench</div>
-            <div class="table-wrap">
+            <div class="table-wrap myteam-desktop-table">
               <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
               <tbody id="user-bench-body"></tbody></table>
             </div>
+            <div class="player-card-list myteam-mobile-cards" id="user-bench-cards"></div>
           </div>
           <div class="section hidden" id="user-transfers-section">
             <div class="section-title blue">Suggested Transfers</div>
             <div class="table-wrap">
-              <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right">Cost</th></tr></thead>
+              <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right" title="Expected points gain next GW">EP Gain</th><th class="right">Cost</th></tr></thead>
               <tbody id="user-transfers-body"></tbody></table>
             </div>
           </div>
@@ -1869,8 +1994,9 @@
             </div>
           </div>
           <div class="loader" id="players-loader"><div class="spinner"></div><div class="loader-text">Loading players...</div></div>
+          <div id="players-column-selector"></div>
           <div class="table-wrap">
-            <table id="players-table" class="hidden">
+            <table id="players-table" class="hidden table-freeze">
               <thead id="players-thead"><tr>
                 <th class="sortable sort-desc" data-sort="total_points" onclick="sortPlayers(this)">Pts</th>
                 <th>Pos</th>
@@ -2170,6 +2296,7 @@
               <label>FPL User ID or Profile URL</label>
               <input type="text" id="user-id" placeholder="e.g. 1234567 or paste FPL URL" onkeydown="if(event.key==='Enter')loadUser()" oninput="autoDetectFplId(this)">
               <div class="help-text">Paste your FPL URL or enter your ID — we'll detect it automatically</div>
+              <div id="user-id-help" style="color:#00E676;font-size:0.75rem;margin-top:0.2rem;min-height:1em;"></div>
             </div>
             <button class="btn-blue" id="load-user-btn" onclick="loadUser()">Load</button>
           </div>
@@ -2218,18 +2345,37 @@
 
 <script>
 const $ = id => document.getElementById(id);
+
+// ==================== CENTRALIZED APP STATE ====================
+const AppState = {
+  userId: null,
+  AppState.isDemoMode: false,
+  userData: null,       // cached /api/user response
+  teamData: null,       // cached /api/data response (teams, gameweeks)
+  _loaded: { dash: false, players: false, fixtures: false, draftRank: false, captain: false, prices: false },
+};
+
+/** Return current user ID or null. Optionally show error in container. */
+function requireUser(errorContainerId) {
+  if (AppState.userId) return AppState.userId;
+  if (errorContainerId) {
+    const el = $(errorContainerId);
+    if (el) el.innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>';
+  }
+  return null;
+}
+
+/** Return demo-notice HTML if in demo mode, otherwise empty string. */
+function demoNotice() {
+  if (!AppState.AppState.isDemoMode) return '';
+  return '<div class="demo-inline-notice"><span class="demo-badge">DEMO</span> Viewing sample data &mdash; <a href="#" onclick="switchNav(\'nav-settings\');return false" style="color:#4da6ff">connect your team</a></div>';
+}
+
 let teamsMap = {};
 let playersSort = { col: 'total_points', dir: 'desc' };
 let fixturesData = null;
-let playersLoaded = false;
-let fixturesLoaded = false;
 let debounceTimer = null;
 let compareTimer = null;
-let loadedUserId = null;
-let isDemoMode = false;
-let draftRankLoaded = false;
-let captainLoaded = false;
-let pricesLoaded = false;
 let compareIds = [];
 let allPlayersCache = null;
 
@@ -2291,6 +2437,20 @@ function showSkeleton(containerId, count) {
   if (!el) return;
   el.innerHTML = Array.from({length: count}, () =>
     `<div class="skeleton-card"><div class="skeleton" style="width:60%;height:16px"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>`
+  ).join('');
+}
+function showSkeletonTable(containerId, rows, cols) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({length: rows}, () =>
+    `<tr>${Array.from({length: cols}, (_, j) => `<td><div class="skeleton" style="height:14px;width:${j === 0 ? '40' : '60'}%"></div></td>`).join('')}</tr>`
+  ).join('');
+}
+function showSkeletonStats(containerId, count) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({length: count}, () =>
+    `<div class="stat-card"><div class="skeleton" style="height:12px;width:60%;margin:0 auto 0.3rem"></div><div class="skeleton" style="height:22px;width:40%;margin:0 auto"></div></div>`
   ).join('');
 }
 
@@ -2373,8 +2533,8 @@ function switchNav(panelId) {
   }
 
   // Lazy load data
-  if (panelId === 'nav-playerstats-table' && !playersLoaded) loadMetadata().then(() => loadPlayers());
-  if (panelId === 'nav-fixtures-list' && !fixturesLoaded) loadMetadata().then(() => loadFixtures());
+  if (panelId === 'nav-playerstats-table' && !AppState._loaded.players) loadMetadata().then(() => loadPlayers());
+  if (panelId === 'nav-fixtures-list' && !AppState._loaded.fixtures) loadMetadata().then(() => loadFixtures());
   if (panelId === 'nav-fixtures-schedule') loadSchedule();
   if (panelId === 'nav-fixtures-fdr') loadFDR();
   if (panelId === 'nav-news-captain') loadCaptainPicks();
@@ -2382,10 +2542,11 @@ function switchNav(panelId) {
   if (panelId === 'nav-news-prices') loadPriceChanges();
   if (panelId === 'nav-news-differentials') loadDifferentials();
   if (panelId === 'nav-team-live') loadLive();
+  if (panelId === 'nav-team-myteam') loadSquadAnalysis();
   if (panelId === 'nav-transfers-planner') loadTransferPlanner();
   if (panelId === 'nav-playerstats-opta') loadOptaStats();
   if (panelId === 'nav-dashboard') loadDashboard();
-  if (panelId === 'nav-draft-rankings' && !draftRankLoaded) loadDraftRankings();
+  if (panelId === 'nav-draft-rankings' && !AppState._loaded.draftRank) loadDraftRankings();
   if (panelId === 'nav-draft-waiver') loadWaiverWire();
   if (panelId === 'nav-draft-roster') analyseRoster();
   if (panelId === 'nav-transfers-multigw') loadMultiGW();
@@ -2394,6 +2555,9 @@ function switchNav(panelId) {
   if (panelId === 'nav-fixtures-swing') loadFixtureSwing();
   if (panelId === 'nav-news-ownership') loadOwnership();
   if (panelId === 'nav-news-ranksim') { /* manual button */ }
+
+  // Keep demo banner visible when in demo mode
+  if (AppState.isDemoMode) showDemoBanner();
 
   // Sticky optimize CTA on mobile
   const stickyOpt = $('sticky-optimize');
@@ -2407,24 +2571,28 @@ function switchNav(panelId) {
 }
 
 // ==================== DASHBOARD ====================
-let dashLoaded = false;
+// Loaded flags now live in AppState._loaded
 
 function loadDashboard() {
-  if (!loadedUserId) return;
+  if (!AppState.userId) return;
 
   // Show live dash, hide empty state
   $('dash-empty-state').classList.add('hidden');
   $('dash-live').classList.remove('hidden');
 
   // Avoid re-fetching if already loaded this session
-  if (dashLoaded) return;
+  if (AppState._loaded.dash) return;
+
+  // Show skeleton loading instead of plain spinner
+  showSkeletonStats('dash-stats', 4);
+  showSkeleton('dash-pitch-slot', 3);
 
   const loader = $('dash-loader');
   loader.classList.add('active');
 
   // Fire all requests in parallel
   Promise.all([
-    fetch(`/api/live/${loadedUserId}`).then(r => r.json()),
+    fetch(`/api/live/${AppState.userId}`).then(r => r.json()),
     fetch('/api/price-changes').then(r => r.json()),
     fetch('/api/players?sort=total_points&dir=desc').then(r => r.json()),
     fetch('/api/fixtures').then(r => r.json()),
@@ -2574,7 +2742,7 @@ function loadDashboard() {
       }
     }
 
-    dashLoaded = true;
+    AppState._loaded.dash = true;
     initDashAccordions();
   }).catch(err => {
     console.error('Dashboard load error:', err);
@@ -2584,15 +2752,15 @@ function loadDashboard() {
 }
 
 function loadDashLeagueRank() {
-  if (!loadedUserId) return;
-  fetch(`/api/user/${loadedUserId}`).then(r => r.json()).then(data => {
+  if (!AppState.userId) return;
+  fetch(`/api/user/${AppState.userId}`).then(r => r.json()).then(data => {
     if (data.error || !data.leagues || data.leagues.length === 0) return;
     const league = data.leagues[0];
     $('dash-league-sub').textContent = league.name;
     fetch(`/api/league/${league.id}`).then(r => r.json()).then(lg => {
       if (lg.error) return;
       // Match user by entry ID
-      const me = lg.standings.find(s => s.entry === loadedUserId);
+      const me = lg.standings.find(s => s.entry === AppState.userId);
       if (me) {
         $('dash-league-rank').textContent = '#' + me.rank;
       } else if (lg.standings.length > 0) {
@@ -2619,7 +2787,7 @@ function removeRecentUser(id, evt) {
   evt.stopPropagation();
   let list = getRecentUsers().filter(u => u.id !== id);
   localStorage.setItem('fpl_recent_users', JSON.stringify(list));
-  if (loadedUserId === id) {
+  if (AppState.userId === id) {
     // If removed user is current, clear active user reference in storage
     const saved = localStorage.getItem('fpl_user_id');
     if (saved && parseInt(saved) === id) localStorage.removeItem('fpl_user_id');
@@ -2637,7 +2805,7 @@ function renderRecentUsers() {
   if (!list.length) { section.style.display = 'none'; return; }
   section.style.display = '';
   container.innerHTML = list.map(u => {
-    const isCurrent = loadedUserId === u.id ? ' current' : '';
+    const isCurrent = AppState.userId === u.id ? ' current' : '';
     return `<div class="recent-user-item${isCurrent}" onclick="selectRecentUser(${u.id})">
       <span class="ru-name">${u.name}</span>
       <span class="ru-team">${u.teamName}</span>
@@ -2677,26 +2845,30 @@ renderRecentUsers();
     setTimeout(async () => {
       await loadUser();
       const savedLeague = localStorage.getItem('fpl_league_id');
-      if (savedLeague && loadedUserId) {
+      if (savedLeague && AppState.userId) {
         const chip = document.querySelector(`.league-chip[data-id="${savedLeague}"]`);
         if (chip) loadLeague(parseInt(savedLeague), chip);
       }
     }, 100);
   } else {
-    // No saved user — auto-activate demo mode
+    // No saved user — auto-activate demo mode and show mobile connect CTA
     setTimeout(() => activateDemo(), 300);
+    if (window.innerWidth <= 768) {
+      const stickyConnect = $('sticky-connect-cta');
+      if (stickyConnect) stickyConnect.classList.add('visible');
+    }
   }
 })();
 
 // Sync button handler
 async function syncUser() {
-  if (!loadedUserId) return;
+  if (!AppState.userId) return;
   $('uhb-sync-spinner').classList.add('active');
   $('uhb-sync-btn').disabled = true;
-  $('user-id').value = loadedUserId;
+  $('user-id').value = AppState.userId;
   try {
     await loadUser();
-    dashLoaded = false;
+    AppState._loaded.dash = false;
     const activePanel = document.querySelector('.nav-panel.active');
     if (activePanel) switchNav(activePanel.id);
   } finally {
@@ -2749,7 +2921,7 @@ async function loadUser() {
     showUserError('Please enter a valid numeric FPL User ID.');
     return;
   }
-  isDemoMode = (uid === 0);
+  AppState.isDemoMode = (uid === 0);
 
   const btn = $('load-user-btn');
   const spinner = $('user-spinner');
@@ -2765,9 +2937,10 @@ async function loadUser() {
     const data = await resp.json();
     if (!resp.ok) { showUserError(data.error || 'Failed to load user'); return; }
 
-    loadedUserId = uid;
-    dashLoaded = false; // Reset so dashboard reloads with new user
-    if (!isDemoMode) {
+    AppState.userId = uid;
+    AppState.userData = data; // Cache user data centrally
+    AppState._loaded.dash = false; // Reset so dashboard reloads with new user
+    if (!AppState.isDemoMode) {
       localStorage.setItem('fpl_user_id', String(uid));
       saveRecentUser(uid, data.manager_name, data.team_name);
       hideDemoBanner();
@@ -2777,7 +2950,7 @@ async function loadUser() {
     $('user-info').classList.add('active');
 
     // Update persistent header bar
-    if (isDemoMode) {
+    if (AppState.isDemoMode) {
       $('uhb-name').innerHTML = 'Demo Manager <span class="demo-badge" style="font-size:0.6rem;vertical-align:middle;margin-left:4px;">DEMO</span>';
     } else {
       $('uhb-name').textContent = data.manager_name;
@@ -2790,15 +2963,36 @@ async function loadUser() {
     $('uhb-fts').textContent = data.free_transfers || '1';
     $('user-header-bar').classList.add('active');
 
-    // Chips display
+    // Hide sticky connect CTA (user is now connected)
+    const stickyConnect = $('sticky-connect-cta');
+    if (stickyConnect) stickyConnect.classList.remove('visible');
+
+    // Chips display — group by chip type, show remaining/total
     const chipNameMap = {wildcard: 'WC', freehit: 'FH', bboost: 'BB', '3xc': 'TC'};
+    const chipOrder = ['wildcard', 'freehit', 'bboost', '3xc'];
+    const availCount = {};
+    const usedList = {};
+    (data.chips_available || []).forEach(c => { availCount[c] = (availCount[c] || 0) + 1; });
+    (data.chips_used || []).forEach(c => {
+      if (!usedList[c.name]) usedList[c.name] = [];
+      usedList[c.name].push(c);
+    });
     let chipsHtml = '';
-    if (data.chips_available) {
-      data.chips_available.forEach(c => { chipsHtml += `<span class="chip-badge available">${chipNameMap[c] || c}</span>`; });
-    }
-    if (data.chips_used) {
-      data.chips_used.forEach(c => { chipsHtml += `<span class="chip-badge used" title="Used GW${c.event}">${chipNameMap[c.name] || c.name}</span>`; });
-    }
+    chipOrder.forEach(chip => {
+      const label = chipNameMap[chip] || chip;
+      const avail = availCount[chip] || 0;
+      const used = usedList[chip] || [];
+      const total = avail + used.length;
+      if (total === 0) return;
+      const usedGws = used.map(u => `GW${u.event}`).join(', ');
+      if (avail === 0) {
+        chipsHtml += `<span class="chip-badge used" title="Used ${usedGws}">${label} (0/${total})</span>`;
+      } else if (used.length === 0) {
+        chipsHtml += `<span class="chip-badge available">${label} (${avail}/${total})</span>`;
+      } else {
+        chipsHtml += `<span class="chip-badge available" title="Used ${usedGws}">${label} (${avail}/${total})</span>`;
+      }
+    });
     $('uhb-chips').innerHTML = chipsHtml;
     $('settings-chips').innerHTML = chipsHtml;
 
@@ -2810,7 +3004,7 @@ async function loadUser() {
     $('settings-fts').textContent = data.free_transfers || '1';
 
     // Cache user data for instant restore (skip for demo)
-    if (!isDemoMode) {
+    if (!AppState.isDemoMode) {
       localStorage.setItem('fpl_user_data', JSON.stringify({
         manager_name: data.manager_name, team_name: data.team_name,
         overall_rank: data.overall_rank, overall_points: data.overall_points,
@@ -2856,10 +3050,13 @@ function hideUserError() { $('user-error').classList.remove('active'); }
 function showDemoBanner() { $('demo-banner').classList.remove('hidden'); }
 function hideDemoBanner() { $('demo-banner').classList.add('hidden'); }
 async function activateDemo() {
-  isDemoMode = true;
+  AppState.isDemoMode = true;
   $('user-id').value = '0';
   await loadUser();
   showDemoBanner();
+  // Hide sticky connect CTA since user chose demo
+  const stickyConnect = $('sticky-connect-cta');
+  if (stickyConnect) stickyConnect.classList.remove('visible');
 }
 
 async function loadLeague(leagueId, chipEl) {
@@ -2887,7 +3084,7 @@ async function loadLeague(leagueId, chipEl) {
       <td>${s.team_name}</td>
       <td class="right">${s.gw_points}</td>
       <td class="right score">${s.total_points}</td>
-      <td>${loadedUserId ? `<span class="btn-outline" onclick="loadRival(${s.rank}, '${s.manager_name.replace(/'/g, "\\'")}', event)" style="font-size:0.7rem;padding:0.15rem 0.4rem;">vs</span>` : ''}</td>
+      <td>${AppState.userId ? `<span class="btn-outline" onclick="loadRival(${s.rank}, '${s.manager_name.replace(/'/g, "\\'")}', event)" style="font-size:0.7rem;padding:0.15rem 0.4rem;">vs</span>` : ''}</td>
     </tr>`).join('');
     tableEl.classList.remove('hidden');
     applyCardLabels(tableEl);
@@ -2907,7 +3104,7 @@ function loadMetadata() {
     if (data.error) throw new Error(data.error);
     const sel = $('player-team-filter');
     data.teams.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
-    data.teams.forEach(t => { teamsMap[t.id] = t; });
+    data.teams.forEach(t => { teamsMap[t.id] = t; if (t.code) teamCodeMap[t.id] = t.code; });
     metadataLoaded = true;
   }).catch(err => { metadataPromise = null; console.error(err); });
   return metadataPromise;
@@ -2919,6 +3116,17 @@ let livePicksData = []; // Store picks data for captain/vice changes
 let liveGameweek = null;
 let captainMode = null; // null, 'captain', or 'vice'
 const PHOTO_BASE = 'https://resources.premierleague.com/premierleague/photos/players/110x140/p';
+const KIT_BASE = 'https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_';
+let teamCodeMap = {}; // team id -> team code (for kit URLs)
+
+/** Get kit image HTML for a team. isGk: true for goalkeeper kit. */
+function kitImg(teamId, isGk, size) {
+  size = size || 20;
+  const code = teamCodeMap[teamId];
+  if (!code) return '';
+  const suffix = isGk ? '_1-110.webp' : '-110.webp';
+  return `<img src="${KIT_BASE}${code}${suffix}" alt="" style="width:${size}px;height:${size}px;vertical-align:middle;" onerror="this.style.display='none'">`;
+}
 
 const TEAM_COLORS = {
   'ARS': '#EF0107', 'AVL': '#670E36', 'BOU': '#DA291C', 'BRE': '#e30613',
@@ -2955,7 +3163,7 @@ function validateFormation() {
 }
 
 function saveLineup() {
-  if (!loadedUserId || !liveGameweek) return;
+  if (!AppState.userId || !liveGameweek) return;
   const cards = document.querySelectorAll('#live-pitch .live-card');
   const lineup = [];
   let benchIdx = 0;
@@ -2969,15 +3177,15 @@ function saveLineup() {
       isVice: c.dataset.isVice === 'true',
     });
   });
-  localStorage.setItem(`fpl_lineup_${loadedUserId}_${liveGameweek}`, JSON.stringify(lineup));
+  localStorage.setItem(`fpl_lineup_${AppState.userId}_${liveGameweek}`, JSON.stringify(lineup));
   // Flash saved indicator
   const ind = $('live-save-indicator');
   if (ind) { ind.classList.add('visible'); setTimeout(() => ind.classList.remove('visible'), 1500); }
 }
 
 function loadSavedLineup(picks) {
-  if (!loadedUserId || !liveGameweek) return picks;
-  const saved = localStorage.getItem(`fpl_lineup_${loadedUserId}_${liveGameweek}`);
+  if (!AppState.userId || !liveGameweek) return picks;
+  const saved = localStorage.getItem(`fpl_lineup_${AppState.userId}_${liveGameweek}`);
   if (!saved) return picks;
   try {
     const lineup = JSON.parse(saved);
@@ -3069,14 +3277,14 @@ function handleCaptainClick(playerId) {
 }
 
 async function loadLive() {
-  if (!loadedUserId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
+  if (!AppState.userId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
   $('live-no-user').classList.add('hidden');
   const loader = $('live-loader');
   loader.classList.add('active');
   $('live-content').classList.add('hidden');
 
   try {
-    const resp = await fetch(`/api/live/${loadedUserId}`);
+    const resp = await fetch(`/api/live/${AppState.userId}`);
     const data = await resp.json();
     if (!resp.ok) { $('live-content').innerHTML = `<div class="error-msg">${data.error}</div>`; $('live-content').classList.remove('hidden'); return; }
 
@@ -3125,7 +3333,7 @@ async function loadLive() {
         else if (i === 2 && p.bps > 0) { rankClass = 'bronze'; bonusPts = '+1'; }
         bpsHtml += `<div class="bps-ranking-item">
           <div class="bps-rank ${rankClass}">${i + 1}</div>
-          <span class="bps-name">${p.name} <span style="color:#8899AA;font-size:0.72rem;">${p.position_name}</span></span>
+          <span class="bps-name">${playerLink(p)} <span style="color:#8899AA;font-size:0.72rem;">${p.position_name}</span></span>
           <span class="bps-score">${p.bps || 0}</span>
           <span class="bps-bonus">${bonusPts}</span>
         </div>`;
@@ -3188,10 +3396,12 @@ function liveCard(p, isBench, benchOrder) {
   // Position name map for data attribute
   const posNames = {1:'GK', 2:'DEF', 3:'MID', 4:'FWD'};
 
+  const kitHtml = kitImg(p.team, p.position === 1, 24);
+
   return `<div class="live-card${isBench ? ' bench' : ''}" draggable="true" data-player-id="${p.id}" data-is-bench="${isBench}" data-position="${p.position}" data-team="${p.team_name}" data-is-captain="${!!p.is_captain}" data-is-vice="${!!p.is_vice_captain}" style="--team-color:${teamColor}" onclick="handleCaptainClick(${p.id})">
     ${badge}${injuryHtml}
-    <div class="lp-photo">${photoHtml}</div>
-    <div class="lp-name">${p.name}</div>
+    <div class="lp-photo">${kitHtml || photoHtml}</div>
+    <div class="lp-name"><span style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" onclick="event.stopPropagation();openPlayerModal(${p.id})">${p.name}</span></div>
     <div class="lp-pts${p.live_points === 0 ? ' zero' : ''}">${p.live_points}</div>
     ${details.length ? `<div class="lp-detail">${details.join(' &middot; ')}</div>` : ''}
     ${upcomingHtml}${benchBadge}
@@ -3466,7 +3676,7 @@ async function loadFDR() {
 
 // ==================== CAPTAIN PICKS ====================
 async function loadCaptainPicks() {
-  if (captainLoaded) return;
+  if (AppState._loaded.captain) return;
   const loader = $('captain-loader');
   loader.classList.add('active');
 
@@ -3477,7 +3687,7 @@ async function loadCaptainPicks() {
 
     $('captain-body').innerHTML = data.picks.map((p, i) => `<tr${i === 0 ? ' style="background:#1a2a1a"' : ''}>
       <td>${i === 0 ? '<span style="color:#FFB800;font-weight:bold">1</span>' : i + 1}</td>
-      <td><strong>${p.name}</strong></td>
+      <td><strong>${playerLink(p)}</strong></td>
       <td>${p.team_name}</td>
       <td class="pos">${p.position_name}</td>
       <td class="right">${p.form.toFixed(1)}</td>
@@ -3492,7 +3702,7 @@ async function loadCaptainPicks() {
     applyCardLabels($('captain-table'));
     drawCaptainEVChart(data.picks);
     $('captain-ev-section').classList.remove('hidden');
-    captainLoaded = true;
+    AppState._loaded.captain = true;
   } catch (err) {
     $('captain-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
   } finally {
@@ -3566,7 +3776,7 @@ function drawCaptainEVChart(picks) {
 
 // ==================== PRICE CHANGES ====================
 async function loadPriceChanges() {
-  if (pricesLoaded) return;
+  if (AppState._loaded.prices) return;
   const loader = $('prices-loader');
   loader.classList.add('active');
 
@@ -3577,7 +3787,7 @@ async function loadPriceChanges() {
 
     $('risers-container').innerHTML = data.risers.map(p => priceCard(p, true)).join('');
     $('fallers-container').innerHTML = data.fallers.map(p => priceCard(p, false)).join('');
-    pricesLoaded = true;
+    AppState._loaded.prices = true;
   } catch (err) {
     $('risers-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
   } finally {
@@ -3928,7 +4138,7 @@ function drawBarChart(players, stats, labels, maxes, colors) {
 // ==================== RIVAL COMPARISON ====================
 async function loadRival(rank, name, event) {
   event.stopPropagation();
-  if (!loadedUserId) return;
+  if (!AppState.userId) return;
 
   const rivalId = prompt(`Enter FPL User ID for "${name}" to compare squads:`);
   if (!rivalId) return;
@@ -3940,7 +4150,7 @@ async function loadRival(rank, name, event) {
   $('rival-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
 
   try {
-    const resp = await fetch(`/api/rival/${rid}?user_id=${loadedUserId}`);
+    const resp = await fetch(`/api/rival/${rid}?user_id=${AppState.userId}`);
     const data = await resp.json();
     if (!resp.ok) { $('rival-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
 
@@ -3951,7 +4161,7 @@ async function loadRival(rank, name, event) {
 }
 
 async function loadRivalDirect() {
-  if (!loadedUserId) {
+  if (!AppState.userId) {
     $('rival-output').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>';
     return;
   }
@@ -3963,7 +4173,7 @@ async function loadRivalDirect() {
   $('rival-output').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading rival comparison...</div></div>';
 
   try {
-    const resp = await fetch(`/api/rival/${rid}?user_id=${loadedUserId}`);
+    const resp = await fetch(`/api/rival/${rid}?user_id=${AppState.userId}`);
     const data = await resp.json();
     if (!resp.ok) { $('rival-output').innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
 
@@ -4051,7 +4261,7 @@ function renderPlayersBody(players) {
     $('players-body').innerHTML = players.map(p => `<tr>
       <td class="score">${p.total_points}</td>
       <td class="pos">${p.position_name}</td>
-      <td>${p.name}</td>
+      <td>${playerLink(p)}</td>
       <td>${p.team_name}</td>
       <td class="right cost">${p.cost.toFixed(1)}</td>
       <td class="right">${p.xG.toFixed(2)}</td>
@@ -4067,7 +4277,7 @@ function renderPlayersBody(players) {
     $('players-body').innerHTML = players.map(p => `<tr>
       <td class="score">${p.total_points}</td>
       <td class="pos">${p.position_name}</td>
-      <td>${p.name}</td>
+      <td>${playerLink(p)}</td>
       <td>${p.team_name}</td>
       <td class="right cost">${p.cost.toFixed(1)}</td>
       <td class="right">${p.form.toFixed(1)}</td>
@@ -4083,11 +4293,52 @@ function renderPlayersBody(players) {
   applyCardLabels($('players-table'));
 }
 
+// ==================== COLUMN SELECTOR (Item 16) ====================
+const PLAYER_COLUMNS = [
+  { key: 'total_points', label: 'Pts', default: true },
+  { key: 'position_name', label: 'Pos', default: true, locked: true },
+  { key: 'name', label: 'Player', default: true, locked: true },
+  { key: 'team_name', label: 'Team', default: true },
+  { key: 'cost', label: 'Cost', default: true },
+  { key: 'form', label: 'Form', default: true },
+  { key: 'goals', label: 'G', default: true },
+  { key: 'assists', label: 'A', default: true },
+  { key: 'clean_sheets', label: 'CS', default: true },
+  { key: 'bonus', label: 'Bonus', default: true },
+  { key: 'points_per_game', label: 'PPG', default: true },
+  { key: 'minutes', label: 'Min', default: false },
+  { key: 'selected_by_percent', label: 'Own%', default: false },
+  { key: 'xG', label: 'xG', default: false },
+  { key: 'xA', label: 'xA', default: false },
+  { key: 'ict_index', label: 'ICT', default: false },
+  { key: 'ep_next', label: 'xPts', default: false },
+];
+let visibleColumns = JSON.parse(localStorage.getItem('fpl_columns_players') || 'null') || PLAYER_COLUMNS.filter(c => c.default).map(c => c.key);
+
+function initColumnSelector() {
+  const container = $('players-column-selector');
+  if (!container) return;
+  container.innerHTML = `<div class="column-selector">
+    <button class="btn-outline" onclick="this.nextElementSibling.classList.toggle('open')" style="font-size:0.78rem;padding:0.3rem 0.7rem;">Columns &#9660;</button>
+    <div class="column-popover" id="col-popover">
+      ${PLAYER_COLUMNS.map(c => `<label><input type="checkbox" ${visibleColumns.includes(c.key) ? 'checked' : ''} ${c.locked ? 'disabled checked' : ''} onchange="toggleColumn('${c.key}', this.checked)"> ${c.label}</label>`).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleColumn(key, visible) {
+  if (visible && !visibleColumns.includes(key)) visibleColumns.push(key);
+  else if (!visible) visibleColumns = visibleColumns.filter(k => k !== key);
+  localStorage.setItem('fpl_columns_players', JSON.stringify(visibleColumns));
+  if (lastPlayersData) { updatePlayersHeader(); renderPlayersBody(lastPlayersData); }
+}
+
 function loadPlayers() {
   const loader = $('players-loader');
   const table = $('players-table');
   loader.classList.add('active');
   table.classList.add('hidden');
+  initColumnSelector();
 
   const params = new URLSearchParams();
   const search = $('player-search').value.trim();
@@ -4114,7 +4365,7 @@ function loadPlayers() {
       lastPlayersData = data.players;
       renderPlayersBody(data.players);
       table.classList.remove('hidden');
-      playersLoaded = true;
+      AppState._loaded.players = true;
     })
     .catch(err => {
       $('players-body').innerHTML = `<tr><td colspan="13" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
@@ -4153,7 +4404,7 @@ function loadFixtures() {
       opt.textContent = label;
       sel.appendChild(opt);
     });
-    fixturesLoaded = true;
+    AppState._loaded.fixtures = true;
     renderFixtures();
   }).catch(err => {
     $('fixtures-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
@@ -4161,7 +4412,7 @@ function loadFixtures() {
 }
 
 function diffBadge(diff, extra) {
-  return `<span class="difficulty diff-${diff} ${extra || ''}">${diff}</span>`;
+  return `<span class="fdr-cell fdr-${diff} ${extra || ''}" style="padding:0.15rem 0.4rem;border-radius:4px;font-size:0.75rem;">${diff}</span>`;
 }
 
 function renderFixtures() {
@@ -4211,19 +4462,51 @@ function switchTab(tab) {
 
 function teamName(id) { const t = teamsMap[id]; return t ? t.short_name : id; }
 
+/** Render an FDR badge with consistent color coding. diff: 1-5, opp: opponent short name, isHome: boolean */
+function fdrBadge(diff, opp, isHome) {
+  if (!diff || !opp) return '';
+  const suffix = isHome ? ' (H)' : ' (A)';
+  return `<span class="fdr-cell fdr-${diff}" style="font-size:0.7rem;padding:0.12rem 0.35rem;border-radius:4px;white-space:nowrap;">${opp}${suffix}</span>`;
+}
+
+function playerLink(p) {
+  return `<span style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" onclick="event.stopPropagation();openPlayerModal(${p.id})">${p.name}</span>`;
+}
 function playerRow(p, full) {
-  if (full) return `<tr><td class="pos">${p.position_name}</td><td>${p.name}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right">${p.form.toFixed(1)}</td><td class="right">${p.points_per_game.toFixed(1)}</td><td class="right">${p.xG.toFixed(1)}</td><td class="right">${p.xA.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
-  return `<tr><td class="pos">${p.position_name}</td><td>${p.name}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
+  if (full) return `<tr><td class="pos">${p.position_name}</td><td>${playerLink(p)}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right">${p.form.toFixed(1)}</td><td class="right">${p.points_per_game.toFixed(1)}</td><td class="right">${p.xG.toFixed(1)}</td><td class="right">${p.xA.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
+  return `<tr><td class="pos">${p.position_name}</td><td>${playerLink(p)}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
 }
 
 function transferRow(t, i) {
-  return `<tr><td>${i+1}</td><td class="out">${t.player_out.name} (${t.player_out.cost.toFixed(1)})</td><td class="in">${t.player_in.name} (${t.player_in.cost.toFixed(1)})</td><td class="right score">+${t.score_gain.toFixed(3)}</td><td class="right">${t.cost_change >= 0 ? '+' : ''}${t.cost_change.toFixed(1)}</td></tr>`;
+  const epGain = t.pts_gain != null ? t.pts_gain : 0;
+  const epColor = epGain > 0 ? '#00E676' : epGain < 0 ? '#FF5252' : '#8899AA';
+  return `<tr><td>${i+1}</td><td class="out">${playerLink(t.player_out)} (${t.player_out.cost.toFixed(1)})</td><td class="in">${playerLink(t.player_in)} (${t.player_in.cost.toFixed(1)})</td><td class="right score">+${t.score_gain.toFixed(3)}</td><td class="right" style="color:${epColor}" title="Expected points gain next GW">${epGain > 0 ? '+' : ''}${epGain.toFixed(1)} EP</td><td class="right">${t.cost_change >= 0 ? '+' : ''}${t.cost_change.toFixed(1)}</td></tr>`;
 }
 
 function renderSummary(el, sq) {
   el.innerHTML = `<div class="stat-card"><div class="label">Cost</div><div class="value">${sq.total_cost.toFixed(1)}M</div></div>
     <div class="stat-card"><div class="label">Remaining</div><div class="value">${sq.budget_remaining.toFixed(1)}M</div></div>
     <div class="stat-card"><div class="label">Score</div><div class="value">${sq.total_score.toFixed(3)}</div></div>`;
+}
+
+function renderPlayerCard(p) {
+  const kit = kitImg(p.team, p.position === 1, 28);
+  return `<div class="player-card" onclick="this.querySelector('.pc-expand')?.classList.toggle('open')">
+    <div class="pc-kit">${kit || '<span style="font-size:1.2rem;">&#9917;</span>'}</div>
+    <div class="pc-main">
+      <div class="pc-name">${p.position_name} ${playerLink(p)}</div>
+      <div class="pc-meta">${teamName(p.team)} &middot; ${p.cost.toFixed(1)}M</div>
+      <div class="pc-stats">
+        <span>Form: ${p.form.toFixed(1)}</span>
+        <span>PPG: ${p.points_per_game.toFixed(1)}</span>
+        <span>Score: ${p.composite_score.toFixed(3)}</span>
+      </div>
+      <div class="pc-expand">
+        xG: ${p.xG.toFixed(1)} | xA: ${p.xA.toFixed(1)} | ICT: ${p.ict_index.toFixed(1)} | Rotation: ${(p.rotation_risk * 100).toFixed(0)}%
+      </div>
+    </div>
+    <div class="pc-score">${p.composite_score.toFixed(2)}</div>
+  </div>`;
 }
 
 function renderSquad(sEl, bEl, sq) {
@@ -4233,6 +4516,11 @@ function renderSquad(sEl, bEl, sq) {
   const bTable = bEl.closest('table');
   if (sTable) applyCardLabels(sTable);
   if (bTable) applyCardLabels(bTable);
+  // Also render mobile cards
+  const sCards = $('user-starting-cards');
+  const bCards = $('user-bench-cards');
+  if (sCards) sCards.innerHTML = sq.starting.map(p => renderPlayerCard(p)).join('');
+  if (bCards) bCards.innerHTML = sq.bench.map(p => renderPlayerCard(p)).join('');
 }
 
 function renderTransfers(sec, body, tf) {
@@ -4244,12 +4532,42 @@ function renderTransfers(sec, body, tf) {
   } else sec.classList.add('hidden');
 }
 
+async function loadSquadAnalysis() {
+  if (!AppState.userId) return;
+  const el = $('squad-analysis');
+  if (!el) return;
+  try {
+    const resp = await fetch(`/api/squad-analysis/${AppState.userId}`);
+    const data = await resp.json();
+    if (data.error) return;
+    el.classList.remove('hidden');
+    // Score with color
+    const score = data.squad_score;
+    const scoreColor = score >= 60 ? '#00E676' : score >= 40 ? '#FFB800' : '#FF5252';
+    $('squad-score-value').textContent = score;
+    $('squad-score-value').style.color = scoreColor;
+    // Fixture outlook badge
+    const outlookColors = { favorable: '#00E676', neutral: '#FFB800', tough: '#FF5252' };
+    $('squad-fixture-badge').textContent = data.fixture_outlook.charAt(0).toUpperCase() + data.fixture_outlook.slice(1);
+    $('squad-fixture-badge').style.background = outlookColors[data.fixture_outlook] || '#FFB800';
+    $('squad-fixture-badge').style.color = '#0D1B2A';
+    // Weaknesses
+    const sevColors = { high: '#FF5252', medium: '#FFB800', low: '#4da6ff' };
+    $('squad-weaknesses').innerHTML = data.weaknesses.map(w =>
+      `<div style="border-left:3px solid ${sevColors[w.severity] || '#FFB800'};padding:0.2rem 0.5rem;margin:0.3rem 0;font-size:0.8rem;color:#AABBCC;">${w.description}</div>`
+    ).join('');
+    $('squad-strengths').innerHTML = data.strengths.map(s =>
+      `<div style="border-left:3px solid #00E676;padding:0.2rem 0.5rem;margin:0.3rem 0;font-size:0.8rem;color:#AABBCC;">${s.description}</div>`
+    ).join('');
+  } catch(e) { /* silent */ }
+}
+
 async function runOptimizer() {
   const btn = $('run-btn');
   const loader = $('loader');
   const results = $('results');
   const errorEl = $('error');
-  const userId = loadedUserId ? String(loadedUserId) : $('user-id').value.trim();
+  const userId = AppState.userId ? String(AppState.userId) : $('user-id').value.trim();
 
   btn.disabled = true;
   loader.classList.add('active');
@@ -4326,7 +4644,7 @@ let tpSellingPlayer = null;  // player being sold (awaiting replacement pick)
 let tpLoaded = false;
 
 async function loadTransferPlanner() {
-  if (!loadedUserId) { $('tp-no-user').classList.remove('hidden'); $('tp-content').classList.add('hidden'); return; }
+  if (!AppState.userId) { $('tp-no-user').classList.remove('hidden'); $('tp-content').classList.add('hidden'); return; }
   $('tp-no-user').classList.add('hidden');
 
   if (tpLoaded) { $('tp-content').classList.remove('hidden'); return; }
@@ -4336,7 +4654,7 @@ async function loadTransferPlanner() {
   $('tp-content').classList.add('hidden');
 
   try {
-    const resp = await fetch(`/api/transfer-planner/${loadedUserId}`);
+    const resp = await fetch(`/api/transfer-planner/${AppState.userId}`);
     const data = await resp.json();
     if (!resp.ok) { $('tp-content').innerHTML = `<div class="error-msg">${data.error}</div>`; $('tp-content').classList.remove('hidden'); return; }
 
@@ -4387,9 +4705,9 @@ function renderTransferPlanner() {
   if (tpTransfers.length > 0) {
     $('tp-transfer-summary').innerHTML = tpTransfers.map((t, i) => `
       <div class="tp-transfer-item">
-        <span class="out">${t.out.name} (${(t.out.selling_price || t.out.cost).toFixed(1)}M)</span>
+        <span class="out">${playerLink(t.out)} (${(t.out.selling_price || t.out.cost).toFixed(1)}M)</span>
         <span class="tp-arrow">&#8594;</span>
-        <span class="in">${t.in.name} (${t.in.cost.toFixed(1)}M)</span>
+        <span class="in">${playerLink(t.in)} (${t.in.cost.toFixed(1)}M)</span>
         <span style="margin-left:auto;cursor:pointer;color:#FF5252;font-size:0.9rem;" onclick="undoTransfer(${i})" title="Remove">&times;</span>
       </div>
     `).join('');
@@ -4437,7 +4755,7 @@ function renderTransferPlanner() {
       squadHtml += `<div class="tp-player${isSold ? ' tp-sold' : ''}">
         <div class="tp-photo">${photoHtml}</div>
         <div class="tp-info">
-          <div class="tp-name">${p.name} ${injuryFlag} ${priceIndicator}</div>
+          <div class="tp-name">${playerLink(p)} ${injuryFlag} ${priceIndicator}</div>
           <div class="tp-meta">${p.team_name} &middot; ${p.cost.toFixed(1)}M &middot; ${p.selected_by_percent}% own &middot; Form: ${p.form}</div>
         </div>
         <div class="tp-stats">
@@ -4452,7 +4770,7 @@ function renderTransferPlanner() {
       squadHtml += `<div class="tp-player tp-new">
         <div class="tp-photo">${p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'" style="width:100%;height:100%;object-fit:cover;object-position:top;">` : '&#9917;'}</div>
         <div class="tp-info">
-          <div class="tp-name">${p.name} <span style="color:#51cf66;font-size:0.65rem;">NEW</span></div>
+          <div class="tp-name">${playerLink(p)} <span style="color:#51cf66;font-size:0.65rem;">NEW</span></div>
           <div class="tp-meta">${p.team_name} &middot; ${p.cost.toFixed(1)}M &middot; ${p.selected_by_percent}% own &middot; Form: ${p.form}</div>
         </div>
         <div class="tp-stats"><span class="score">${p.composite_score}</span></div>
@@ -4473,7 +4791,7 @@ function renderTransferIntel() {
     let priceInd = '';
     if (p.cost_change_event > 0) priceInd = '<span class="tp-price-indicator tp-price-up">&#9650;</span>';
     return `<div class="tp-intel-item">
-      <span class="tp-intel-name">${p.name} ${priceInd}</span>
+      <span class="tp-intel-name">${playerLink(p)} ${priceInd}</span>
       <span class="tp-intel-val" style="color:#51cf66">+${p.transfers_in_event.toLocaleString()}</span>
     </div>`;
   }).join('');
@@ -4483,7 +4801,7 @@ function renderTransferIntel() {
     let priceInd = '';
     if (p.cost_change_event < 0) priceInd = '<span class="tp-price-indicator tp-price-down">&#9660;</span>';
     return `<div class="tp-intel-item">
-      <span class="tp-intel-name">${p.name} ${priceInd}</span>
+      <span class="tp-intel-name">${playerLink(p)} ${priceInd}</span>
       <span class="tp-intel-val" style="color:#FF5252">${p.transfers_out_event.toLocaleString()}</span>
     </div>`;
   }).join('');
@@ -4495,7 +4813,7 @@ function renderTransferIntel() {
   $('tp-intel-form').innerHTML = byForm.map(p => {
     const isNew = tpTransfers.some(t => t.in.id === p.id);
     return `<div class="tp-intel-item">
-      <span class="tp-intel-name">${p.name}${isNew ? ' <span style="color:#51cf66;font-size:0.6rem;">NEW</span>' : ''}</span>
+      <span class="tp-intel-name">${playerLink(p)}${isNew ? ' <span style="color:#51cf66;font-size:0.6rem;">NEW</span>' : ''}</span>
       <span class="tp-intel-val" style="color:#4da6ff">${p.form}</span>
     </div>`;
   }).join('');
@@ -4568,7 +4886,7 @@ function filterReplacements() {
     const netColor = netTransfers > 0 ? '#51cf66' : netTransfers < 0 ? '#FF5252' : '#888';
 
     return `<div class="tp-buy-row" style="${affordable ? '' : 'opacity:0.4;'}">
-      <span class="tp-buy-name">${p.name}${priceInd}</span>
+      <span class="tp-buy-name">${playerLink(p)}${priceInd}</span>
       <span class="tp-buy-meta">${p.team_name} &middot; <span class="cost">${p.cost.toFixed(1)}M</span> &middot; ${p.selected_by_percent}% &middot; F:${p.form} &middot; <span style="color:${netColor}">${netTransfers > 0 ? '+' : ''}${netTransfers.toLocaleString()}</span></span>
       <span style="color:#00E676;font-size:0.72rem;font-weight:600;min-width:35px;text-align:right;">${p.composite_score}</span>
       ${affordable ? `<button class="tp-buy-btn" onclick="buyPlayerByIdx(${idx})">Buy</button>` : '<span style="color:#FF5252;font-size:0.68rem;">$$</span>'}
@@ -4657,7 +4975,7 @@ function confirmTransfers() {
     out: { id: t.out.id, name: t.out.name, cost: t.out.selling_price || t.out.cost },
     in: { id: t.in.id, name: t.in.name, cost: t.in.cost },
   }));
-  localStorage.setItem(`fpl_transfer_plan_${loadedUserId}`, JSON.stringify(plan));
+  localStorage.setItem(`fpl_transfer_plan_${AppState.userId}`, JSON.stringify(plan));
   closeTransferModal();
 
   // Show confirmation message
@@ -5016,7 +5334,7 @@ async function loadDraftRankings() {
     applyCardLabels(body.closest('table'));
 
     section.style.display = '';
-    draftRankLoaded = true;
+    AppState._loaded.draftRank = true;
   } catch (e) {
     errDiv.innerHTML = `<div class="error-msg">${e.message}</div>`;
   } finally {
@@ -5213,25 +5531,119 @@ if (draftRosterIds.length > 0) {
 }
 
 // ==================== #1 AUTO FPL URL DETECT ====================
+// ==================== PLAYER DRILLDOWN MODAL (Item 17) ====================
+async function openPlayerModal(playerId) {
+  const overlay = $('player-modal-overlay');
+  const content = $('player-modal-content');
+  overlay.classList.remove('hidden');
+  content.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner active" style="display:inline-block;"></div><div style="color:#8899AA;font-size:0.82rem;margin-top:0.5rem;">Loading player data...</div></div>';
+
+  try {
+    const resp = await fetch(`/api/player/${playerId}`);
+    const data = await resp.json();
+    if (data.error) { closePlayerModal(); return; }
+
+    const p = data.player;
+    const kit = data.team_code ? `<img src="${KIT_BASE}${data.team_code}${p.position === 1 ? '_1' : ''}-110.webp" style="width:48px;" onerror="this.style.display='none'">` : '';
+    const photoHtml = p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'">` : '&#9917;';
+
+    const fixturesHtml = data.fixture_ticker.map(fx =>
+      `<div class="pm-fixture fdr-cell fdr-${fx.difficulty}">
+        ${fx.opponent}${fx.is_home ? ' (H)' : ' (A)'}
+        <span class="gw-label">GW${fx.gw}</span>
+      </div>`
+    ).join('');
+
+    const bd = data.composite_breakdown;
+    const breakdownRows = [
+      { label: 'Form', value: bd.form, max: 10 },
+      { label: 'PPG', value: bd.ppg, max: 10 },
+      { label: 'xG', value: bd.xG, max: 15 },
+      { label: 'xA', value: bd.xA, max: 10 },
+      { label: 'Fixture Ease', value: bd.fixture_ease, max: 1 },
+      { label: 'Rotation Risk', value: bd.rotation_risk, max: 1 },
+    ].map(r => {
+      const pct = Math.min(100, (r.value / r.max) * 100);
+      const color = r.label === 'Rotation Risk' ? (pct > 50 ? '#FF5252' : '#00E676') : '#00E676';
+      return `<div class="pm-breakdown-row">
+        <div class="pm-breakdown-label">${r.label}</div>
+        <div class="pm-breakdown-bar"><div class="pm-breakdown-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="pm-breakdown-val">${r.value}</div>
+      </div>`;
+    }).join('');
+
+    content.innerHTML = `
+      <div class="pm-header">
+        <div class="pm-photo">${kit || photoHtml}</div>
+        <div>
+          <div class="pm-name">${p.name}</div>
+          <div class="pm-meta">${data.team_name} &middot; ${p.position_name} &middot; ${p.cost.toFixed(1)}M</div>
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:#8899AA;margin-bottom:0.3rem;font-weight:600;">Upcoming Fixtures</div>
+      <div class="pm-fixtures">${fixturesHtml || '<span style="color:#555">No fixture data</span>'}</div>
+      <div class="pm-stats">
+        <div class="pm-stat"><div class="label">Total Pts</div><div class="value score">${p.total_points}</div></div>
+        <div class="pm-stat"><div class="label">Form</div><div class="value">${p.form}</div></div>
+        <div class="pm-stat"><div class="label">PPG</div><div class="value">${p.points_per_game}</div></div>
+        <div class="pm-stat"><div class="label">xGI</div><div class="value">${(p.xG + p.xA).toFixed(1)}</div></div>
+        <div class="pm-stat"><div class="label">ICT</div><div class="value">${p.ict_index}</div></div>
+        <div class="pm-stat"><div class="label">Bonus</div><div class="value">${p.bonus}</div></div>
+        <div class="pm-stat"><div class="label">Own%</div><div class="value" style="color:#4da6ff">${p.selected_by_percent}%</div></div>
+        <div class="pm-stat"><div class="label">Proj Min</div><div class="value">${bd.projected_minutes}</div></div>
+      </div>
+      ${p.news ? `<div style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:8px;padding:0.4rem 0.6rem;font-size:0.78rem;color:#FFAAAA;margin-bottom:0.8rem;">${p.news}</div>` : ''}
+      <div style="font-size:0.75rem;color:#8899AA;margin-bottom:0.3rem;font-weight:600;">Score Breakdown</div>
+      <div class="pm-breakdown">${breakdownRows}</div>
+      <div style="margin-top:0.8rem;display:flex;gap:0.3rem;flex-wrap:wrap;font-size:0.72rem;">
+        <span style="color:#8899AA">Price change:</span>
+        <span style="color:${p.cost_change_event > 0 ? '#00E676' : p.cost_change_event < 0 ? '#FF5252' : '#8899AA'}">${p.cost_change_event > 0 ? '+' : ''}${(p.cost_change_event / 10).toFixed(1)}M</span>
+        <span style="color:#8899AA;margin-left:0.5rem;">Transfers:</span>
+        <span class="in">+${p.transfers_in_event.toLocaleString()}</span>
+        <span class="out">-${p.transfers_out_event.toLocaleString()}</span>
+      </div>
+    `;
+  } catch(e) {
+    content.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function closePlayerModal() {
+  $('player-modal-overlay').classList.add('hidden');
+  $('player-modal-content').innerHTML = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayerModal(); });
+
+let autoDetectTimer = null;
 function autoDetectFplId(input) {
   const val = input.value.trim();
-  // Match FPL URLs: /entry/12345, /entry/12345/event, etc.
-  const match = val.match(/entry\/(\d+)/);
+  if (!val) return;
+  // Match FPL URLs: /entry/12345/..., full URLs, or bare numeric IDs (3-10 digits)
+  const match = val.match(/entry\/(\d+)/) || val.match(/^(\d{3,10})$/);
   if (match) {
-    input.value = match[1];
+    const detectedId = match[1];
+    input.value = detectedId;
     input.style.borderColor = '#00E676';
-    setTimeout(() => { input.style.borderColor = ''; }, 1500);
+    // Show detection feedback
+    const helpEl = $('user-id-help');
+    if (helpEl) helpEl.textContent = `Team ID ${detectedId} detected`;
+    setTimeout(() => { input.style.borderColor = ''; if (helpEl) helpEl.textContent = ''; }, 2500);
+    // Auto-load after debounce if URL was pasted (not bare number typed)
+    if (val.includes('/')) {
+      clearTimeout(autoDetectTimer);
+      autoDetectTimer = setTimeout(() => loadUser(), 500);
+    }
   }
 }
 
 // ==================== #2 MULTI-GW PLANNER ====================
 async function loadMultiGW() {
-  if (!loadedUserId) { $('multigw-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  if (!AppState.userId) { $('multigw-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('multigw-loader'), content = $('multigw-content'), err = $('multigw-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
   const horizon = $('multigw-horizon').value;
   try {
-    const resp = await fetch(`/api/multi-gw/${loadedUserId}?horizon=${horizon}`);
+    const resp = await fetch(`/api/multi-gw/${AppState.userId}?horizon=${horizon}`);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
     $('multigw-summary').innerHTML = `
@@ -5260,29 +5672,49 @@ async function loadMultiGW() {
 
 // ==================== #3 CHIP STRATEGY ====================
 async function loadChipStrategy() {
-  if (!loadedUserId) { $('chips-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  if (!AppState.userId) { $('chips-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('chips-loader'), content = $('chips-content'), err = $('chips-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
   try {
-    const resp = await fetch(`/api/chip-strategy/${loadedUserId}`);
+    const resp = await fetch(`/api/chip-strategy/${AppState.userId}`);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
     const chips = [
-      { key: 'bench_boost', name: 'Bench Boost', icon: '🪑', color: '#51cf66' },
-      { key: 'triple_captain', name: 'Triple Captain', icon: '©️', color: '#FFB800' },
-      { key: 'free_hit', name: 'Free Hit', icon: '⚡', color: '#4da6ff' },
-      { key: 'wildcard', name: 'Wildcard', icon: '🃏', color: '#FF5252' },
+      { key: 'bench_boost', apiName: 'bboost', name: 'Bench Boost', icon: '🪑', color: '#51cf66' },
+      { key: 'triple_captain', apiName: '3xc', name: 'Triple Captain', icon: '©️', color: '#FFB800' },
+      { key: 'free_hit', apiName: 'freehit', name: 'Free Hit', icon: '⚡', color: '#4da6ff' },
+      { key: 'wildcard', apiName: 'wildcard', name: 'Wildcard', icon: '🃏', color: '#FF5252' },
     ];
+    // Cross-reference chips: count available and used per chip type
+    const chipAvailCount = {};
+    const chipUsedCount = {};
+    const chipUsedGws = {};
+    (AppState.userData?.chips_available || []).forEach(c => { chipAvailCount[c] = (chipAvailCount[c] || 0) + 1; });
+    (AppState.userData?.chips_used || []).forEach(c => {
+      chipUsedCount[c.name] = (chipUsedCount[c.name] || 0) + 1;
+      if (!chipUsedGws[c.name]) chipUsedGws[c.name] = [];
+      chipUsedGws[c.name].push('GW' + c.event);
+    });
     $('chips-cards').innerHTML = chips.map(c => {
       const d = data[c.key] || {};
-      return `<div class="waiver-card" style="border-top:3px solid ${c.color};">
+      const avail = chipAvailCount[c.apiName] || 0;
+      const used = chipUsedCount[c.apiName] || 0;
+      const total = avail + used;
+      const allUsed = avail === 0 && used > 0;
+      const opacity = allUsed ? 'opacity:0.4;' : '';
+      const usedGws = chipUsedGws[c.apiName] || [];
+      let statusLabel = '';
+      if (allUsed) statusLabel = `<span style="color:#FF5252;font-size:0.72rem;font-weight:600;margin-left:0.5rem;">USED (${used}/${total})</span>`;
+      else if (used > 0) statusLabel = `<span style="color:#FFB800;font-size:0.72rem;font-weight:600;margin-left:0.5rem;">${avail}/${total} left</span>`;
+      else if (total > 1) statusLabel = `<span style="color:#51cf66;font-size:0.72rem;margin-left:0.5rem;">${avail}/${total}</span>`;
+      return `<div class="waiver-card" style="border-top:3px solid ${c.color};${opacity}">
         <div class="wc-header">
-          <span class="wc-name">${c.icon} ${c.name}</span>
-          <span style="color:${c.color};font-weight:700;font-size:0.9rem;">${d.gw ? 'GW' + d.gw : 'N/A'}</span>
+          <span class="wc-name">${c.icon} ${c.name}${statusLabel}</span>
+          <span style="color:${c.color};font-weight:700;font-size:0.9rem;">${allUsed ? '—' : d.gw ? 'GW' + d.gw : 'N/A'}</span>
         </div>
-        <div class="wc-meta">${d.reason || 'No recommendation available'}</div>
-        ${d.player ? `<div style="color:#F0F0F0;font-size:0.82rem;margin-top:0.3rem;">Player: <strong>${d.player}</strong></div>` : ''}
-        ${d.dgw_teams ? `<div style="color:#8899AA;font-size:0.78rem;margin-top:0.2rem;">DGW players: ${d.dgw_teams}</div>` : ''}
+        <div class="wc-meta">${allUsed ? `Played ${usedGws.join(' & ')}` : d.reason || 'No recommendation available'}</div>
+        ${!allUsed && d.player ? `<div style="color:#F0F0F0;font-size:0.82rem;margin-top:0.3rem;">Player: <strong>${d.player}</strong></div>` : ''}
+        ${!allUsed && d.dgw_teams ? `<div style="color:#8899AA;font-size:0.78rem;margin-top:0.2rem;">DGW players: ${d.dgw_teams}</div>` : ''}
       </div>`;
     }).join('');
     content.style.display = '';
@@ -5316,9 +5748,9 @@ async function loadOwnership() {
 
   let url = '/api/ownership';
   const params = [];
-  if (loadedUserId) params.push(`user_id=${loadedUserId}`);
+  if (AppState.userId) params.push(`user_id=${AppState.userId}`);
   const savedLeague = localStorage.getItem('fpl_league_id');
-  if (savedLeague && loadedUserId) params.push(`league_id=${savedLeague}`);
+  if (savedLeague && AppState.userId) params.push(`league_id=${savedLeague}`);
   if (params.length) url += '?' + params.join('&');
 
   try {
@@ -5444,26 +5876,27 @@ function drawEoCaptainChart(captainData) {
 
 // ==================== #6 TRANSFER GAIN VS HIT ====================
 async function loadTransferGain() {
-  if (!loadedUserId) { $('gain-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  if (!AppState.userId) { $('gain-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('gain-loader'), content = $('gain-content'), err = $('gain-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
   try {
-    const resp = await fetch(`/api/transfer-gain/${loadedUserId}`);
+    const resp = await fetch(`/api/transfer-gain/${AppState.userId}`);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
     // Table
     $('gain-body').innerHTML = data.transfers.map(t => {
       const beColor = t.breakeven_gws <= 2 ? '#00E676' : t.breakeven_gws <= 4 ? '#FFB800' : '#FF5252';
       return `<tr>
-        <td><span class="out">${t.out_name}</span> <span style="color:#555">${t.out_team}</span></td>
-        <td><span class="in">${t.in_name}</span> <span style="color:#555">${t.in_team}</span></td>
+        <td><span class="out" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" onclick="event.stopPropagation();openPlayerModal(${t.out_id})">${t.out_name}</span> <span style="color:#555">${t.out_team}</span></td>
+        <td><span class="in" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" onclick="event.stopPropagation();openPlayerModal(${t.in_id})">${t.in_name}</span> <span style="color:#555">${t.in_team}</span></td>
         <td><span class="pos">${t.position_name}</span></td>
         <td class="right score">+${t.pts_gain}</td>
         <td class="right" style="color:#51cf66">${t.net_gain_free > 0 ? '+' : ''}${t.net_gain_free}</td>
         <td class="right" style="color:${t.net_gain_hit >= 0 ? '#51cf66' : '#FF5252'}">${t.net_gain_hit > 0 ? '+' : ''}${t.net_gain_hit}</td>
         <td class="right" style="color:${beColor};font-weight:600">${t.breakeven_gws < 99 ? t.breakeven_gws + ' GWs' : '—'}</td>
         <td class="right">${t.worth_hit ? '<span style="color:#00E676;font-weight:700">YES</span>' : '<span style="color:#FF5252">NO</span>'}</td>
-      </tr>`;
+      </tr>
+      ${t.reasoning ? `<tr><td colspan="8" style="color:#8899AA;font-size:0.78rem;padding:0.15rem 0.6rem 0.4rem;border-top:none;">${t.reasoning}</td></tr>` : ''}`;
     }).join('');
     applyCardLabels($('gain-body').closest('table'));
     // Chart
@@ -5572,7 +6005,7 @@ function populateRankSimCaptains(players) {
 }
 
 async function loadRankSim() {
-  if (!loadedUserId) { $('ranksim-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
+  if (!AppState.userId) { $('ranksim-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('ranksim-loader'), content = $('ranksim-content'), err = $('ranksim-error');
   loader.classList.add('active'); content.style.display = 'none'; err.innerHTML = '';
 
@@ -5581,7 +6014,7 @@ async function loadRankSim() {
   const altCaptainId = $('ranksim-alt-captain').value;
   const hits = $('ranksim-hits').value;
 
-  let url = `/api/rank-simulation/${loadedUserId}?horizon=${horizon}&sims=2000&hits=${hits}`;
+  let url = `/api/rank-simulation/${AppState.userId}?horizon=${horizon}&sims=2000&hits=${hits}`;
   if (captainId) url += `&captain_id=${captainId}`;
   if (altCaptainId) url += `&alt_captain_id=${altCaptainId}`;
 
@@ -5711,6 +6144,12 @@ setTimeout(prefetchCoreData, 2000);
 </script>
 
 <!-- ==================== BOTTOM NAVIGATION (MOBILE) ==================== -->
+<!-- Sticky Connect CTA (mobile only, visible when no user connected) -->
+<div class="sticky-connect-cta" id="sticky-connect-cta">
+  <span>Connect your FPL team for personalized insights</span>
+  <button class="btn btn-sm" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect</button>
+</div>
+
 <!-- Sticky Optimize CTA (mobile only, visible on optimizer tab) -->
 <div class="sticky-optimize" id="sticky-optimize">
   <button class="btn" onclick="runOptimizer()">Optimize Squad</button>
@@ -5786,6 +6225,14 @@ setTimeout(prefetchCoreData, 2000);
   <div class="mm-divider"></div>
 
   <div class="mm-item" onclick="switchNav('nav-settings')"><span class="mm-icon">&#9881;</span> Settings</div>
+</div>
+
+<!-- Player Drilldown Modal (Item 17) -->
+<div class="player-modal-overlay hidden" id="player-modal-overlay" onclick="closePlayerModal()">
+  <div class="player-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closePlayerModal()">&times;</button>
+    <div id="player-modal-content"></div>
+  </div>
 </div>
 
 </body>
