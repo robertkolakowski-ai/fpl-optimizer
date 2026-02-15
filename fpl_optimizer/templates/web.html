@@ -2586,8 +2586,7 @@ function loadDashboard() {
   // Ensure team metadata is loaded for kit images and team names
   loadMetadata();
 
-  // Show skeleton loading instead of plain spinner
-  showSkeletonStats('dash-stats', 4);
+  // Show skeleton in pitch slot (safe — it gets fully replaced later)
   showSkeleton('dash-pitch-slot', 3);
 
   const loader = $('dash-loader');
@@ -2603,13 +2602,14 @@ function loadDashboard() {
 
     // ---- TOP STATS ----
     if (!liveData.error) {
-      $('dash-gw-pts').textContent = liveData.total_live_points ?? '--';
-      $('dash-gw-label').textContent = liveData.gameweek_name || 'GW Points';
-      $('dash-hits-sub').textContent = liveData.hits ? `(-${liveData.hits} hits)` : '';
-      $('dash-rank').textContent = liveData.overall_rank ? liveData.overall_rank.toLocaleString() : '--';
-      $('dash-total').textContent = liveData.total_points ? liveData.total_points.toLocaleString() : '--';
-      $('dash-total-sub').textContent = liveData.team_value ? `Value: ${(liveData.team_value / 10).toFixed(1)}M` : '';
-      $('dash-rank-sub').textContent = liveData.points_on_bench ? `${liveData.points_on_bench} on bench` : '';
+      const _s = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+      _s('dash-gw-pts', liveData.total_live_points ?? '--');
+      _s('dash-gw-label', liveData.gameweek_name || 'GW Points');
+      _s('dash-hits-sub', liveData.hits ? `(-${liveData.hits} hits)` : '');
+      _s('dash-rank', liveData.overall_rank ? liveData.overall_rank.toLocaleString() : '--');
+      _s('dash-total', liveData.total_points ? liveData.total_points.toLocaleString() : '--');
+      _s('dash-total-sub', liveData.team_value ? `Value: ${(liveData.team_value / 10).toFixed(1)}M` : '');
+      _s('dash-rank-sub', liveData.points_on_bench ? `${liveData.points_on_bench} on bench` : '');
 
       // ---- CAPTAIN ----
       const captain = liveData.picks.find(p => p.is_captain);
