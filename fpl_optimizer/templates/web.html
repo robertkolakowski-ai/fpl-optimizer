@@ -81,10 +81,31 @@
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
-    .main-content { margin-left: 0; padding-top: 50px; padding-bottom: 68px; }
+    .main-content { margin-left: 0; padding-top: 50px; padding-bottom: 68px; overflow-x: hidden; }
+    .container { overflow-x: hidden; }
     .mobile-topbar { display: flex; }
     .hamburger { display: none; }
     .fixture-ticker { top: 50px; }
+
+    /* User header bar: horizontal scroll on mobile */
+    .user-header-bar { gap: 0.6rem; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0.45rem 0.8rem; }
+    .user-header-bar::-webkit-scrollbar { display: none; }
+    .user-header-bar .uhb-name { white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; }
+    .user-header-bar .uhb-item { flex-shrink: 0; }
+    .user-header-bar .uhb-value { white-space: nowrap; font-size: 0.72rem; }
+    .user-header-bar .uhb-label { font-size: 0.58rem; }
+
+    /* Dashboard: prevent overflow */
+    .dash-welcome h2 { font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-stats { gap: 0.5rem; }
+    .dash-stat { padding: 0.7rem 0.5rem; min-width: 0; }
+    .dash-stat .ds-value { font-size: 1.2rem; word-break: break-all; }
+    .dash-stat .ds-label { font-size: 0.62rem; }
+    .dash-stat .ds-sub { font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-section { overflow: hidden; }
+    .dash-captain .dc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .section { overflow: hidden; }
+    .nav-panel { overflow-x: hidden; }
   }
 
   /* ==================== UTILITY ==================== */
@@ -386,7 +407,7 @@
   .dash-stat .ds-value.blue { color: #4da6ff; text-shadow: 0 0 20px rgba(77,166,255,0.15); }
   .dash-stat .ds-label { font-size: 0.7rem; color: #8899AA; text-transform: uppercase; margin-top: 0.2rem; letter-spacing: 0.03em; }
   .dash-stat .ds-sub { font-size: 0.68rem; color: #667788; margin-top: 0.15rem; }
-  @media (max-width: 600px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; } }
 
   /* Dashboard main layout: 2-col on desktop */
   .dash-body { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; margin-bottom: 1rem; }
