@@ -2583,6 +2583,9 @@ function loadDashboard() {
   // Avoid re-fetching if already loaded this session
   if (AppState._loaded.dash) return;
 
+  // Ensure team metadata is loaded for kit images and team names
+  loadMetadata();
+
   // Show skeleton loading instead of plain spinner
   showSkeletonStats('dash-stats', 4);
   showSkeleton('dash-pitch-slot', 3);
@@ -2843,6 +2846,7 @@ renderRecentUsers();
   if (saved) {
     $('user-id').value = saved;
     setTimeout(async () => {
+      await loadMetadata();
       await loadUser();
       const savedLeague = localStorage.getItem('fpl_league_id');
       if (savedLeague && AppState.userId) {
@@ -3279,6 +3283,7 @@ function handleCaptainClick(playerId) {
 async function loadLive() {
   if (!AppState.userId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
   $('live-no-user').classList.add('hidden');
+  await loadMetadata();
   const loader = $('live-loader');
   loader.classList.add('active');
   $('live-content').classList.add('hidden');

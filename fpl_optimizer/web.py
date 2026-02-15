@@ -543,6 +543,7 @@ def api_live(user_id):
             pick_list.append({
                 "id": pid,
                 "name": p.name if p else f"ID {pid}",
+                "team": p.team if p else 0,
                 "team_name": teams_dict.get(p.team, "???") if p else "???",
                 "position": p.position if p else 0,
                 "position_name": p.position_name if p else "??",
