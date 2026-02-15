@@ -2349,7 +2349,7 @@ const $ = id => document.getElementById(id);
 // ==================== CENTRALIZED APP STATE ====================
 const AppState = {
   userId: null,
-  AppState.isDemoMode: false,
+  isDemoMode: false,
   userData: null,       // cached /api/user response
   teamData: null,       // cached /api/data response (teams, gameweeks)
   _loaded: { dash: false, players: false, fixtures: false, draftRank: false, captain: false, prices: false },
@@ -2367,7 +2367,7 @@ function requireUser(errorContainerId) {
 
 /** Return demo-notice HTML if in demo mode, otherwise empty string. */
 function demoNotice() {
-  if (!AppState.AppState.isDemoMode) return '';
+  if (!AppState.isDemoMode) return '';
   return '<div class="demo-inline-notice"><span class="demo-badge">DEMO</span> Viewing sample data &mdash; <a href="#" onclick="switchNav(\'nav-settings\');return false" style="color:#4da6ff">connect your team</a></div>';
 }
 
