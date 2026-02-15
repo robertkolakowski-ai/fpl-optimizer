@@ -2332,10 +2332,24 @@ function switchNav(panelId) {
     if (moreBtn) moreBtn.classList.remove('active');
   }
 
-  // Update bottom nav active state
+  // Update bottom nav active state — map sub-pages to parent tab
+  const bnMap = {
+    'nav-dashboard': 'nav-dashboard',
+    'nav-team-live': 'nav-dashboard', 'nav-team-myteam': 'nav-dashboard',
+    'nav-transfers-planner': 'nav-transfers-planner', 'nav-transfers-suggestions': 'nav-transfers-planner',
+    'nav-transfers-optimizer': 'nav-transfers-planner', 'nav-transfers-multigw': 'nav-transfers-planner',
+    'nav-transfers-chips': 'nav-transfers-planner', 'nav-transfers-gain': 'nav-transfers-planner',
+    'nav-fixtures-fdr': 'nav-fixtures-fdr', 'nav-fixtures-schedule': 'nav-fixtures-fdr',
+    'nav-fixtures-list': 'nav-fixtures-fdr', 'nav-fixtures-swing': 'nav-fixtures-fdr',
+    'nav-playerstats-table': 'nav-playerstats-table', 'nav-playerstats-opta': 'nav-playerstats-table',
+    'nav-playerstats-compare': 'nav-playerstats-table',
+  };
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
-  const bnBtn = document.querySelector(`.bottom-nav button[data-nav="${panelId}"]`);
-  if (bnBtn) bnBtn.classList.add('active');
+  const bnTarget = bnMap[panelId];
+  if (bnTarget) {
+    const bnBtn = document.querySelector(`.bottom-nav button[data-nav="${bnTarget}"]`);
+    if (bnBtn) bnBtn.classList.add('active');
+  }
 
   // Lazy load data
   if (panelId === 'nav-playerstats-table' && !playersLoaded) loadMetadata().then(() => loadPlayers());
@@ -2855,6 +2869,7 @@ async function loadLeague(leagueId, chipEl) {
       <td>${loadedUserId ? `<span class="btn-outline" onclick="loadRival(${s.rank}, '${s.manager_name.replace(/'/g, "\\'")}', event)" style="font-size:0.7rem;padding:0.15rem 0.4rem;">vs</span>` : ''}</td>
     </tr>`).join('');
     tableEl.classList.remove('hidden');
+    applyCardLabels(tableEl);
   } catch (err) {
     $('league-title-text').textContent = 'Network error';
   } finally {
@@ -4200,8 +4215,12 @@ function renderSquad(sEl, bEl, sq) {
 }
 
 function renderTransfers(sec, body, tf) {
-  if (tf && tf.length > 0) { sec.classList.remove('hidden'); body.innerHTML = tf.map((t,i) => transferRow(t,i)).join(''); }
-  else sec.classList.add('hidden');
+  if (tf && tf.length > 0) {
+    sec.classList.remove('hidden');
+    body.innerHTML = tf.map((t,i) => transferRow(t,i)).join('');
+    const tbl = body.closest('table');
+    if (tbl) applyCardLabels(tbl);
+  } else sec.classList.add('hidden');
 }
 
 async function runOptimizer() {
@@ -4233,6 +4252,7 @@ async function runOptimizer() {
     // Render transfers in optimizer panel and suggestions panel
     if (data.transfers && data.transfers.length > 0) {
       $('transfers-body').innerHTML = data.transfers.map((t,i) => transferRow(t,i)).join('');
+      applyCardLabels($('transfers-body').closest('table'));
       $('suggestions-content').classList.remove('hidden');
       $('suggestions-no-data').classList.add('hidden');
     }
@@ -4266,6 +4286,8 @@ async function runOptimizer() {
         </table></div></div>`;
     }
 
+    // Apply card labels to all rendered tables
+    tpc.querySelectorAll('table').forEach(t => applyCardLabels(t));
     results.classList.remove('hidden');
     switchTab('optimal');
   } catch (err) {
@@ -4970,6 +4992,7 @@ async function loadDraftRankings() {
       <td class="right">${rotBadge(p.rotation_risk)}</td>
       <td class="right score">${p.draft_score}</td>
     </tr>`).join('');
+    applyCardLabels(body.closest('table'));
 
     section.style.display = '';
     draftRankLoaded = true;
@@ -5208,6 +5231,7 @@ async function loadMultiGW() {
         <td class="right" style="font-weight:600">${gw.cumulative_gain > 0 ? '+' : ''}${gw.cumulative_gain}</td>
       </tr>`;
     }).join('');
+    applyCardLabels($('multigw-body').closest('table'));
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
   finally { loader.classList.remove('active'); }
@@ -5336,6 +5360,7 @@ async function loadOwnership() {
           <td class="right" style="color:#FFB800">${p.league_ownership_pct}%</td>
         </tr>`;
       }).join('');
+      applyCardLabels($('eo-league-body').closest('table'));
       $('eo-league-section').style.display = '';
     }
 
@@ -5506,6 +5531,7 @@ async function loadFixtureSwing() {
         return `<td><span class="fdr-cell fdr-${fdr}" style="display:inline-block;min-width:28px;text-align:center;">${d}</span></td>`;
       }).join('')}<td class="right">${t.avg_difficulty}</td><td class="right" style="color:${t.swing >= 2 ? '#FF5252' : '#00E676'}">${t.swing}</td></tr>`
     ).join('');
+    applyCardLabels($('swing-body').closest('table'));
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
   finally { loader.classList.remove('active'); }
