@@ -87,8 +87,8 @@
     .hamburger { display: none; }
     .fixture-ticker { top: 50px; }
 
-    /* User header bar: horizontal scroll on mobile */
-    .user-header-bar { gap: 0.6rem; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0.45rem 0.8rem; }
+    /* User header bar: horizontal scroll on mobile, sticky below fixture ticker */
+    .user-header-bar { gap: 0.6rem; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0.45rem 0.8rem; position: sticky; top: 82px; z-index: 99; }
     .user-header-bar::-webkit-scrollbar { display: none; }
     .user-header-bar .uhb-name { white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; }
     .user-header-bar .uhb-item { flex-shrink: 0; }
