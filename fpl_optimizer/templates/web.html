@@ -730,6 +730,16 @@
   /* Waiver card upgrade */
   .waiver-card { background: linear-gradient(135deg, #13161f 0%, #181d28 100%); border-radius: 12px; transition: transform 0.2s, border-color 0.15s, box-shadow 0.2s; }
   .waiver-card:hover { border-color: #4da6ff; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+
+  /* ==================== DEMO BANNER ==================== */
+  .demo-banner { background: linear-gradient(90deg, rgba(77,166,255,0.1), rgba(0,255,135,0.06)); border: 1px solid rgba(77,166,255,0.25); border-radius: 12px; padding: 0.6rem 1rem; margin-bottom: 1rem; }
+  .demo-banner.hidden { display: none; }
+  .demo-banner-content { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+  .demo-badge { background: linear-gradient(135deg, #4da6ff, #3a8edb); color: #0e1117; font-weight: 700; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 5px; letter-spacing: 0.06em; flex-shrink: 0; }
+  .demo-banner .demo-text { color: #aaa; font-size: 0.82rem; flex: 1; }
+  .demo-banner .btn { font-size: 0.78rem; padding: 0.35rem 1rem; }
+  .demo-dismiss { color: #555; font-size: 1.2rem; cursor: pointer; padding: 0 0.3rem; line-height: 1; }
+  .demo-dismiss:hover { color: #ff6b6b; }
 </style>
 </head>
 <body>
@@ -907,6 +917,16 @@
             <div class="ds-value blue" id="dash-league-rank">--</div>
             <div class="ds-label">League Rank</div>
             <div class="ds-sub" id="dash-league-sub"></div>
+          </div>
+        </div>
+
+        <!-- Demo banner -->
+        <div id="demo-banner" class="demo-banner hidden">
+          <div class="demo-banner-content">
+            <span class="demo-badge">DEMO</span>
+            <span class="demo-text">You're viewing sample data. Enter your FPL ID to see your own team.</span>
+            <button class="btn btn-sm" onclick="switchNav('nav-settings');$('user-id').focus();">Try with your team &rarr;</button>
+            <span class="demo-dismiss" onclick="hideDemoBanner()">&times;</span>
           </div>
         </div>
 
@@ -1985,6 +2005,7 @@ let fixturesLoaded = false;
 let debounceTimer = null;
 let compareTimer = null;
 let loadedUserId = null;
+let isDemoMode = false;
 let draftRankLoaded = false;
 let captainLoaded = false;
 let pricesLoaded = false;
@@ -2349,6 +2370,9 @@ renderRecentUsers();
         if (chip) loadLeague(parseInt(savedLeague), chip);
       }
     }, 100);
+  } else {
+    // No saved user — auto-activate demo mode
+    setTimeout(() => activateDemo(), 300);
   }
 })();
 
@@ -2409,10 +2433,11 @@ async function loadUser() {
   const rawId = idInput.value.trim();
   if (!rawId) { idInput.focus(); return; }
   const uid = parseInt(rawId);
-  if (isNaN(uid) || uid <= 0) {
+  if (isNaN(uid) || uid < 0) {
     showUserError('Please enter a valid numeric FPL User ID.');
     return;
   }
+  isDemoMode = (uid === 0);
 
   const btn = $('load-user-btn');
   const spinner = $('user-spinner');
@@ -2430,14 +2455,21 @@ async function loadUser() {
 
     loadedUserId = uid;
     dashLoaded = false; // Reset so dashboard reloads with new user
-    localStorage.setItem('fpl_user_id', String(uid));
-    saveRecentUser(uid, data.manager_name, data.team_name);
+    if (!isDemoMode) {
+      localStorage.setItem('fpl_user_id', String(uid));
+      saveRecentUser(uid, data.manager_name, data.team_name);
+      hideDemoBanner();
+    }
     $('manager-name').textContent = data.manager_name;
     $('team-name').textContent = data.team_name;
     $('user-info').classList.add('active');
 
     // Update persistent header bar
-    $('uhb-name').textContent = data.manager_name;
+    if (isDemoMode) {
+      $('uhb-name').innerHTML = 'Demo Manager <span class="demo-badge" style="font-size:0.6rem;vertical-align:middle;margin-left:4px;">DEMO</span>';
+    } else {
+      $('uhb-name').textContent = data.manager_name;
+    }
     $('uhb-rank').textContent = data.overall_rank ? data.overall_rank.toLocaleString() : '-';
     $('uhb-points').textContent = data.overall_points || '-';
     $('uhb-gw-pts').textContent = data.gw_points || '-';
@@ -2465,15 +2497,19 @@ async function loadUser() {
     $('settings-bank').textContent = data.bank ? data.bank + 'M' : '-';
     $('settings-fts').textContent = data.free_transfers || '1';
 
-    // Cache user data for instant restore
-    localStorage.setItem('fpl_user_data', JSON.stringify({
-      manager_name: data.manager_name, team_name: data.team_name,
-      overall_rank: data.overall_rank, overall_points: data.overall_points,
-      team_value: data.team_value, bank: data.bank, free_transfers: data.free_transfers,
-      gw_points: data.gw_points, chips_available: data.chips_available,
-      chips_used: data.chips_used, last_sync: Date.now(),
-    }));
-    $('uhb-last-sync').textContent = 'Synced just now';
+    // Cache user data for instant restore (skip for demo)
+    if (!isDemoMode) {
+      localStorage.setItem('fpl_user_data', JSON.stringify({
+        manager_name: data.manager_name, team_name: data.team_name,
+        overall_rank: data.overall_rank, overall_points: data.overall_points,
+        team_value: data.team_value, bank: data.bank, free_transfers: data.free_transfers,
+        gw_points: data.gw_points, chips_available: data.chips_available,
+        chips_used: data.chips_used, last_sync: Date.now(),
+      }));
+      $('uhb-last-sync').textContent = 'Synced just now';
+    } else {
+      $('uhb-last-sync').textContent = 'Demo mode';
+    }
 
     // Update dashboard welcome
     $('dash-title').textContent = `Welcome, ${data.manager_name}`;
@@ -2503,6 +2539,16 @@ async function loadUser() {
 
 function showUserError(msg) { const el = $('user-error'); el.textContent = msg; el.classList.add('active'); }
 function hideUserError() { $('user-error').classList.remove('active'); }
+
+// Demo mode helpers
+function showDemoBanner() { $('demo-banner').classList.remove('hidden'); }
+function hideDemoBanner() { $('demo-banner').classList.add('hidden'); }
+async function activateDemo() {
+  isDemoMode = true;
+  $('user-id').value = '0';
+  await loadUser();
+  showDemoBanner();
+}
 
 async function loadLeague(leagueId, chipEl) {
   document.querySelectorAll('.league-chip').forEach(c => c.classList.remove('active'));

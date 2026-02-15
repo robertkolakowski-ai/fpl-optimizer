@@ -41,6 +41,67 @@ def _get_cached_data():
     return players, teams, gameweeks, fixtures
 
 
+DEMO_USER_ID = 0
+
+
+def _get_demo_squad():
+    """Build a realistic demo squad from current player data using the optimizer.
+
+    Caches the result alongside general data so it refreshes every TTL cycle.
+    """
+    now = time.time()
+    if _cache.get("demo_squad") and now - _cache.get("demo_ts", 0) < _CACHE_TTL:
+        return _cache["demo_squad"]
+
+    players, teams, gameweeks, fixtures = _get_cached_data()
+    score_players(players, fixtures, gameweeks, teams, lookahead=5)
+    compute_rotation_risk(players)
+
+    squad = select_squad(players, budget=99.0, risk_mode="balanced")
+
+    # Determine captain (highest ep_next outfield starter) and vice
+    outfield_starting = [p for p in squad.starting if p.position != 1]
+    ranked = sorted(outfield_starting, key=lambda p: p.ep_next, reverse=True)
+    captain = ranked[0] if ranked else squad.starting[0]
+    vice = ranked[1] if len(ranked) > 1 else captain
+
+    picks = []
+    for i, p in enumerate(squad.starting):
+        picks.append({
+            "element": p.id,
+            "position": i + 1,
+            "multiplier": 2 if p.id == captain.id else 1,
+            "is_captain": p.id == captain.id,
+            "vice_captain": p.id == vice.id,
+            "selling_price": int(p.cost * 10),
+        })
+    for i, p in enumerate(squad.bench):
+        picks.append({
+            "element": p.id,
+            "position": len(squad.starting) + i + 1,
+            "multiplier": 0,
+            "is_captain": False,
+            "vice_captain": False,
+            "selling_price": int(p.cost * 10),
+        })
+
+    result = {
+        "squad": squad,
+        "bank": round(100.0 - squad.total_cost, 1),
+        "picks": picks,
+        "captain_id": captain.id,
+    }
+    _cache["demo_squad"] = result
+    _cache["demo_ts"] = now
+    return result
+
+
+def _demo_user_team():
+    """Return (squad_players, bank) for demo mode, matching load_user_team() signature."""
+    demo = _get_demo_squad()
+    return demo["squad"].players, demo["bank"]
+
+
 POS_MAP = {"GK": 1, "DEF": 2, "MID": 3, "FWD": 4}
 SORT_FIELDS = {
     "name", "team", "position", "cost", "total_points", "minutes",
@@ -192,6 +253,32 @@ def api_fixtures():
 @app.route("/api/user/<int:user_id>")
 def api_user(user_id):
     """Fetch FPL user entry with full profile: chips, bank, transfers, history."""
+    if user_id == DEMO_USER_ID:
+        try:
+            demo = _get_demo_squad()
+            tv = round(sum(p.cost for p in demo["squad"].players) + demo["bank"], 1)
+            return jsonify({
+                "manager_name": "Demo Manager",
+                "team_name": "FPL Optimizer XI",
+                "leagues": [{"id": 0, "name": "Demo League"}],
+                "overall_rank": 247832,
+                "overall_points": 1453,
+                "team_value": tv,
+                "bank": demo["bank"],
+                "gw_points": 62,
+                "gw_rank": 198432,
+                "gw_transfers": 1,
+                "gw_hits": 0,
+                "free_transfers": 2,
+                "chips_used": [],
+                "chips_available": ["wildcard", "freehit", "bboost", "3xc"],
+                "season_history": [
+                    {"gw": i, "points": 40 + (i * 3) + (i % 3) * 8, "rank": 300000 - i * 5000}
+                    for i in range(1, 11)
+                ],
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     try:
         with httpx.Client(timeout=30) as client:
             entry = fetch_user_entry(client, user_id)
@@ -268,6 +355,17 @@ def api_user(user_id):
 @app.route("/api/league/<int:league_id>")
 def api_league(league_id):
     """Fetch classic league standings."""
+    if league_id == DEMO_USER_ID:
+        return jsonify({
+            "league_name": "Demo League",
+            "standings": [
+                {"rank": 1, "entry": 0, "manager_name": "Demo Manager", "team_name": "FPL Optimizer XI", "gw_points": 62, "total_points": 1453},
+                {"rank": 2, "entry": 1, "manager_name": "Alice FPL", "team_name": "Alice's Aces", "gw_points": 58, "total_points": 1441},
+                {"rank": 3, "entry": 2, "manager_name": "Bob Fantasy", "team_name": "Bob's Best XI", "gw_points": 71, "total_points": 1428},
+                {"rank": 4, "entry": 3, "manager_name": "Carol Chips", "team_name": "Chip & Run", "gw_points": 45, "total_points": 1412},
+                {"rank": 5, "entry": 4, "manager_name": "Dave Draft", "team_name": "Draft Day", "gw_points": 53, "total_points": 1398},
+            ],
+        })
     try:
         with httpx.Client(timeout=30) as client:
             data = fetch_league_standings(client, league_id)
@@ -324,13 +422,21 @@ def api_live(user_id):
         for tid in team_upcoming:
             team_upcoming[tid].sort(key=lambda x: x["gw"])
 
-        with httpx.Client(timeout=30) as client:
-            picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
-            live_data = fetch_live_gameweek(client, current_gw.id)
+        if user_id == DEMO_USER_ID:
+            demo = _get_demo_squad()
+            with httpx.Client(timeout=30) as client:
+                live_data = fetch_live_gameweek(client, current_gw.id)
+            picks = demo["picks"]
+            entry_history = {}
+        else:
+            with httpx.Client(timeout=30) as client:
+                picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
+                live_data = fetch_live_gameweek(client, current_gw.id)
 
         live_map = {e["id"]: e["stats"] for e in live_data.get("elements", [])}
-        picks = picks_data.get("picks", [])
-        entry_history = picks_data.get("entry_history", {})
+        if user_id != DEMO_USER_ID:
+            picks = picks_data.get("picks", [])
+            entry_history = picks_data.get("entry_history", {})
 
         pick_list = []
         total_live = 0
@@ -372,14 +478,18 @@ def api_live(user_id):
                 total_live += live_pts
 
         # Fetch total season points and team value from entry
-        try:
-            with httpx.Client(timeout=30) as client2:
-                entry_data = fetch_user_entry(client2, user_id)
-            total_points = entry_data.get("summary_overall_points", 0)
-            team_value = entry_data.get("last_deadline_value", 0)
-        except Exception:
-            total_points = entry_history.get("total_points", 0)
-            team_value = 0
+        if user_id == DEMO_USER_ID:
+            total_points = 1453
+            team_value = round(sum(p.cost for p in _get_demo_squad()["squad"].players) * 10)
+        else:
+            try:
+                with httpx.Client(timeout=30) as client2:
+                    entry_data = fetch_user_entry(client2, user_id)
+                total_points = entry_data.get("summary_overall_points", 0)
+                team_value = entry_data.get("last_deadline_value", 0)
+            except Exception:
+                total_points = entry_history.get("total_points", 0)
+                team_value = 0
 
         return jsonify({
             "gameweek": current_gw.id,
@@ -1052,24 +1162,29 @@ def api_transfer_planner(user_id):
         if current_gw is None:
             return jsonify({"error": "Cannot determine current gameweek"}), 400
 
-        with httpx.Client(timeout=30) as client:
-            entry = fetch_user_entry(client, user_id)
-            picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
-            history = fetch_entry_history(client, user_id)
+        if user_id == DEMO_USER_ID:
+            demo = _get_demo_squad()
+            bank = demo["bank"]
+            team_value = round(sum(p.cost for p in demo["squad"].players) + bank, 1)
+            free_transfers = 2
+            picks = demo["picks"]
+        else:
+            with httpx.Client(timeout=30) as client:
+                entry = fetch_user_entry(client, user_id)
+                picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
+                history = fetch_entry_history(client, user_id)
+            bank = entry.get("last_deadline_bank", 0) / 10.0
+            team_value = entry.get("last_deadline_value", 0) / 10.0
+            # Determine free transfers from history
+            current_history = None
+            for h in history.get("current", []):
+                if h.get("event") == current_gw.id:
+                    current_history = h
+                    break
+            # FPL doesn't expose free transfers directly; estimate from entry
+            free_transfers = 1  # default
+            picks = picks_data.get("picks", [])
 
-        bank = entry.get("last_deadline_bank", 0) / 10.0
-        team_value = entry.get("last_deadline_value", 0) / 10.0
-
-        # Determine free transfers from history
-        current_history = None
-        for h in history.get("current", []):
-            if h.get("event") == current_gw.id:
-                current_history = h
-                break
-        # FPL doesn't expose free transfers directly; estimate from entry
-        free_transfers = 1  # default
-
-        picks = picks_data.get("picks", [])
         squad = []
         for pick in picks:
             pid = pick["element"]
@@ -1191,7 +1306,10 @@ def api_optimize():
         if user_id:
             try:
                 uid = int(user_id)
-                squad_players, bank = load_user_team(uid, players, gameweeks)
+                if uid == DEMO_USER_ID:
+                    squad_players, bank = _demo_user_team()
+                else:
+                    squad_players, bank = load_user_team(uid, players, gameweeks)
                 # Build a Squad from the user's current team
                 user_squad = Squad(players=squad_players)
                 user_squad.budget_remaining = bank
@@ -1288,7 +1406,10 @@ def api_ownership():
         if user_id:
             try:
                 uid = int(user_id)
-                squad_players, _ = load_user_team(uid, players, gameweeks)
+                if uid == DEMO_USER_ID:
+                    squad_players, _ = _demo_user_team()
+                else:
+                    squad_players, _ = load_user_team(uid, players, gameweeks)
                 squad_ids = {p.id for p in squad_players}
 
                 current_gw = next((gw for gw in gameweeks if gw.is_current), None)
@@ -1296,14 +1417,18 @@ def api_ownership():
                     current_gw = next((gw for gw in gameweeks if gw.is_next), None)
                 user_captain_id = None
                 if current_gw:
-                    try:
-                        with httpx.Client(timeout=30) as client:
-                            picks_data = fetch_user_picks_full(client, uid, current_gw.id)
-                        for pick in picks_data.get("picks", []):
-                            if pick.get("is_captain"):
-                                user_captain_id = pick["element"]
-                    except Exception:
-                        pass
+                    if uid == DEMO_USER_ID:
+                        demo = _get_demo_squad()
+                        user_captain_id = demo["captain_id"]
+                    else:
+                        try:
+                            with httpx.Client(timeout=30) as client:
+                                picks_data = fetch_user_picks_full(client, uid, current_gw.id)
+                            for pick in picks_data.get("picks", []):
+                                if pick.get("is_captain"):
+                                    user_captain_id = pick["element"]
+                        except Exception:
+                            pass
 
                 for item in result:
                     item["user_owns"] = item["id"] in squad_ids
@@ -1414,7 +1539,10 @@ def api_transfer_gain(user_id):
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
-        squad_players, bank = load_user_team(user_id, players, gameweeks)
+        if user_id == DEMO_USER_ID:
+            squad_players, bank = _demo_user_team()
+        else:
+            squad_players, bank = load_user_team(user_id, players, gameweeks)
         squad_ids = {p.id for p in squad_players}
 
         team_counts: dict[int, int] = {}
@@ -1482,7 +1610,10 @@ def api_multi_gw(user_id):
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=1)
 
-        squad_players, bank = load_user_team(user_id, players, gameweeks)
+        if user_id == DEMO_USER_ID:
+            squad_players, bank = _demo_user_team()
+        else:
+            squad_players, bank = load_user_team(user_id, players, gameweeks)
 
         from .multi_gw import plan_transfers
         plan = plan_transfers(squad_players, players, fixtures, gameweeks,
@@ -1502,7 +1633,10 @@ def api_chip_strategy(user_id):
     """Chip strategy recommendations."""
     try:
         players, teams, gameweeks, fixtures = _get_cached_data()
-        squad_players, bank = load_user_team(user_id, players, gameweeks)
+        if user_id == DEMO_USER_ID:
+            squad_players, bank = _demo_user_team()
+        else:
+            squad_players, bank = load_user_team(user_id, players, gameweeks)
 
         from .multi_gw import recommend_chips
         recs = recommend_chips(squad_players, players, fixtures, gameweeks, teams)
@@ -1531,12 +1665,16 @@ def api_rank_simulation(user_id):
         player_map = {p.id: p for p in players}
         teams_dict = {tid: t.short_name for tid, t in teams.items()}
 
-        squad_players, bank = load_user_team(user_id, players, gameweeks)
-
-        with httpx.Client(timeout=30) as client:
-            entry = fetch_user_entry(client, user_id)
-        current_rank = entry.get("summary_overall_rank", 500000)
-        current_points = entry.get("summary_overall_points", 0)
+        if user_id == DEMO_USER_ID:
+            squad_players, bank = _demo_user_team()
+            current_rank = 247832
+            current_points = 1453
+        else:
+            squad_players, bank = load_user_team(user_id, players, gameweeks)
+            with httpx.Client(timeout=30) as client:
+                entry = fetch_user_entry(client, user_id)
+            current_rank = entry.get("summary_overall_rank", 500000)
+            current_points = entry.get("summary_overall_points", 0)
 
         # Build starting XI
         gks = [p for p in squad_players if p.position == 1]
