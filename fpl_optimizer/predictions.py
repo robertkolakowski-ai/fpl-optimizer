@@ -465,3 +465,202 @@ def generate_predictions(
     # Sort by kickoff time
     predictions.sort(key=lambda p: p.kickoff_time or "")
     return predictions
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Specialty market predictions
+# ---------------------------------------------------------------------------
+
+def predict_cards(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    referee_stats: dict | None,
+) -> dict:
+    """Predict booking market for a match.
+
+    Uses team card averages (60%) + referee average (40%).
+    Returns expected cards, O/U probabilities, and referee info.
+    """
+    # Team component
+    home_avg = home_stats.get("avg_cards_home", 1.0) if home_stats else 1.0
+    away_avg = away_stats.get("avg_cards_away", 1.0) if away_stats else 1.0
+
+    # Referee component
+    ref_avg_yellows = referee_stats.get("avg_yellows_per_match", 3.5) if referee_stats else 3.5
+    ref_name = referee_stats.get("name", "") if referee_stats else ""
+
+    # Blend: 60% team data, 40% referee data
+    team_expected = home_avg + away_avg
+    ref_expected = ref_avg_yellows  # referee yellows already captures both teams
+
+    expected_total = 0.6 * team_expected + 0.4 * ref_expected
+    expected_home = home_avg * (expected_total / team_expected) if team_expected > 0 else expected_total / 2
+    expected_away = away_avg * (expected_total / team_expected) if team_expected > 0 else expected_total / 2
+
+    # Poisson O/U for cards
+    ou_thresholds = [2.5, 3.5, 4.5, 5.5]
+    over_under = {}
+    for t in ou_thresholds:
+        over = 1.0 - sum(_poisson_pmf(k, expected_total) for k in range(int(t) + 1))
+        over_under[f"over_{str(t).replace('.', '_')}"] = round(max(0, min(1, over)), 4)
+
+    return {
+        "expected_total": round(expected_total, 2),
+        "expected_home": round(expected_home, 2),
+        "expected_away": round(expected_away, 2),
+        "over_under": over_under,
+        "referee": {
+            "name": ref_name,
+            "avg_yellows": round(ref_avg_yellows, 2),
+            "avg_reds": round(referee_stats.get("avg_reds_per_match", 0), 2) if referee_stats else 0,
+            "penalty_rate": round(referee_stats.get("penalty_rate", 0), 2) if referee_stats else 0,
+            "matches": referee_stats.get("matches_officiated", 0) if referee_stats else 0,
+            "recent_yellows": referee_stats.get("recent_yellows", []) if referee_stats else [],
+        },
+        "season_avg": {
+            "home": round(home_avg, 2),
+            "away": round(away_avg, 2),
+        },
+    }
+
+
+def predict_corners(
+    home_stats: dict | None,
+    away_stats: dict | None,
+) -> dict:
+    """Predict corner market for a match.
+
+    Model: home team's home corner avg + away team's away corner avg.
+    Returns expected corners, O/U probabilities, and dominance.
+    """
+    home_avg = home_stats.get("avg_corners_home", 5.0) if home_stats else 5.0
+    away_avg = away_stats.get("avg_corners_away", 4.5) if away_stats else 4.5
+
+    expected_total = home_avg + away_avg
+
+    # Dominance: which team is expected to win more corners
+    total = home_avg + away_avg
+    home_share = home_avg / total if total > 0 else 0.5
+
+    # Poisson O/U
+    ou_thresholds = [8.5, 9.5, 10.5, 11.5]
+    over_under = {}
+    for t in ou_thresholds:
+        over = 1.0 - sum(_poisson_pmf(k, expected_total) for k in range(int(t) + 1))
+        over_under[f"over_{str(t).replace('.', '_')}"] = round(max(0, min(1, over)), 4)
+
+    return {
+        "expected_total": round(expected_total, 2),
+        "expected_home": round(home_avg, 2),
+        "expected_away": round(away_avg, 2),
+        "over_under": over_under,
+        "home_dominance": round(home_share, 4),
+        "season_avg": {
+            "home": round(home_avg, 2),
+            "away": round(away_avg, 2),
+        },
+    }
+
+
+def predict_shots(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    home_players: list[Player],
+    away_players: list[Player],
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Predict shot market and goalscorer probabilities.
+
+    Blends Football-Data.org shot averages with FPL xG data.
+    """
+    # Shot totals from external data
+    h_shots = home_stats.get("avg_shots", 13.0) if home_stats else 13.0
+    a_shots = away_stats.get("avg_shots", 11.0) if away_stats else 11.0
+    h_sot = home_stats.get("avg_shots_on_target", 4.5) if home_stats else 4.5
+    a_sot = away_stats.get("avg_shots_on_target", 3.5) if away_stats else 3.5
+
+    expected_total_shots = h_shots + a_shots
+    expected_total_sot = h_sot + a_sot
+
+    # Goalscorer probabilities from player xG share
+    def _scorer_probs(players: list[Player], match_xg: float) -> list[dict]:
+        if match_xg <= 0:
+            return []
+        # Sum season xG across team to compute each player's share
+        season_team_xg = sum(p.xG for p in players if p.position != 1)
+        if season_team_xg <= 0:
+            return []
+        scored = []
+        for p in players:
+            if p.position == 1:  # skip GK
+                continue
+            share = p.xG / season_team_xg
+            player_match_xg = share * match_xg
+            # P(score >= 1) = 1 - P(score == 0) via Poisson
+            prob = 1.0 - _poisson_pmf(0, player_match_xg) if player_match_xg > 0 else 0
+            if prob > 0.01:
+                scored.append({
+                    "id": p.id,
+                    "name": p.name,
+                    "position": p.position_name,
+                    "xG": round(p.xG, 2),
+                    "prob": round(prob, 4),
+                })
+        scored.sort(key=lambda x: x["prob"], reverse=True)
+        return scored[:10]
+
+    home_scorers = _scorer_probs(home_players, home_xg)
+    away_scorers = _scorer_probs(away_players, away_xg)
+
+    return {
+        "expected_total_shots": round(expected_total_shots, 1),
+        "expected_total_on_target": round(expected_total_sot, 1),
+        "home_shots": round(h_shots, 1),
+        "away_shots": round(a_shots, 1),
+        "home_shots_on_target": round(h_sot, 1),
+        "away_shots_on_target": round(a_sot, 1),
+        "home_xg": round(home_xg, 2),
+        "away_xg": round(away_xg, 2),
+        "home_scorers": home_scorers,
+        "away_scorers": away_scorers,
+    }
+
+
+def get_player_card_risks(
+    players: list[Player],
+    team_id: int,
+    gw_count: int,
+) -> list[dict]:
+    """Calculate card risk scores for players on a team.
+
+    Risk = (yellows/starts) × position weight.
+    Flags players one yellow away from suspension (5th, 10th in PL).
+    """
+    POS_WEIGHTS = {1: 0.5, 2: 1.3, 3: 1.1, 4: 0.9}  # GK, DEF, MID, FWD
+    SUSPENSION_THRESHOLDS = {4, 9, 14}  # one away from 5th, 10th, 15th
+
+    team_players = [p for p in players if p.team == team_id]
+    risks = []
+    for p in team_players:
+        if p.starts == 0 and p.minutes < 45:
+            continue
+        base_rate = p.yellow_cards / max(p.starts, 1)
+        pos_weight = POS_WEIGHTS.get(p.position, 1.0)
+        risk_score = base_rate * pos_weight
+
+        one_away = p.yellow_cards in SUSPENSION_THRESHOLDS
+
+        risks.append({
+            "id": p.id,
+            "name": p.name,
+            "position": p.position_name,
+            "yellow_cards": p.yellow_cards,
+            "red_cards": p.red_cards,
+            "starts": p.starts,
+            "risk_score": round(risk_score, 3),
+            "one_away_from_suspension": one_away,
+        })
+
+    risks.sort(key=lambda x: x["risk_score"], reverse=True)
+    return risks

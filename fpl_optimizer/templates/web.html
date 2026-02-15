@@ -112,6 +112,11 @@
     .heatmap-table { font-size: 0.65rem; }
     .heatmap-table th, .heatmap-table td { padding: 0.25rem; }
     .match-detail-header .teams { font-size: 1rem; }
+    .match-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .match-tab { padding: 0.5rem 0.8rem; font-size: 0.75rem; }
+    .card-risk-columns, .scorer-columns { grid-template-columns: 1fr; }
+    .tracker-stat-cards { grid-template-columns: 1fr; }
+    .referee-card .ref-stats { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ==================== UTILITY ==================== */
@@ -904,6 +909,59 @@
   .match-detail-header .datetime { color: #667788; font-size: 0.82rem; margin: 0.3rem 0; }
   .match-detail-header .pred-score { display: inline-block; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.4rem; color: #00E676; padding: 0.2rem 0.8rem; background: rgba(0,230,118,0.1); border-radius: 8px; margin: 0.5rem 0; }
 
+  /* ==================== MATCH DETAIL TABS ==================== */
+  .match-tabs { display: flex; gap: 0; border-bottom: 2px solid rgba(255,255,255,0.08); margin-bottom: 1.2rem; overflow-x: auto; }
+  .match-tab { padding: 0.6rem 1.2rem; font-size: 0.82rem; font-weight: 600; color: #667788; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+  .match-tab:hover { color: #AABBCC; }
+  .match-tab.active { color: #4da6ff; border-bottom-color: #4da6ff; }
+  .match-tab-content { display: none; }
+  .match-tab-content.active { display: block; }
+
+  /* Referee card */
+  .referee-card { background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.15); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+  .referee-card h4 { color: #FFC107; font-size: 0.88rem; margin-bottom: 0.5rem; }
+  .referee-card .ref-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; }
+  .referee-card .ref-stat { text-align: center; }
+  .referee-card .ref-stat .val { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700; color: #FFC107; }
+  .referee-card .ref-stat .lbl { font-size: 0.68rem; color: #8899AA; }
+
+  /* Card risk table */
+  .card-risk-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .card-risk-table th { text-align: left; padding: 0.4rem; color: #8899AA; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .card-risk-table td { padding: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .card-risk-table .suspension-flag { color: #FF5252; font-weight: 700; font-size: 0.7rem; }
+  .card-risk-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* Corner dominance bar */
+  .corner-dom-bar { height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; display: flex; margin: 0.5rem 0; }
+  .corner-dom-home { background: #4da6ff; height: 100%; transition: width 0.3s; }
+  .corner-dom-away { background: #FF7043; height: 100%; transition: width 0.3s; }
+  .corner-dom-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #8899AA; }
+
+  /* Scorer probability */
+  .scorer-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .scorer-row .scorer-name { flex: 1; font-size: 0.8rem; }
+  .scorer-row .scorer-pos { font-size: 0.68rem; color: #8899AA; width: 30px; }
+  .scorer-prob-bar { flex: 0 0 120px; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .scorer-prob-fill { height: 100%; background: #00E676; border-radius: 3px; }
+  .scorer-prob-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; width: 45px; text-align: right; }
+  .scorer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* Tracker stat cards */
+  .tracker-stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .tracker-stat-card { background: rgba(27,45,69,0.5); border-radius: 12px; padding: 1.2rem; text-align: center; border: 1px solid rgba(255,255,255,0.06); }
+  .tracker-stat-card .val { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: #00E676; }
+  .tracker-stat-card .lbl { font-size: 0.75rem; color: #8899AA; margin-top: 0.3rem; }
+  .tracker-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .tracker-table th { text-align: left; padding: 0.5rem; color: #8899AA; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .tracker-table td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .tracker-correct { color: #00E676; }
+  .tracker-wrong { color: #FF5252; }
+
+  /* No data message */
+  .no-data-msg { text-align: center; padding: 2rem; color: #667788; font-size: 0.85rem; }
+  .no-data-msg .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
   /* ==================== BOTTOM NAVIGATION (MOBILE) ==================== */
   .bottom-nav { display: none; }
   .more-menu-mobile { display: none; }
@@ -1255,10 +1313,15 @@
       <div class="sidebar-divider"></div>
       <div class="sidebar-section-label">MATCH ANALYSIS</div>
 
-      <!-- Match Centre -->
-      <div class="sidebar-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">
+      <!-- Match Analysis group -->
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-match-analysis', this)">
         <span class="si-icon">&#9917;</span>
-        <span class="si-label">Match Centre</span>
+        <span class="si-label">Match Analysis</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-match-analysis">
+        <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
+        <div class="sidebar-sub-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">Prediction Tracker</div>
       </div>
     </div>
   </nav>
@@ -2464,7 +2527,27 @@
           Predictions are statistical estimates, not guarantees. <a href="https://www.begambleaware.org/" target="_blank" rel="noopener">BeGambleAware.org</a>
         </div>
         <div class="loader" id="match-detail-loader"><div class="spinner"></div><div class="loader-text">Loading match details...</div></div>
-        <div id="match-detail-content"></div>
+        <div id="match-detail-header-area"></div>
+        <div class="match-tabs" id="match-detail-tabs" style="display:none;">
+          <button class="match-tab active" onclick="switchMatchTab('result')">Result</button>
+          <button class="match-tab" onclick="switchMatchTab('cards')">Cards</button>
+          <button class="match-tab" onclick="switchMatchTab('corners')">Corners</button>
+          <button class="match-tab" onclick="switchMatchTab('shots')">Shots</button>
+        </div>
+        <div class="match-tab-content active" id="tab-result"></div>
+        <div class="match-tab-content" id="tab-cards"></div>
+        <div class="match-tab-content" id="tab-corners"></div>
+        <div class="match-tab-content" id="tab-shots"></div>
+      </div>
+
+      <!-- ==================== PREDICTION TRACKER ==================== -->
+      <div class="nav-panel" id="nav-prediction-tracker">
+        <h2 class="panel-title" style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;margin-bottom:1rem;">Prediction Tracker</h2>
+        <div class="prediction-disclaimer" style="margin-top:0;margin-bottom:1rem;border-top:none;text-align:left;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.02);border-radius:8px;">
+          Track the accuracy of our prediction model across gameweeks. Accuracy is calculated from resolved predictions only.
+        </div>
+        <div class="loader" id="tracker-loader"><div class="spinner"></div><div class="loader-text">Loading tracker...</div></div>
+        <div id="tracker-content"></div>
       </div>
 
     </div><!-- /container -->
@@ -2654,6 +2737,7 @@ function switchNav(panelId) {
     'nav-playerstats-table': 'nav-playerstats-table', 'nav-playerstats-opta': 'nav-playerstats-table',
     'nav-playerstats-compare': 'nav-playerstats-table',
     'nav-match-centre': 'nav-match-centre', 'nav-match-detail': 'nav-match-centre',
+    'nav-prediction-tracker': 'nav-match-centre',
   };
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
   const bnTarget = bnMap[panelId];
@@ -2686,6 +2770,7 @@ function switchNav(panelId) {
   if (panelId === 'nav-news-ownership') loadOwnership();
   if (panelId === 'nav-news-ranksim') { /* manual button */ }
   if (panelId === 'nav-match-centre') loadMatchCentre();
+  if (panelId === 'nav-prediction-tracker') loadPredictionTracker();
 
   // Keep demo banner visible when in demo mode
   if (AppState.isDemoMode) showDemoBanner();
@@ -6398,44 +6483,78 @@ function applyTeamFilter(matches) {
 
 // ==================== MATCH DETAIL ====================
 
+let currentMatchDetail = null;
+let tabsLoaded = { result: false, cards: false, corners: false, shots: false };
+
 async function viewMatchDetail(fixtureId) {
   switchNav('nav-match-detail');
+  tabsLoaded = { result: false, cards: false, corners: false, shots: false };
+  currentMatchDetail = null;
 
   const loader = $('match-detail-loader');
   loader.classList.add('active');
-  $('match-detail-content').innerHTML = '';
+  $('match-detail-header-area').innerHTML = '';
+  $('tab-result').innerHTML = '';
+  $('tab-cards').innerHTML = '';
+  $('tab-corners').innerHTML = '';
+  $('tab-shots').innerHTML = '';
+  $('match-detail-tabs').style.display = 'none';
+
+  // Reset tab state
+  document.querySelectorAll('.match-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.match-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.match-tab[onclick*="result"]').classList.add('active');
+  $('tab-result').classList.add('active');
 
   try {
     const resp = await fetch('/api/predictions/' + matchCentreGW + '/' + fixtureId);
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
-    renderMatchDetail(data.match);
+    currentMatchDetail = data.match;
+    renderMatchHeader(data.match);
+    renderResultTab(data.match);
+    tabsLoaded.result = true;
+    $('match-detail-tabs').style.display = 'flex';
   } catch (e) {
-    $('match-detail-content').innerHTML = '<div class="error-msg" style="padding:2rem;text-align:center;color:#FF5252;">Error: ' + e.message + '</div>';
+    $('tab-result').innerHTML = '<div class="error-msg" style="padding:2rem;text-align:center;color:#FF5252;">Error: ' + e.message + '</div>';
   } finally {
     loader.classList.remove('active');
   }
 }
 
-function renderMatchDetail(m) {
-  const container = $('match-detail-content');
+function switchMatchTab(tabName) {
+  document.querySelectorAll('.match-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.match-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.match-tab[onclick*="' + tabName + '"]').classList.add('active');
+  $('tab-' + tabName).classList.add('active');
+
+  if (!tabsLoaded[tabName] && currentMatchDetail) {
+    if (tabName === 'cards') loadCardsTab();
+    if (tabName === 'corners') loadCornersTab();
+    if (tabName === 'shots') loadShotsTab();
+  }
+}
+
+function renderMatchHeader(m) {
   const predH = Math.round(m.home_xg);
   const predA = Math.round(m.away_xg);
   const confClass = m.confidence.toLowerCase();
-  const fd = r => (r || []).map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
   const kickoffStr = m.kickoff_time ? new Date(m.kickoff_time).toLocaleString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
   }) : 'TBC';
 
-  let html = '';
-
-  // Header
-  html += '<div class="match-detail-header">'
+  $('match-detail-header-area').innerHTML =
+    '<div class="match-detail-header">'
     + '<div class="teams">' + m.home_team_name + ' vs ' + m.away_team_name + '</div>'
     + '<div class="datetime">' + kickoffStr + '</div>'
     + '<div class="pred-score">' + predH + ' - ' + predA + '</div><br>'
     + '<span class="confidence-badge ' + confClass + '">' + m.confidence + ' confidence</span>'
     + '</div>';
+}
+
+function renderResultTab(m) {
+  const fd = r => (r || []).map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
+  let html = '';
 
   // 1X2 bar
   const hw = (m.home_win_prob * 100).toFixed(1);
@@ -6541,7 +6660,293 @@ function renderMatchDetail(m) {
     + '<span>' + m.away_team_short + ': <span class="fdr-cell fdr-' + m.away_fdr + '" style="padding:0.1rem 0.4rem;border-radius:4px;">' + m.away_fdr + '</span></span>'
     + '</div></div>';
 
-  container.innerHTML = html;
+  $('tab-result').innerHTML = html;
+}
+
+// ==================== CARDS TAB ====================
+
+async function loadCardsTab() {
+  const m = currentMatchDetail;
+  if (!m) return;
+  $('tab-cards').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading cards data...</div></div>';
+
+  try {
+    const resp = await fetch('/api/match/' + matchCentreGW + '/' + m.fixture_id + '/cards');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderCardsTab(data);
+    tabsLoaded.cards = true;
+  } catch (e) {
+    $('tab-cards').innerHTML = '<div class="no-data-msg"><div class="icon">&#128196;</div>Could not load cards data: ' + e.message + '</div>';
+  }
+}
+
+function renderCardsTab(data) {
+  if (!data.has_external_data) {
+    $('tab-cards').innerHTML = '<div class="no-data-msg"><div class="icon">&#128196;</div>External data unavailable. Set FOOTBALL_DATA_API_KEY to enable card predictions.</div>';
+    return;
+  }
+  const p = data.prediction;
+  let html = '';
+
+  // Referee card
+  if (p.referee && p.referee.name) {
+    const r = p.referee;
+    html += '<div class="referee-card"><h4>Referee: ' + r.name + '</h4>'
+      + '<div class="ref-stats">'
+      + '<div class="ref-stat"><div class="val">' + r.avg_yellows + '</div><div class="lbl">Avg Yellows/Match</div></div>'
+      + '<div class="ref-stat"><div class="val">' + r.avg_reds + '</div><div class="lbl">Avg Reds/Match</div></div>'
+      + '<div class="ref-stat"><div class="val">' + r.penalty_rate + '</div><div class="lbl">Penalties/Match</div></div>'
+      + '<div class="ref-stat"><div class="val">' + r.matches + '</div><div class="lbl">Matches</div></div>'
+      + '</div></div>';
+  }
+
+  // Expected cards
+  html += '<div class="detail-section"><h3>Expected Cards</h3>'
+    + '<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:1rem;">'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.4rem;font-weight:700;color:#FFC107;">' + p.expected_total + '</div><div style="font-size:0.75rem;color:#8899AA;">Total</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.2rem;font-weight:600;">' + p.expected_home + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.home_team + '</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.2rem;font-weight:600;">' + p.expected_away + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.away_team + '</div></div>'
+    + '</div>';
+
+  // O/U bars
+  const ouKeys = [
+    { key: 'over_2_5', label: 'Over 2.5 Cards' },
+    { key: 'over_3_5', label: 'Over 3.5 Cards' },
+    { key: 'over_4_5', label: 'Over 4.5 Cards' },
+    { key: 'over_5_5', label: 'Over 5.5 Cards' },
+  ];
+  ouKeys.forEach(function(ou) {
+    const val = p.over_under[ou.key];
+    if (val === undefined) return;
+    const pct = (val * 100).toFixed(1);
+    html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + ou.label + '</span><span>' + pct + '%</span></div><div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%;background:#FFC107;"></div></div></div>';
+  });
+  html += '</div>';
+
+  // Player card risk tables
+  html += '<div class="detail-section"><h3>Player Card Risk</h3><div class="card-risk-columns">';
+
+  function renderRiskTable(players, teamName) {
+    let t = '<div><strong style="font-size:0.85rem;display:block;margin-bottom:0.5rem;">' + teamName + '</strong>';
+    if (!players || !players.length) {
+      t += '<span style="color:#556677;font-size:0.8rem;">No data</span>';
+    } else {
+      t += '<table class="card-risk-table"><thead><tr><th>Player</th><th>Pos</th><th>YC</th><th>Risk</th></tr></thead><tbody>';
+      players.slice(0, 8).forEach(function(pl) {
+        const flag = pl.one_away_from_suspension ? ' <span class="suspension-flag">SUSP!</span>' : '';
+        const riskColor = pl.risk_score > 0.3 ? '#FF5252' : pl.risk_score > 0.15 ? '#FFB800' : '#8899AA';
+        t += '<tr><td>' + pl.name + flag + '</td><td>' + pl.position + '</td><td>' + pl.yellow_cards + '</td><td style="color:' + riskColor + ';font-weight:600;">' + pl.risk_score + '</td></tr>';
+      });
+      t += '</tbody></table>';
+    }
+    t += '</div>';
+    return t;
+  }
+
+  html += renderRiskTable(data.home_player_risks, data.home_team);
+  html += renderRiskTable(data.away_player_risks, data.away_team);
+  html += '</div></div>';
+
+  $('tab-cards').innerHTML = html;
+}
+
+// ==================== CORNERS TAB ====================
+
+async function loadCornersTab() {
+  const m = currentMatchDetail;
+  if (!m) return;
+  $('tab-corners').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading corners data...</div></div>';
+
+  try {
+    const resp = await fetch('/api/match/' + matchCentreGW + '/' + m.fixture_id + '/corners');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderCornersTab(data);
+    tabsLoaded.corners = true;
+  } catch (e) {
+    $('tab-corners').innerHTML = '<div class="no-data-msg"><div class="icon">&#9917;</div>Could not load corners data: ' + e.message + '</div>';
+  }
+}
+
+function renderCornersTab(data) {
+  if (!data.has_external_data) {
+    $('tab-corners').innerHTML = '<div class="no-data-msg"><div class="icon">&#9917;</div>External data unavailable. Set FOOTBALL_DATA_API_KEY to enable corner predictions.</div>';
+    return;
+  }
+  const p = data.prediction;
+  let html = '';
+
+  // Expected corners
+  html += '<div class="detail-section"><h3>Expected Corners</h3>'
+    + '<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:1rem;">'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.4rem;font-weight:700;color:#4da6ff;">' + p.expected_total + '</div><div style="font-size:0.75rem;color:#8899AA;">Total</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.2rem;font-weight:600;">' + p.expected_home + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.home_team + '</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.2rem;font-weight:600;">' + p.expected_away + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.away_team + '</div></div>'
+    + '</div>';
+
+  // Corner dominance bar
+  const homePct = (p.home_dominance * 100).toFixed(1);
+  const awayPct = ((1 - p.home_dominance) * 100).toFixed(1);
+  html += '<div style="margin-bottom:1rem;">'
+    + '<div class="corner-dom-labels"><span>' + data.home_team + ' ' + homePct + '%</span><span>' + awayPct + '% ' + data.away_team + '</span></div>'
+    + '<div class="corner-dom-bar"><div class="corner-dom-home" style="width:' + homePct + '%"></div><div class="corner-dom-away" style="width:' + awayPct + '%"></div></div>'
+    + '</div>';
+
+  // O/U bars
+  const ouKeys = [
+    { key: 'over_8_5', label: 'Over 8.5 Corners' },
+    { key: 'over_9_5', label: 'Over 9.5 Corners' },
+    { key: 'over_10_5', label: 'Over 10.5 Corners' },
+    { key: 'over_11_5', label: 'Over 11.5 Corners' },
+  ];
+  ouKeys.forEach(function(ou) {
+    const val = p.over_under[ou.key];
+    if (val === undefined) return;
+    const pct = (val * 100).toFixed(1);
+    html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + ou.label + '</span><span>' + pct + '%</span></div><div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%;"></div></div></div>';
+  });
+  html += '</div>';
+
+  $('tab-corners').innerHTML = html;
+}
+
+// ==================== SHOTS TAB ====================
+
+async function loadShotsTab() {
+  const m = currentMatchDetail;
+  if (!m) return;
+  $('tab-shots').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading shots data...</div></div>';
+
+  try {
+    const resp = await fetch('/api/match/' + matchCentreGW + '/' + m.fixture_id + '/shots');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderShotsTab(data);
+    tabsLoaded.shots = true;
+  } catch (e) {
+    $('tab-shots').innerHTML = '<div class="no-data-msg"><div class="icon">&#127919;</div>Could not load shots data: ' + e.message + '</div>';
+  }
+}
+
+function renderShotsTab(data) {
+  const p = data.prediction;
+  let html = '';
+
+  // Shot stats
+  html += '<div class="detail-section"><h3>Expected Shots</h3>'
+    + '<div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:1rem;text-align:center;">'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.3rem;font-weight:700;">' + p.expected_total_shots + '</div><div style="font-size:0.75rem;color:#8899AA;">Total Shots</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.3rem;font-weight:700;">' + p.expected_total_on_target + '</div><div style="font-size:0.75rem;color:#8899AA;">On Target</div></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:1rem;text-align:center;margin-top:1rem;">'
+    + '<div><span style="font-size:0.8rem;">' + data.home_team + ': </span><strong>' + p.home_shots + '</strong> (' + p.home_shots_on_target + ' on target)</div>'
+    + '<div><span style="font-size:0.8rem;">' + data.away_team + ': </span><strong>' + p.away_shots + '</strong> (' + p.away_shots_on_target + ' on target)</div>'
+    + '</div></div>';
+
+  // xG
+  html += '<div class="detail-section"><h3>Expected Goals (xG)</h3>'
+    + '<div style="display:flex;justify-content:space-around;text-align:center;">'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.3rem;font-weight:700;color:#00E676;">' + p.home_xg + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.home_team + '</div></div>'
+    + '<div><div style="font-family:\'JetBrains Mono\',monospace;font-size:1.3rem;font-weight:700;color:#4da6ff;">' + p.away_xg + '</div><div style="font-size:0.75rem;color:#8899AA;">' + data.away_team + '</div></div>'
+    + '</div></div>';
+
+  // Goalscorer probabilities
+  function renderScorers(scorers, teamName) {
+    let s = '<div><strong style="font-size:0.85rem;display:block;margin-bottom:0.5rem;">' + teamName + '</strong>';
+    if (!scorers || !scorers.length) {
+      s += '<span style="color:#556677;font-size:0.8rem;">No data</span>';
+    } else {
+      scorers.forEach(function(sc) {
+        const pct = (sc.prob * 100).toFixed(1);
+        const barW = Math.min(sc.prob * 200, 100);
+        s += '<div class="scorer-row">'
+          + '<span class="scorer-pos">' + sc.position + '</span>'
+          + '<span class="scorer-name">' + sc.name + '</span>'
+          + '<div class="scorer-prob-bar"><div class="scorer-prob-fill" style="width:' + barW + '%"></div></div>'
+          + '<span class="scorer-prob-pct">' + pct + '%</span>'
+          + '</div>';
+      });
+    }
+    s += '</div>';
+    return s;
+  }
+
+  html += '<div class="detail-section"><h3>Goalscorer Probabilities</h3><div class="scorer-columns">';
+  html += renderScorers(p.home_scorers, data.home_team);
+  html += renderScorers(p.away_scorers, data.away_team);
+  html += '</div></div>';
+
+  $('tab-shots').innerHTML = html;
+}
+
+// ==================== PREDICTION TRACKER ====================
+
+async function loadPredictionTracker() {
+  $('tracker-loader').classList.add('active');
+  $('tracker-content').innerHTML = '';
+
+  try {
+    const resp = await fetch('/api/predictions/tracker');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderTracker(data);
+  } catch (e) {
+    $('tracker-content').innerHTML = '<div class="error-msg" style="padding:2rem;text-align:center;color:#FF5252;">Error: ' + e.message + '</div>';
+  } finally {
+    $('tracker-loader').classList.remove('active');
+  }
+}
+
+function renderTracker(data) {
+  if (data.total === 0) {
+    $('tracker-content').innerHTML = '<div class="no-data-msg"><div class="icon">&#128202;</div>No predictions tracked yet. Visit the Match Centre to generate predictions — they will be tracked automatically once matches finish.</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Accuracy stat cards
+  html += '<div class="tracker-stat-cards">'
+    + '<div class="tracker-stat-card"><div class="val">' + data.result_accuracy + '%</div><div class="lbl">1X2 Result Accuracy</div></div>'
+    + '<div class="tracker-stat-card"><div class="val">' + data.over25_accuracy + '%</div><div class="lbl">Over 2.5 Goals Accuracy</div></div>'
+    + '<div class="tracker-stat-card"><div class="val">' + data.btts_accuracy + '%</div><div class="lbl">BTTS Accuracy</div></div>'
+    + '</div>';
+  html += '<p style="font-size:0.78rem;color:#667788;text-align:center;margin-bottom:1.5rem;">Based on ' + data.total + ' resolved predictions</p>';
+
+  // Per-GW trend (simple bar chart using divs)
+  if (data.per_gw && data.per_gw.length > 0) {
+    html += '<div class="detail-section"><h3>Accuracy by Gameweek</h3>';
+    html += '<div style="overflow-x:auto;"><table class="tracker-table"><thead><tr><th>GW</th><th>Matches</th><th>1X2</th><th>O/U 2.5</th><th>BTTS</th></tr></thead><tbody>';
+    data.per_gw.forEach(function(gw) {
+      html += '<tr><td>GW' + gw.gameweek + '</td><td>' + gw.total + '</td>'
+        + '<td>' + gw.result_pct + '%</td>'
+        + '<td>' + gw.over25_pct + '%</td>'
+        + '<td>' + gw.btts_pct + '%</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  // Recent predictions
+  if (data.recent && data.recent.length > 0) {
+    html += '<div class="detail-section"><h3>Recent Predictions</h3>';
+    html += '<div style="overflow-x:auto;"><table class="tracker-table"><thead><tr><th>Match</th><th>Score</th><th>1X2</th><th>O/U 2.5</th></tr></thead><tbody>';
+    data.recent.forEach(function(r) {
+      const resultClass = r.correct_1x2 ? 'tracker-correct' : 'tracker-wrong';
+      const ouClass = r.correct_over_25 ? 'tracker-correct' : 'tracker-wrong';
+      html += '<tr><td style="font-size:0.75rem;">' + r.match + '</td>'
+        + '<td>' + r.actual_score + '</td>'
+        + '<td class="' + resultClass + '">' + r.predicted_1x2 + (r.correct_1x2 ? ' &#10003;' : ' &#10007;') + '</td>'
+        + '<td class="' + ouClass + '">' + (r.predicted_over_25 ? 'Over' : 'Under') + (r.correct_over_25 ? ' &#10003;' : ' &#10007;') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  // Disclaimer
+  html += '<div class="prediction-disclaimer">Prediction accuracy is tracked automatically from matches that have finished. Model accuracy varies and should be used as one input among many. Past performance does not guarantee future results.</div>';
+
+  $('tracker-content').innerHTML = html;
 }
 
 </script>
@@ -6632,6 +7037,7 @@ function renderMatchDetail(m) {
   <div class="mm-divider"></div>
   <div class="mm-group-title">Match Analysis</div>
   <div class="mm-item" onclick="switchNav('nav-match-centre')"><span class="mm-icon">&#9917;</span> Match Centre</div>
+  <div class="mm-item" onclick="switchNav('nav-prediction-tracker')"><span class="mm-icon">&#128202;</span> Prediction Tracker</div>
 </div>
 
 <!-- Player Drilldown Modal (Item 17) -->

@@ -20,7 +20,8 @@ from .api import (
 )
 from .models import Player, Squad
 from .optimizer import select_squad
-from .predictions import generate_predictions
+from .football_data import get_fd_team_id, get_match_referee, get_referee_data, get_team_stats, fetch_season_matches
+from .predictions import generate_predictions, predict_cards, predict_corners, predict_shots, get_player_card_risks
 from .transfers import suggest_transfers
 
 app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
@@ -59,7 +60,149 @@ def _get_cached_predictions(gw: int) -> list:
     predictions = generate_predictions(fixtures, players, teams, gameweeks, target_gw=gw)
     _pred_cache[cache_key] = predictions
     _pred_cache[f"{cache_key}_ts"] = now
+    _store_predictions(gw, predictions)
     return predictions
+
+
+def _get_cached_team_stats():
+    """Return team season stats derived from FPL data."""
+    players, teams, gameweeks, fixtures = _get_cached_data()
+    return get_team_stats(players, teams, fixtures, gameweeks)
+
+
+def _get_cached_referee_data():
+    """Return (raw_matches, referee_stats) from Football-Data.org."""
+    return get_referee_data()
+
+
+def _resolve_fd_team_id(fpl_team_id: int) -> int | None:
+    """Map FPL team ID → Football-Data.org team ID via team code."""
+    _, teams, _, _ = _get_cached_data()
+    team = teams.get(fpl_team_id)
+    if not team:
+        return None
+    return get_fd_team_id(team.code)
+
+
+# Prediction Tracker (in-memory)
+_prediction_history: list[dict] = []
+
+
+def _store_predictions(gw: int, predictions: list) -> None:
+    """Store predictions for accuracy tracking."""
+    # Avoid duplicates
+    existing_gws = {p["gameweek"] for p in _prediction_history}
+    if gw in existing_gws:
+        return
+    for pred in predictions:
+        _prediction_history.append({
+            "gameweek": gw,
+            "fixture_id": pred.fixture_id,
+            "home_team": pred.home_team_short,
+            "away_team": pred.away_team_short,
+            "home_xg": pred.home_xg,
+            "away_xg": pred.away_xg,
+            "predicted_1x2": "1" if pred.home_win_prob > max(pred.draw_prob, pred.away_win_prob)
+                            else "X" if pred.draw_prob > pred.away_win_prob else "2",
+            "home_win_prob": pred.home_win_prob,
+            "draw_prob": pred.draw_prob,
+            "away_win_prob": pred.away_win_prob,
+            "predicted_over_25": pred.over_25 > 0.5,
+            "over_25_prob": pred.over_25,
+            "predicted_btts": pred.btts_yes > 0.5,
+            "btts_prob": pred.btts_yes,
+            "actual_home_score": None,
+            "actual_away_score": None,
+            "actual_1x2": None,
+            "actual_over_25": None,
+            "actual_btts": None,
+        })
+
+
+def _update_actuals() -> None:
+    """Check finished fixtures and fill in actual results."""
+    _, _, _, fixtures = _get_cached_data()
+    fixture_map = {f.id: f for f in fixtures}
+    for entry in _prediction_history:
+        if entry["actual_1x2"] is not None:
+            continue
+        f = fixture_map.get(entry["fixture_id"])
+        if not f or not f.finished or f.home_score is None:
+            continue
+        entry["actual_home_score"] = f.home_score
+        entry["actual_away_score"] = f.away_score
+        if f.home_score > f.away_score:
+            entry["actual_1x2"] = "1"
+        elif f.home_score == f.away_score:
+            entry["actual_1x2"] = "X"
+        else:
+            entry["actual_1x2"] = "2"
+        entry["actual_over_25"] = (f.home_score + f.away_score) > 2.5
+        entry["actual_btts"] = f.home_score > 0 and f.away_score > 0
+
+
+def _compute_tracker_accuracy() -> dict:
+    """Calculate prediction accuracy from history."""
+    _update_actuals()
+    resolved = [e for e in _prediction_history if e["actual_1x2"] is not None]
+    if not resolved:
+        return {"total": 0, "result_accuracy": 0, "over25_accuracy": 0, "btts_accuracy": 0,
+                "per_gw": [], "recent": []}
+
+    correct_1x2 = sum(1 for e in resolved if e["predicted_1x2"] == e["actual_1x2"])
+    correct_ou = sum(1 for e in resolved if e["predicted_over_25"] == e["actual_over_25"])
+    correct_btts = sum(1 for e in resolved if e["predicted_btts"] == e["actual_btts"])
+    n = len(resolved)
+
+    # Per-GW breakdown
+    gw_data: dict[int, dict] = {}
+    for e in resolved:
+        gw = e["gameweek"]
+        if gw not in gw_data:
+            gw_data[gw] = {"total": 0, "correct_1x2": 0, "correct_ou": 0, "correct_btts": 0}
+        gw_data[gw]["total"] += 1
+        if e["predicted_1x2"] == e["actual_1x2"]:
+            gw_data[gw]["correct_1x2"] += 1
+        if e["predicted_over_25"] == e["actual_over_25"]:
+            gw_data[gw]["correct_ou"] += 1
+        if e["predicted_btts"] == e["actual_btts"]:
+            gw_data[gw]["correct_btts"] += 1
+
+    per_gw = []
+    for gw in sorted(gw_data):
+        d = gw_data[gw]
+        per_gw.append({
+            "gameweek": gw,
+            "total": d["total"],
+            "result_pct": round(d["correct_1x2"] / d["total"] * 100, 1),
+            "over25_pct": round(d["correct_ou"] / d["total"] * 100, 1),
+            "btts_pct": round(d["correct_btts"] / d["total"] * 100, 1),
+        })
+
+    # Recent 10 predictions (newest first)
+    recent = sorted(resolved, key=lambda e: (e["gameweek"], e["fixture_id"]), reverse=True)[:10]
+    recent_out = []
+    for e in recent:
+        recent_out.append({
+            "gameweek": e["gameweek"],
+            "match": f"{e['home_team']} vs {e['away_team']}",
+            "predicted_1x2": e["predicted_1x2"],
+            "actual_1x2": e["actual_1x2"],
+            "correct_1x2": e["predicted_1x2"] == e["actual_1x2"],
+            "predicted_over_25": e["predicted_over_25"],
+            "actual_over_25": e["actual_over_25"],
+            "correct_over_25": e["predicted_over_25"] == e["actual_over_25"],
+            "actual_score": f"{e['actual_home_score']}-{e['actual_away_score']}",
+        })
+
+    return {
+        "total": n,
+        "result_accuracy": round(correct_1x2 / n * 100, 1),
+        "over25_accuracy": round(correct_ou / n * 100, 1),
+        "btts_accuracy": round(correct_btts / n * 100, 1),
+        "per_gw": per_gw,
+        "recent": recent_out,
+    }
 
 
 def _get_chip_windows() -> list[dict]:
@@ -2390,5 +2533,126 @@ def api_prediction_detail(gw, match_id):
             return jsonify({"error": "Match not found"}), 404
 
         return jsonify({"gameweek": gw, "match": pred.to_dict()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Specialty Markets (Phase 2) ──────────────────────────────────────────
+
+
+@app.route("/api/match/<int:gw>/<int:match_id>/cards")
+def api_match_cards(gw, match_id):
+    """Card prediction + referee analysis + player card risk."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        pred = next((p for p in predictions if p.fixture_id == match_id), None)
+        if not pred:
+            return jsonify({"error": "Match not found"}), 404
+
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        team_stats = _get_cached_team_stats()
+
+        # Team stats are keyed by FPL team ID
+        home_ts = team_stats.get(pred.home_team_id)
+        away_ts = team_stats.get(pred.away_team_id)
+        home_ts_d = home_ts.to_dict() if home_ts else None
+        away_ts_d = away_ts.to_dict() if away_ts else None
+
+        # Referee from Football-Data.org
+        fd_matches, ref_stats = _get_cached_referee_data()
+        ref_name = None
+        home_fd_id = _resolve_fd_team_id(pred.home_team_id)
+        away_fd_id = _resolve_fd_team_id(pred.away_team_id)
+        if home_fd_id and away_fd_id and fd_matches:
+            ref_name = get_match_referee(fd_matches, home_fd_id, away_fd_id)
+        ref_s = ref_stats.get(ref_name).to_dict() if ref_name and ref_name in ref_stats else None
+
+        card_pred = predict_cards(home_ts_d, away_ts_d, ref_s)
+
+        # Player card risks
+        finished_gws = sum(1 for g in gameweeks if g.finished)
+        home_risks = get_player_card_risks(players, pred.home_team_id, finished_gws)
+        away_risks = get_player_card_risks(players, pred.away_team_id, finished_gws)
+
+        return jsonify({
+            "has_external_data": True,
+            "prediction": card_pred,
+            "home_team": pred.home_team_short,
+            "away_team": pred.away_team_short,
+            "home_player_risks": home_risks,
+            "away_player_risks": away_risks,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/match/<int:gw>/<int:match_id>/corners")
+def api_match_corners(gw, match_id):
+    """Corner prediction + team comparison."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        pred = next((p for p in predictions if p.fixture_id == match_id), None)
+        if not pred:
+            return jsonify({"error": "Match not found"}), 404
+
+        team_stats = _get_cached_team_stats()
+        home_ts = team_stats.get(pred.home_team_id)
+        away_ts = team_stats.get(pred.away_team_id)
+
+        corner_pred = predict_corners(
+            home_ts.to_dict() if home_ts else None,
+            away_ts.to_dict() if away_ts else None,
+        )
+
+        return jsonify({
+            "has_external_data": True,
+            "prediction": corner_pred,
+            "home_team": pred.home_team_short,
+            "away_team": pred.away_team_short,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/match/<int:gw>/<int:match_id>/shots")
+def api_match_shots(gw, match_id):
+    """Shot prediction + goalscorer probabilities."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        pred = next((p for p in predictions if p.fixture_id == match_id), None)
+        if not pred:
+            return jsonify({"error": "Match not found"}), 404
+
+        players, _, _, _ = _get_cached_data()
+        team_stats = _get_cached_team_stats()
+        home_ts = team_stats.get(pred.home_team_id)
+        away_ts = team_stats.get(pred.away_team_id)
+
+        home_players = [p for p in players if p.team == pred.home_team_id]
+        away_players = [p for p in players if p.team == pred.away_team_id]
+
+        shot_pred = predict_shots(
+            home_ts.to_dict() if home_ts else None,
+            away_ts.to_dict() if away_ts else None,
+            home_players, away_players,
+            pred.home_xg, pred.away_xg,
+        )
+
+        return jsonify({
+            "has_external_data": True,
+            "prediction": shot_pred,
+            "home_team": pred.home_team_short,
+            "away_team": pred.away_team_short,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/tracker")
+def api_prediction_tracker():
+    """Historical prediction accuracy data."""
+    try:
+        accuracy = _compute_tracker_accuracy()
+        return jsonify(accuracy)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
