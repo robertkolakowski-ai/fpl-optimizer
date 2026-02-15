@@ -875,10 +875,13 @@
   .confidence-badge.low { background: rgba(255,82,82,0.15); color: #FF5252; }
 
   .form-dots { display: flex; gap: 4px; }
-  .form-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+  .form-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; cursor: default; position: relative; }
   .form-dot.W { background: #00E676; color: #0D1B2A; }
   .form-dot.D { background: #667788; color: #F0F0F0; }
   .form-dot.L { background: #FF5252; color: #F0F0F0; }
+  .form-dot .form-tip { display: none; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #1B2D45; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.68rem; font-weight: 400; white-space: nowrap; color: #CCDDEE; z-index: 20; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .form-dot .form-tip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: rgba(255,255,255,0.12); }
+  .form-dot:hover .form-tip { display: block; }
 
   .heatmap-table { width: 100%; border-collapse: collapse; }
   .heatmap-table th, .heatmap-table td { text-align: center; padding: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.05); }
@@ -6365,6 +6368,20 @@ function prefetchCoreData() {
 }
 setTimeout(prefetchCoreData, 2000);
 
+// ==================== FORM DOTS HELPER ====================
+function renderFormDots(form) {
+  if (!form || !form.length) return '';
+  return form.map(function(f) {
+    // Support both old format (string) and new format (object)
+    if (typeof f === 'string') {
+      return '<span class="form-dot ' + f + '">' + f + '</span>';
+    }
+    const r = f.result;
+    const tip = f.score + ' vs ' + f.opponent + ' (' + f.venue + ')';
+    return '<span class="form-dot ' + r + '">' + r + '<span class="form-tip">' + tip + '</span></span>';
+  }).join('');
+}
+
 // ==================== MATCH CENTRE ====================
 let matchCentreGW = null;
 let matchCentreData = null;
@@ -6437,15 +6454,13 @@ function renderMatchCards(matches) {
     const btts = (m.btts_yes * 100).toFixed(0);
     const predH = Math.round(m.home_xg);
     const predA = Math.round(m.away_xg);
-    const fd = r => r.map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
-
     return '<div class="match-card" onclick="viewMatchDetail(' + m.fixture_id + ')" data-team-home="' + m.home_team_id + '" data-team-away="' + m.away_team_id + '" data-confidence="' + m.confidence + '" data-kickoff="' + (m.kickoff_time || '') + '">'
       + '<div class="match-card-header"><span class="match-card-kickoff">' + kickoff + '</span><span class="confidence-badge ' + confClass + '">' + m.confidence + '</span></div>'
       + '<div class="match-card-teams"><span>' + m.home_team_short + '</span><span class="match-card-score">' + predH + ' - ' + predA + '</span><span>' + m.away_team_short + '</span></div>'
       + '<div class="prob-bar"><div class="prob-bar-segment home" style="width:' + hw + '%"></div><div class="prob-bar-segment draw" style="width:' + dw + '%"></div><div class="prob-bar-segment away" style="width:' + aw + '%"></div></div>'
       + '<div class="prob-labels"><span style="color:#00E676">' + hw + '%</span><span>' + dw + '%</span><span style="color:#4da6ff">' + aw + '%</span></div>'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;font-size:0.78rem;"><span>O2.5 <strong>' + ou25 + '%</strong></span><span>BTTS <strong>' + btts + '%</strong></span></div>'
-      + '<div style="display:flex;justify-content:space-between;margin-top:0.5rem;"><div class="form-dots">' + fd(m.home_form || []) + '</div><div class="form-dots">' + fd(m.away_form || []) + '</div></div>'
+      + '<div style="display:flex;justify-content:space-between;margin-top:0.5rem;"><div class="form-dots">' + renderFormDots(m.home_form || []) + '</div><div class="form-dots">' + renderFormDots(m.away_form || []) + '</div></div>'
       + '</div>';
   }).join('');
 }
@@ -6553,7 +6568,6 @@ function renderMatchHeader(m) {
 }
 
 function renderResultTab(m) {
-  const fd = r => (r || []).map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
   let html = '';
 
   // 1X2 bar
@@ -6622,8 +6636,8 @@ function renderResultTab(m) {
 
   // Form
   html += '<div class="detail-section"><h3>Form (Last 5)</h3>'
-    + '<div style="display:flex;justify-content:space-between;"><div><strong>' + m.home_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;">' + fd(m.home_form) + '</div></div>'
-    + '<div style="text-align:right;"><strong>' + m.away_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;justify-content:flex-end;">' + fd(m.away_form) + '</div></div></div></div>';
+    + '<div style="display:flex;justify-content:space-between;"><div><strong>' + m.home_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;">' + renderFormDots(m.home_form) + '</div></div>'
+    + '<div style="text-align:right;"><strong>' + m.away_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;justify-content:flex-end;">' + renderFormDots(m.away_form) + '</div></div></div></div>';
 
   // H2H
   if (m.h2h && m.h2h.length) {

@@ -291,8 +291,15 @@ def _apply_injury_adjustment(
     return base * (1.0 - reduction)
 
 
-def _team_form(fixtures: list[Fixture], team_id: int) -> list[str]:
-    """Last 5 results for a team (most recent first)."""
+def _team_form(
+    fixtures: list[Fixture],
+    team_id: int,
+    teams: dict[int, Team] | None = None,
+) -> list[dict]:
+    """Last 5 results for a team (most recent first).
+
+    Returns list of dicts with result, opponent, score, venue.
+    """
     team_fixtures = sorted(
         [f for f in fixtures
          if f.finished and f.home_score is not None
@@ -304,9 +311,22 @@ def _team_form(fixtures: list[Fixture], team_id: int) -> list[str]:
     for f in team_fixtures[:5]:
         if f.home_team == team_id:
             diff = f.home_score - f.away_score
+            opp_id = f.away_team
+            score = f"{f.home_score}-{f.away_score}"
+            venue = "H"
         else:
             diff = f.away_score - f.home_score
-        results.append("W" if diff > 0 else "D" if diff == 0 else "L")
+            opp_id = f.home_team
+            score = f"{f.away_score}-{f.home_score}"
+            venue = "A"
+        result = "W" if diff > 0 else "D" if diff == 0 else "L"
+        opp_name = teams[opp_id].short_name if teams and opp_id in teams else "???"
+        results.append({
+            "result": result,
+            "opponent": opp_name,
+            "score": score,
+            "venue": venue,
+        })
     return results
 
 
@@ -449,8 +469,8 @@ def generate_predictions(
             scoreline_matrix=rounded_matrix,
             top_scorelines=top5,
             confidence=confidence,
-            home_form=_team_form(fixtures, f.home_team),
-            away_form=_team_form(fixtures, f.away_team),
+            home_form=_team_form(fixtures, f.home_team, teams),
+            away_form=_team_form(fixtures, f.away_team, teams),
             h2h=_h2h_this_season(fixtures, f.home_team, f.away_team, teams),
             home_injuries=_team_injuries(players, f.home_team),
             away_injuries=_team_injuries(players, f.away_team),
