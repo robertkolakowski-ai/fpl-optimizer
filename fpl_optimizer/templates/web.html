@@ -106,6 +106,12 @@
     .dash-captain .dc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .section { overflow: hidden; }
     .nav-panel { overflow-x: hidden; }
+
+    /* Match Analysis mobile */
+    .match-card-grid { grid-template-columns: 1fr; }
+    .heatmap-table { font-size: 0.65rem; }
+    .heatmap-table th, .heatmap-table td { padding: 0.25rem; }
+    .match-detail-header .teams { font-size: 1rem; }
   }
 
   /* ==================== UTILITY ==================== */
@@ -840,6 +846,64 @@
   .demo-inline-notice { background: linear-gradient(90deg, rgba(77,166,255,0.08), rgba(0,230,118,0.04)); border: 1px solid rgba(77,166,255,0.2); border-radius: 8px; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 0.8rem; color: #8899AA; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .demo-inline-notice .demo-badge { font-size: 0.6rem; }
 
+  /* ==================== MATCH ANALYSIS MODULE ==================== */
+  .sidebar-section-label { padding: 0.6rem 1.2rem 0.3rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #556677; user-select: none; }
+
+  .match-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .match-card { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1rem 1.2rem; cursor: pointer; transition: all 0.25s; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .match-card:hover { border-color: #00E676; background: #1e3148; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,230,118,0.08); }
+  .match-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+  .match-card-teams { display: flex; align-items: center; justify-content: center; gap: 0.8rem; font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .match-card-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.15rem; color: #00E676; padding: 0.15rem 0.6rem; background: rgba(0,230,118,0.1); border-radius: 6px; }
+  .match-card-kickoff { font-size: 0.72rem; color: #667788; }
+
+  .prob-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 0.4rem 0; }
+  .prob-bar-segment { transition: width 0.3s; }
+  .prob-bar .home { background: #00E676; }
+  .prob-bar .draw { background: #667788; }
+  .prob-bar .away { background: #4da6ff; }
+  .prob-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #8899AA; }
+
+  .confidence-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .confidence-badge.high { background: rgba(0,230,118,0.15); color: #00E676; }
+  .confidence-badge.medium { background: rgba(255,184,0,0.15); color: #FFB800; }
+  .confidence-badge.low { background: rgba(255,82,82,0.15); color: #FF5252; }
+
+  .form-dots { display: flex; gap: 4px; }
+  .form-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+  .form-dot.W { background: #00E676; color: #0D1B2A; }
+  .form-dot.D { background: #667788; color: #F0F0F0; }
+  .form-dot.L { background: #FF5252; color: #F0F0F0; }
+
+  .heatmap-table { width: 100%; border-collapse: collapse; }
+  .heatmap-table th, .heatmap-table td { text-align: center; padding: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.05); }
+  .heatmap-table th { color: #8899AA; font-weight: 600; }
+  .heatmap-cell { border-radius: 4px; padding: 0.3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+
+  .ou-bar-wrap { margin-bottom: 0.5rem; }
+  .ou-bar-label { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.2rem; }
+  .ou-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .ou-bar-fill { height: 100%; background: #4da6ff; border-radius: 3px; transition: width 0.3s; }
+
+  .gw-selector { display: flex; align-items: center; gap: 0.8rem; }
+  .gw-selector button { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #F0F0F0; border-radius: 8px; padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.85rem; transition: background 0.15s; }
+  .gw-selector button:hover { background: rgba(255,255,255,0.1); }
+  .gw-selector .gw-label { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1rem; }
+
+  .back-btn { display: inline-flex; align-items: center; gap: 0.3rem; color: #4da6ff; font-size: 0.85rem; cursor: pointer; padding: 0.3rem 0; margin-bottom: 1rem; border: none; background: none; }
+  .back-btn:hover { color: #7dbfff; }
+
+  .detail-section { background: rgba(27,45,69,0.5); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.06); }
+  .detail-section h3 { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; margin-bottom: 0.8rem; color: #AABBCC; }
+
+  .prediction-disclaimer { font-size: 0.7rem; color: #556677; text-align: center; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1.5rem; }
+  .prediction-disclaimer a { color: #4da6ff; }
+
+  .match-detail-header { text-align: center; margin-bottom: 1.5rem; }
+  .match-detail-header .teams { font-size: 1.2rem; font-weight: 600; }
+  .match-detail-header .datetime { color: #667788; font-size: 0.82rem; margin: 0.3rem 0; }
+  .match-detail-header .pred-score { display: inline-block; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.4rem; color: #00E676; padding: 0.2rem 0.8rem; background: rgba(0,230,118,0.1); border-radius: 8px; margin: 0.5rem 0; }
+
   /* ==================== BOTTOM NAVIGATION (MOBILE) ==================== */
   .bottom-nav { display: none; }
   .more-menu-mobile { display: none; }
@@ -1084,6 +1148,7 @@
     </div>
 
     <div class="sidebar-nav">
+      <div class="sidebar-section-label">FANTASY TOOLS</div>
       <!-- Dashboard -->
       <div class="sidebar-item active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
         <span class="si-icon">&#9733;</span>
@@ -1186,6 +1251,15 @@
         <span class="si-icon">&#9881;</span>
         <span class="si-label">Settings</span>
       </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">MATCH ANALYSIS</div>
+
+      <!-- Match Centre -->
+      <div class="sidebar-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">
+        <span class="si-icon">&#9917;</span>
+        <span class="si-label">Match Centre</span>
+      </div>
     </div>
   </nav>
 
@@ -1212,6 +1286,20 @@
 
       <!-- ==================== DASHBOARD ==================== -->
       <div class="nav-panel active" id="nav-dashboard">
+
+        <!-- Entry cards: two pathways -->
+        <div class="dash-grid" id="dash-entry-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;">
+          <div class="dash-card" onclick="switchNav('nav-settings')">
+            <div class="dc-icon">&#9889;</div>
+            <div class="dc-title">Optimize your FPL team</div>
+            <div class="dc-desc">Connect your team and get AI-powered squad optimization</div>
+          </div>
+          <div class="dash-card" onclick="switchNav('nav-match-centre')">
+            <div class="dc-icon">&#9917;</div>
+            <div class="dc-title">Analyse upcoming matches</div>
+            <div class="dc-desc">Poisson-based predictions with scoreline probabilities</div>
+          </div>
+        </div>
 
         <!-- Welcome -->
         <div class="dash-welcome">
@@ -2338,6 +2426,47 @@
         </div>
       </div>
 
+      <!-- ==================== MATCH CENTRE ==================== -->
+      <div class="nav-panel" id="nav-match-centre">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">Match Centre</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Poisson-based match predictions &amp; analysis</p>
+        </div>
+
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="gw-selector">
+            <button onclick="changeMatchGW(-1)">&larr;</button>
+            <span class="gw-label" id="match-gw-label">GW --</span>
+            <button onclick="changeMatchGW(1)">&rarr;</button>
+          </div>
+          <select id="match-sort" onchange="sortMatchCards()" style="background:#1B2D45;color:#F0F0F0;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.82rem;">
+            <option value="kickoff">Kick-off time</option>
+            <option value="confidence">Confidence</option>
+          </select>
+          <select id="match-team-filter" onchange="filterMatchCards()" style="background:#1B2D45;color:#F0F0F0;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.82rem;">
+            <option value="">All teams</option>
+          </select>
+        </div>
+
+        <div class="loader" id="match-loader"><div class="spinner"></div><div class="loader-text">Loading predictions...</div></div>
+        <div class="match-card-grid" id="match-card-grid"></div>
+
+        <div class="prediction-disclaimer">
+          All predictions are based on statistical models and historical data. They are intended as analysis tools, not financial advice. Never bet more than you can afford to lose.
+          <br><a href="https://www.begambleaware.org/" target="_blank" rel="noopener">BeGambleAware.org</a>
+        </div>
+      </div>
+
+      <!-- ==================== MATCH DETAIL ==================== -->
+      <div class="nav-panel" id="nav-match-detail">
+        <button class="back-btn" onclick="switchNav('nav-match-centre')">&larr; Back to Match Centre</button>
+        <div class="prediction-disclaimer" style="margin-top:0;margin-bottom:1rem;border-top:none;text-align:left;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.02);border-radius:8px;">
+          Predictions are statistical estimates, not guarantees. <a href="https://www.begambleaware.org/" target="_blank" rel="noopener">BeGambleAware.org</a>
+        </div>
+        <div class="loader" id="match-detail-loader"><div class="spinner"></div><div class="loader-text">Loading match details...</div></div>
+        <div id="match-detail-content"></div>
+      </div>
+
     </div><!-- /container -->
   </div><!-- /main-content -->
 
@@ -2524,6 +2653,7 @@ function switchNav(panelId) {
     'nav-fixtures-list': 'nav-fixtures-fdr', 'nav-fixtures-swing': 'nav-fixtures-fdr',
     'nav-playerstats-table': 'nav-playerstats-table', 'nav-playerstats-opta': 'nav-playerstats-table',
     'nav-playerstats-compare': 'nav-playerstats-table',
+    'nav-match-centre': 'nav-match-centre', 'nav-match-detail': 'nav-match-centre',
   };
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
   const bnTarget = bnMap[panelId];
@@ -2555,6 +2685,7 @@ function switchNav(panelId) {
   if (panelId === 'nav-fixtures-swing') loadFixtureSwing();
   if (panelId === 'nav-news-ownership') loadOwnership();
   if (panelId === 'nav-news-ranksim') { /* manual button */ }
+  if (panelId === 'nav-match-centre') loadMatchCentre();
 
   // Keep demo banner visible when in demo mode
   if (AppState.isDemoMode) showDemoBanner();
@@ -2576,9 +2707,11 @@ function switchNav(panelId) {
 function loadDashboard() {
   if (!AppState.userId) return;
 
-  // Show live dash, hide empty state
+  // Show live dash, hide empty state & entry cards
   $('dash-empty-state').classList.add('hidden');
   $('dash-live').classList.remove('hidden');
+  const entryCards = $('dash-entry-cards');
+  if (entryCards) entryCards.style.display = 'none';
 
   // Avoid re-fetching if already loaded this session
   if (AppState._loaded.dash) return;
@@ -6146,6 +6279,271 @@ function prefetchCoreData() {
   fetch('/api/data').catch(() => {});
 }
 setTimeout(prefetchCoreData, 2000);
+
+// ==================== MATCH CENTRE ====================
+let matchCentreGW = null;
+let matchCentreData = null;
+let _matchTeamsPopulated = false;
+
+async function loadMatchCentre(gw) {
+  if (!gw) {
+    try {
+      const resp = await fetch('/api/data');
+      const data = await resp.json();
+      if (!data.error && data.gameweeks) {
+        const next = data.gameweeks.find(g => g.is_next) || data.gameweeks.find(g => g.is_current);
+        gw = next ? next.id : 1;
+        if (!_matchTeamsPopulated && data.teams) {
+          const sel = $('match-team-filter');
+          data.teams.sort((a, b) => a.name.localeCompare(b.name)).forEach(t => {
+            const o = document.createElement('option');
+            o.value = t.id;
+            o.textContent = t.name;
+            sel.appendChild(o);
+          });
+          _matchTeamsPopulated = true;
+        }
+      } else { gw = 1; }
+    } catch (e) { gw = 1; }
+  }
+
+  matchCentreGW = gw;
+  $('match-gw-label').textContent = 'GW ' + gw;
+
+  const loader = $('match-loader');
+  loader.classList.add('active');
+  $('match-card-grid').innerHTML = '';
+
+  try {
+    const resp = await fetch('/api/predictions/' + gw);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    matchCentreData = data.matches;
+    renderMatchCards(data.matches);
+  } catch (e) {
+    $('match-card-grid').innerHTML = '<div class="error-msg" style="text-align:center;padding:2rem;color:#FF5252;">Error loading predictions: ' + e.message + '</div>';
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function changeMatchGW(delta) {
+  const newGW = Math.max(1, Math.min(38, (matchCentreGW || 1) + delta));
+  if (newGW !== matchCentreGW) loadMatchCentre(newGW);
+}
+
+function renderMatchCards(matches) {
+  const container = $('match-card-grid');
+  if (!matches || !matches.length) {
+    container.innerHTML = '<div style="color:#667788;padding:2rem;text-align:center;">No fixtures found for this gameweek.</div>';
+    return;
+  }
+
+  container.innerHTML = matches.map(m => {
+    const kickoff = m.kickoff_time ? new Date(m.kickoff_time).toLocaleString('en-GB', {
+      weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+    }) : 'TBC';
+
+    const confClass = m.confidence.toLowerCase();
+    const hw = (m.home_win_prob * 100).toFixed(0);
+    const dw = (m.draw_prob * 100).toFixed(0);
+    const aw = (m.away_win_prob * 100).toFixed(0);
+    const ou25 = (m.over_25 * 100).toFixed(0);
+    const btts = (m.btts_yes * 100).toFixed(0);
+    const predH = Math.round(m.home_xg);
+    const predA = Math.round(m.away_xg);
+    const fd = r => r.map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
+
+    return '<div class="match-card" onclick="viewMatchDetail(' + m.fixture_id + ')" data-team-home="' + m.home_team_id + '" data-team-away="' + m.away_team_id + '" data-confidence="' + m.confidence + '" data-kickoff="' + (m.kickoff_time || '') + '">'
+      + '<div class="match-card-header"><span class="match-card-kickoff">' + kickoff + '</span><span class="confidence-badge ' + confClass + '">' + m.confidence + '</span></div>'
+      + '<div class="match-card-teams"><span>' + m.home_team_short + '</span><span class="match-card-score">' + predH + ' - ' + predA + '</span><span>' + m.away_team_short + '</span></div>'
+      + '<div class="prob-bar"><div class="prob-bar-segment home" style="width:' + hw + '%"></div><div class="prob-bar-segment draw" style="width:' + dw + '%"></div><div class="prob-bar-segment away" style="width:' + aw + '%"></div></div>'
+      + '<div class="prob-labels"><span style="color:#00E676">' + hw + '%</span><span>' + dw + '%</span><span style="color:#4da6ff">' + aw + '%</span></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;font-size:0.78rem;"><span>O2.5 <strong>' + ou25 + '%</strong></span><span>BTTS <strong>' + btts + '%</strong></span></div>'
+      + '<div style="display:flex;justify-content:space-between;margin-top:0.5rem;"><div class="form-dots">' + fd(m.home_form || []) + '</div><div class="form-dots">' + fd(m.away_form || []) + '</div></div>'
+      + '</div>';
+  }).join('');
+}
+
+function sortMatchCards() {
+  if (!matchCentreData) return;
+  const sortBy = $('match-sort').value;
+  let sorted = [...matchCentreData];
+  if (sortBy === 'confidence') {
+    const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+    sorted.sort((a, b) => (order[a.confidence] || 1) - (order[b.confidence] || 1));
+  } else {
+    sorted.sort((a, b) => (a.kickoff_time || '').localeCompare(b.kickoff_time || ''));
+  }
+  renderMatchCards(applyTeamFilter(sorted));
+}
+
+function filterMatchCards() {
+  if (!matchCentreData) return;
+  const sortBy = $('match-sort').value;
+  let data = [...matchCentreData];
+  if (sortBy === 'confidence') {
+    const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+    data.sort((a, b) => (order[a.confidence] || 1) - (order[b.confidence] || 1));
+  }
+  renderMatchCards(applyTeamFilter(data));
+}
+
+function applyTeamFilter(matches) {
+  const teamId = $('match-team-filter').value;
+  if (!teamId) return matches;
+  const tid = parseInt(teamId);
+  return matches.filter(m => m.home_team_id === tid || m.away_team_id === tid);
+}
+
+// ==================== MATCH DETAIL ====================
+
+async function viewMatchDetail(fixtureId) {
+  switchNav('nav-match-detail');
+
+  const loader = $('match-detail-loader');
+  loader.classList.add('active');
+  $('match-detail-content').innerHTML = '';
+
+  try {
+    const resp = await fetch('/api/predictions/' + matchCentreGW + '/' + fixtureId);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderMatchDetail(data.match);
+  } catch (e) {
+    $('match-detail-content').innerHTML = '<div class="error-msg" style="padding:2rem;text-align:center;color:#FF5252;">Error: ' + e.message + '</div>';
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function renderMatchDetail(m) {
+  const container = $('match-detail-content');
+  const predH = Math.round(m.home_xg);
+  const predA = Math.round(m.away_xg);
+  const confClass = m.confidence.toLowerCase();
+  const fd = r => (r || []).map(v => '<span class="form-dot ' + v + '">' + v + '</span>').join('');
+  const kickoffStr = m.kickoff_time ? new Date(m.kickoff_time).toLocaleString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+  }) : 'TBC';
+
+  let html = '';
+
+  // Header
+  html += '<div class="match-detail-header">'
+    + '<div class="teams">' + m.home_team_name + ' vs ' + m.away_team_name + '</div>'
+    + '<div class="datetime">' + kickoffStr + '</div>'
+    + '<div class="pred-score">' + predH + ' - ' + predA + '</div><br>'
+    + '<span class="confidence-badge ' + confClass + '">' + m.confidence + ' confidence</span>'
+    + '</div>';
+
+  // 1X2 bar
+  const hw = (m.home_win_prob * 100).toFixed(1);
+  const dw = (m.draw_prob * 100).toFixed(1);
+  const aw = (m.away_win_prob * 100).toFixed(1);
+  html += '<div class="detail-section"><h3>Win Probabilities</h3>'
+    + '<div class="prob-bar" style="height:12px;"><div class="prob-bar-segment home" style="width:' + hw + '%"></div><div class="prob-bar-segment draw" style="width:' + dw + '%"></div><div class="prob-bar-segment away" style="width:' + aw + '%"></div></div>'
+    + '<div class="prob-labels" style="font-size:0.85rem;"><span style="color:#00E676">' + m.home_team_short + ' ' + hw + '%</span><span>Draw ' + dw + '%</span><span style="color:#4da6ff">' + m.away_team_short + ' ' + aw + '%</span></div>'
+    + '</div>';
+
+  // Scoreline Heatmap
+  if (m.scoreline_matrix && m.scoreline_matrix.length) {
+    html += '<div class="detail-section"><h3>Scoreline Distribution</h3><div style="overflow-x:auto;"><table class="heatmap-table"><thead><tr><th>' + m.home_team_short + ' \\ ' + m.away_team_short + '</th>';
+    for (let j = 0; j < 6; j++) html += '<th>' + j + '</th>';
+    html += '</tr></thead><tbody>';
+    for (let i = 0; i < Math.min(m.scoreline_matrix.length, 6); i++) {
+      html += '<tr><th>' + i + '</th>';
+      for (let j = 0; j < Math.min(m.scoreline_matrix[i].length, 6); j++) {
+        const prob = m.scoreline_matrix[i][j];
+        const pct = (prob * 100).toFixed(1);
+        const alpha = Math.min(prob * 10, 0.9);
+        const bg = prob > 0.005 ? 'rgba(0,230,118,' + alpha.toFixed(2) + ')' : 'transparent';
+        html += '<td><div class="heatmap-cell" style="background:' + bg + '">' + pct + '%</div></td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  // Top 5 most likely results
+  if (m.top_scorelines && m.top_scorelines.length) {
+    html += '<div class="detail-section"><h3>Most Likely Results</h3>';
+    m.top_scorelines.forEach(function(s, i) {
+      const pct = (s.prob * 100).toFixed(1);
+      const barW = Math.min(s.prob * 300, 100);
+      html += '<div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.4rem;">'
+        + '<span style="font-weight:600;width:2rem;color:#667788;">#' + (i + 1) + '</span>'
+        + '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;min-width:3rem;">' + s.home + ' - ' + s.away + '</span>'
+        + '<div class="ou-bar" style="flex:1;"><div class="ou-bar-fill" style="width:' + barW + '%;"></div></div>'
+        + '<span style="font-size:0.82rem;color:#AABBCC;">' + pct + '%</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Over/Under Markets
+  const ouMarkets = [
+    { label: 'Over 0.5 Goals', value: m.over_05 },
+    { label: 'Over 1.5 Goals', value: m.over_15 },
+    { label: 'Over 2.5 Goals', value: m.over_25 },
+    { label: 'Over 3.5 Goals', value: m.over_35 },
+    { label: 'Over 4.5 Goals', value: m.over_45 },
+  ];
+  html += '<div class="detail-section"><h3>Over/Under Goals</h3>';
+  ouMarkets.forEach(function(ou) {
+    const pct = (ou.value * 100).toFixed(1);
+    html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + ou.label + '</span><span>' + pct + '%</span></div><div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%"></div></div></div>';
+  });
+  html += '</div>';
+
+  // BTTS
+  const bttsPct = (m.btts_yes * 100).toFixed(1);
+  const bttsNoPct = ((1 - m.btts_yes) * 100).toFixed(1);
+  html += '<div class="detail-section"><h3>Both Teams to Score</h3>'
+    + '<div style="display:flex;gap:2rem;font-size:0.9rem;"><span>Yes: <strong style="color:#00E676">' + bttsPct + '%</strong></span><span>No: <strong style="color:#FF5252">' + bttsNoPct + '%</strong></span></div></div>';
+
+  // Form
+  html += '<div class="detail-section"><h3>Form (Last 5)</h3>'
+    + '<div style="display:flex;justify-content:space-between;"><div><strong>' + m.home_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;">' + fd(m.home_form) + '</div></div>'
+    + '<div style="text-align:right;"><strong>' + m.away_team_short + '</strong><div class="form-dots" style="margin-top:0.3rem;justify-content:flex-end;">' + fd(m.away_form) + '</div></div></div></div>';
+
+  // H2H
+  if (m.h2h && m.h2h.length) {
+    html += '<div class="detail-section"><h3>Head-to-Head (This Season)</h3>';
+    m.h2h.forEach(function(h) {
+      html += '<div class="fixture-card" style="margin-bottom:0.3rem;padding:0.5rem 0.8rem;">'
+        + '<div class="fixture-team home">' + h.home_team + '</div>'
+        + '<div style="font-family:\'JetBrains Mono\',monospace;font-weight:700;padding:0 0.5rem;">' + h.home_score + ' - ' + h.away_score + '</div>'
+        + '<div class="fixture-team away">' + h.away_team + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Injuries
+  function renderInjuries(injuries) {
+    if (!injuries || !injuries.length) return '<span style="color:#556677;">No reported injuries</span>';
+    return injuries.map(function(inj) {
+      const cc = inj.chance !== null && inj.chance <= 25 ? '#FF5252' : '#FFB800';
+      return '<div style="display:flex;justify-content:space-between;padding:0.2rem 0;font-size:0.82rem;">'
+        + '<span>' + inj.name + ' (' + inj.position + ')</span>'
+        + '<span style="color:' + cc + '">' + (inj.chance !== null ? inj.chance + '%' : '?') + '</span></div>';
+    }).join('');
+  }
+  html += '<div class="detail-section"><h3>Injuries &amp; Doubts</h3>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">'
+    + '<div><strong style="font-size:0.85rem;">' + m.home_team_short + '</strong>' + renderInjuries(m.home_injuries) + '</div>'
+    + '<div><strong style="font-size:0.85rem;">' + m.away_team_short + '</strong>' + renderInjuries(m.away_injuries) + '</div>'
+    + '</div></div>';
+
+  // FDR
+  html += '<div class="detail-section"><h3>Fixture Difficulty</h3>'
+    + '<div style="display:flex;gap:2rem;">'
+    + '<span>' + m.home_team_short + ': <span class="fdr-cell fdr-' + m.home_fdr + '" style="padding:0.1rem 0.4rem;border-radius:4px;">' + m.home_fdr + '</span></span>'
+    + '<span>' + m.away_team_short + ': <span class="fdr-cell fdr-' + m.away_fdr + '" style="padding:0.1rem 0.4rem;border-radius:4px;">' + m.away_fdr + '</span></span>'
+    + '</div></div>';
+
+  container.innerHTML = html;
+}
+
 </script>
 
 <!-- ==================== BOTTOM NAVIGATION (MOBILE) ==================== -->
@@ -6230,6 +6628,10 @@ setTimeout(prefetchCoreData, 2000);
   <div class="mm-divider"></div>
 
   <div class="mm-item" onclick="switchNav('nav-settings')"><span class="mm-icon">&#9881;</span> Settings</div>
+
+  <div class="mm-divider"></div>
+  <div class="mm-group-title">Match Analysis</div>
+  <div class="mm-item" onclick="switchNav('nav-match-centre')"><span class="mm-icon">&#9917;</span> Match Centre</div>
 </div>
 
 <!-- Player Drilldown Modal (Item 17) -->

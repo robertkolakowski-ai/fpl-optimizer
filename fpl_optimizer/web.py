@@ -20,6 +20,7 @@ from .api import (
 )
 from .models import Player, Squad
 from .optimizer import select_squad
+from .predictions import generate_predictions
 from .transfers import suggest_transfers
 
 app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
@@ -40,6 +41,25 @@ def _get_cached_data():
     _cache["chip_windows"] = chip_windows
     _cache["ts"] = now
     return players, teams, gameweeks, fixtures
+
+
+# Predictions cache (separate, longer TTL)
+_pred_cache: dict = {}
+_PRED_CACHE_TTL = 900  # 15 minutes
+
+
+def _get_cached_predictions(gw: int) -> list:
+    """Return cached predictions for a gameweek, regenerating if stale."""
+    now = time.time()
+    cache_key = f"gw_{gw}"
+    if _pred_cache.get(cache_key) and now - _pred_cache.get(f"{cache_key}_ts", 0) < _PRED_CACHE_TTL:
+        return _pred_cache[cache_key]
+
+    players, teams, gameweeks, fixtures = _get_cached_data()
+    predictions = generate_predictions(fixtures, players, teams, gameweeks, target_gw=gw)
+    _pred_cache[cache_key] = predictions
+    _pred_cache[f"{cache_key}_ts"] = now
+    return predictions
 
 
 def _get_chip_windows() -> list[dict]:
@@ -2334,5 +2354,41 @@ def api_draft_my_roster():
             "total_draft_score": round(sum(p._draft_score for p in roster), 2),
             "avg_form": round(sum(p.form for p in roster) / len(roster), 2),
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Match Predictions ─────────────────────────────────────────────────────
+
+
+@app.route("/api/predictions/<int:gw>")
+def api_predictions(gw):
+    """Match predictions for a gameweek (list view, no scoreline matrix)."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        if not predictions:
+            return jsonify({"error": f"No fixtures found for GW {gw}"}), 404
+
+        matches = []
+        for pred in predictions:
+            d = pred.to_dict()
+            d.pop("scoreline_matrix", None)
+            matches.append(d)
+
+        return jsonify({"gameweek": gw, "matches": matches})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/<int:gw>/<int:match_id>")
+def api_prediction_detail(gw, match_id):
+    """Detailed prediction for a single match (includes scoreline matrix)."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        pred = next((p for p in predictions if p.fixture_id == match_id), None)
+        if not pred:
+            return jsonify({"error": "Match not found"}), 404
+
+        return jsonify({"gameweek": gw, "match": pred.to_dict()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
