@@ -190,11 +190,14 @@ def recommend_chips(
 
     results["bench_boost"] = best_bb
 
-    # --- TRIPLE CAPTAIN: Highest xPts player in a DGW ---
+    # --- TRIPLE CAPTAIN: Highest xPts player in user's squad in a DGW ---
     best_tc = {"gw": None, "score": 0, "reason": "", "player": ""}
     for gw_id in window:
         tf = gw_team_fixtures.get(gw_id, {})
-        for p in all_players:
+        for pid in squad_ids:
+            p = player_map.get(pid)
+            if not p:
+                continue
             if tf.get(p.team, 0) >= 2:
                 tc_score = p.ep_next * 3 if p.ep_next else p.form * 2
                 if tc_score > best_tc["score"]:
@@ -203,12 +206,13 @@ def recommend_chips(
                                "reason": f"{p.name} ({teams_dict.get(p.team, '???')}) DGW"}
 
     if not best_tc["gw"]:
-        # Fallback: highest ep_next player
-        top = max(all_players, key=lambda p: p.ep_next, default=None)
+        # Fallback: highest ep_next player in squad
+        squad_in_map = [player_map[pid] for pid in squad_ids if pid in player_map]
+        top = max(squad_in_map, key=lambda p: p.ep_next, default=None)
         if top:
             best_tc = {"gw": current_gw.id, "score": round(top.ep_next * 2, 1),
                        "player": top.name,
-                       "reason": f"{top.name} highest xPts (no DGW found)"}
+                       "reason": f"{top.name} highest xPts in squad (no DGW found)"}
     results["triple_captain"] = best_tc
 
     # --- FREE HIT: Best for BGW where squad has fewest fixtures ---

@@ -1704,7 +1704,8 @@
           <div class="settings-grid">
             <div class="field">
               <label>Budget: <span class="slider-value" id="budget-display">100.0</span>M</label>
-              <input type="range" id="budget" min="80" max="105" step="0.5" value="100">
+              <input type="hidden" id="budget" value="100">
+              <div style="font-size:0.75rem;color:#667788;">Auto-calculated from your squad value + bank</div>
             </div>
             <div class="field">
               <label>Fixture Lookahead</label>
@@ -3057,6 +3058,12 @@ renderRecentUsers();
       $('uhb-bank').textContent = cd.bank ? cd.bank + 'M' : '-';
       $('uhb-fts').textContent = cd.free_transfers || '1';
       $('user-header-bar').classList.add('active');
+      // Update optimizer budget from cached data
+      if (cd.team_value && cd.bank) {
+        const totalBudget = parseFloat(cd.team_value) + parseFloat(cd.bank);
+        $('budget').value = totalBudget.toFixed(1);
+        $('budget-display').textContent = totalBudget.toFixed(1);
+      }
       if (cd.last_sync) {
         const ago = Math.round((Date.now() - cd.last_sync) / 60000);
         $('uhb-last-sync').textContent = ago < 1 ? 'Synced just now' : `Synced ${ago}m ago`;
@@ -3227,6 +3234,13 @@ async function loadUser() {
     $('settings-value').textContent = data.team_value ? data.team_value + 'M' : '-';
     $('settings-bank').textContent = data.bank ? data.bank + 'M' : '-';
     $('settings-fts').textContent = data.free_transfers || '1';
+
+    // Update optimizer budget from actual squad value + bank
+    if (data.team_value && data.bank) {
+      const totalBudget = parseFloat(data.team_value) + parseFloat(data.bank);
+      $('budget').value = totalBudget.toFixed(1);
+      $('budget-display').textContent = totalBudget.toFixed(1);
+    }
 
     // Cache user data for instant restore (skip for demo)
     if (!AppState.isDemoMode) {
