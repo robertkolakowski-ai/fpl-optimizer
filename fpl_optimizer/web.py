@@ -1571,7 +1571,7 @@ def api_optimize():
         risk_mode = "balanced"
 
     try:
-        players, teams, gameweeks, fixtures, _cw = load_data()
+        players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=lookahead)
         # Compute rotation risk (needed for safe mode scoring)
         compute_rotation_risk(players)

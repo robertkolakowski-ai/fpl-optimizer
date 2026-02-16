@@ -4866,11 +4866,15 @@ async function runOptimizer() {
   errorEl.innerHTML = '';
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
     const resp = await fetch('/api/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ budget: parseFloat($('budget').value), lookahead: parseInt($('lookahead').value), user_id: userId || null, risk_mode: $('risk-mode').value }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     const data = await resp.json();
     if (!resp.ok) { errorEl.innerHTML = `<div class="error-msg">${data.error || 'Error'}</div>`; return; }
 
