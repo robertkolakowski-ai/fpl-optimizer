@@ -47,11 +47,9 @@ def parse_gameweeks(data: dict) -> list[Gameweek]:
 def parse_players(data: dict) -> list[Player]:
     players = []
     for e in data["elements"]:
-        # Skip unavailable players (status 'u' = unavailable, 'i' = injured, 's' = suspended)
-        if e.get("status") in ("u",):
-            continue
-        # Skip players with 0 minutes
-        if e.get("minutes", 0) == 0:
+        # Skip truly unavailable players (status 'u' = unavailable/left league)
+        # Keep injured ('i'), suspended ('s'), doubtful ('d') — they're still valid squad picks
+        if e.get("status") == "u":
             continue
 
         p = Player(
@@ -166,7 +164,11 @@ def load_user_team(
     all_players: list[Player],
     gameweeks: list[Gameweek],
 ) -> tuple[list[Player], float]:
-    """Load a user's current FPL team. Returns (squad_players, selling_prices_total)."""
+    """Load a user's current FPL team. Returns (squad_players, bank).
+
+    Sets selling_price on each player from the FPL picks endpoint,
+    which accounts for the 50% profit rule correctly.
+    """
     current_gw = next((gw for gw in gameweeks if gw.is_current), None)
     if current_gw is None:
         current_gw = next((gw for gw in gameweeks if gw.is_next), None)
@@ -177,16 +179,20 @@ def load_user_team(
 
     with httpx.Client(timeout=30) as client:
         entry = fetch_user_entry(client, user_id)
-        picks = fetch_user_picks(client, user_id, current_gw.id)
+        picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
 
     bank = entry.get("last_deadline_bank", 0) / 10.0  # Convert to millions
-    team_value = entry.get("last_deadline_value", 0) / 10.0
 
     squad_players = []
-    for pick in picks:
+    for pick in picks_data.get("picks", []):
         pid = pick["element"]
         if pid in player_map:
-            squad_players.append(player_map[pid])
+            p = player_map[pid]
+            # FPL API returns selling_price in tenths of millions
+            sp = pick.get("selling_price")
+            if sp is not None:
+                p.selling_price = sp / 10.0
+            squad_players.append(p)
 
     return squad_players, bank
 

@@ -93,6 +93,12 @@ class Player:
     starts: int = 0
     rotation_risk: float = 0.0
     projected_minutes: float = 0.0
+    selling_price: float = 0.0  # FPL selling price (0 = not set, use cost)
+
+    @property
+    def sell_value(self) -> float:
+        """Selling price if set, otherwise current cost."""
+        return self.selling_price if self.selling_price > 0 else self.cost
 
     @property
     def position_name(self) -> str:

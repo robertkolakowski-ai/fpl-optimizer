@@ -692,6 +692,11 @@ def api_live(user_id):
             picks = picks_data.get("picks", [])
             entry_history = picks_data.get("entry_history", {})
 
+        # Extract automatic subs
+        auto_subs_raw = [] if user_id == DEMO_USER_ID else picks_data.get("automatic_subs", [])
+        auto_sub_in_ids = {s["element_in"] for s in auto_subs_raw}
+        auto_sub_out_ids = {s["element_out"] for s in auto_subs_raw}
+
         pick_list = []
         total_live = 0
         for pick in picks:
@@ -703,6 +708,10 @@ def api_live(user_id):
             is_captain = pick.get("is_captain", False)
             is_vice = pick.get("vice_captain", False)
             p = player_map.get(pid)
+            # Determine autosub status
+            subbed_in = pid in auto_sub_in_ids
+            subbed_out = pid in auto_sub_out_ids
+
             pick_list.append({
                 "id": pid,
                 "name": p.name if p else f"ID {pid}",
@@ -728,6 +737,8 @@ def api_live(user_id):
                 "news": p.news if p else "",
                 "chance_of_playing": p.chance_of_playing if p else None,
                 "upcoming": team_upcoming.get(p.team, [])[:3] if p else [],
+                "auto_sub_in": subbed_in,
+                "auto_sub_out": subbed_out,
             })
             if multiplier > 0:
                 total_live += live_pts
@@ -758,6 +769,15 @@ def api_live(user_id):
                 p["live_points"] for p in pick_list if p["multiplier"] == 0
             ),
             "hits": entry_history.get("event_transfers_cost", 0),
+            "automatic_subs": [
+                {
+                    "element_in": s["element_in"],
+                    "element_out": s["element_out"],
+                    "in_name": player_map[s["element_in"]].name if s["element_in"] in player_map else f"ID {s['element_in']}",
+                    "out_name": player_map[s["element_out"]].name if s["element_out"] in player_map else f"ID {s['element_out']}",
+                }
+                for s in auto_subs_raw
+            ],
         })
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
@@ -1572,8 +1592,9 @@ def api_optimize():
                 from .optimizer import _select_starting
                 _select_starting(user_squad)
                 # Suggest transfers for their team
+                # Use sell_value (FPL selling prices) for accurate budget
                 user_transfers = suggest_transfers(
-                    user_squad, players, budget=sum(p.cost for p in squad_players) + bank
+                    user_squad, players, budget=sum(p.sell_value for p in squad_players) + bank
                 )
                 user_team_info = {
                     "squad": user_squad.to_dict(),

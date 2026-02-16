@@ -75,7 +75,7 @@ def plan_transfers(
             out_p = pm.get(out_id) or player_map.get(out_id)
             if not out_p:
                 continue
-            remaining_budget = current_bank + out_p.cost
+            remaining_budget = current_bank + out_p.sell_value
 
             for candidate in players_copy:
                 if candidate.id in current_squad_ids:
@@ -125,7 +125,7 @@ def plan_transfers(
             # Apply transfer
             current_squad_ids = [pid for pid in current_squad_ids if pid != best_out_id]
             current_squad_ids.append(best_in_id)
-            current_bank = current_bank + out_p.cost - in_p.cost
+            current_bank = current_bank + out_p.sell_value - in_p.cost
             ft = min(max(ft - 1, 0) + 1, 5)
         else:
             gw_plan["transfer_out"] = None

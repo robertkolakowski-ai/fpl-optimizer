@@ -348,6 +348,14 @@
   .live-card .lp-injury.injury-red { background: #FF5252; box-shadow: 0 0 4px rgba(255,68,68,0.6); }
   .live-card .lp-injury.injury-yellow { background: #E5A600; box-shadow: 0 0 4px rgba(255,170,0,0.6); }
 
+  /* Autosub indicators */
+  .live-card .lp-autosub { position: absolute; top: 3px; right: 4px; font-size: 0.55rem; font-weight: 700; border-radius: 3px; padding: 0 3px; z-index: 2; cursor: help; }
+  .live-card .lp-autosub.sub-in { background: rgba(0,230,118,0.2); color: #00E676; }
+  .live-card .lp-autosub.sub-out { background: rgba(255,82,82,0.2); color: #FF5252; }
+  .autosub-summary { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; padding: 0.5rem; background: rgba(27,45,69,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+  .autosub-item { font-size: 0.75rem; color: #AABBCC; display: flex; align-items: center; gap: 0.3rem; }
+  .autosub-item .sub-arrow { color: #00E676; font-weight: 700; }
+
   /* Bench order badge */
   .live-card .bench-order { position: absolute; bottom: 2px; right: 4px; font-size: 0.55rem; background: #444; color: #AABBCC; border-radius: 50%; width: 14px; height: 14px; line-height: 14px; text-align: center; font-weight: bold; }
 
@@ -3582,6 +3590,19 @@ async function loadLive() {
     pitchHtml += `<div class="pitch-row bench-row"><span class="bench-label">Bench</span>${bench.map((p, i) => liveCard(p, true, i + 1)).join('')}</div>`;
 
     $('live-pitch').innerHTML = pitchHtml;
+
+    // Autosub summary — remove previous if any
+    const prevSub = document.querySelector('.autosub-summary');
+    if (prevSub) prevSub.remove();
+    if (data.automatic_subs && data.automatic_subs.length > 0) {
+      let subHtml = '<div class="autosub-summary"><div style="font-size:0.72rem;color:#8899AA;width:100%;margin-bottom:0.2rem;">Auto Subs:</div>';
+      data.automatic_subs.forEach(s => {
+        subHtml += `<div class="autosub-item"><span class="sub-arrow">&#9650;</span> ${s.in_name} <span style="color:#667788;">for</span> <span style="color:#FF5252;">${s.out_name}</span></div>`;
+      });
+      subHtml += '</div>';
+      $('live-pitch').insertAdjacentHTML('afterend', subHtml);
+    }
+
     initLiveDragDrop();
     validateFormation();
 
@@ -3658,13 +3679,18 @@ function liveCard(p, isBench, benchOrder) {
   // Bench order badge
   const benchBadge = isBench && benchOrder ? `<div class="bench-order">${benchOrder}</div>` : '';
 
+  // Autosub indicator
+  let autoSubHtml = '';
+  if (p.auto_sub_in) autoSubHtml = '<div class="lp-autosub sub-in" title="Auto sub IN">&#9650; IN</div>';
+  else if (p.auto_sub_out) autoSubHtml = '<div class="lp-autosub sub-out" title="Auto sub OUT">&#9660; OUT</div>';
+
   // Position name map for data attribute
   const posNames = {1:'GK', 2:'DEF', 3:'MID', 4:'FWD'};
 
   const kitHtml = kitImg(p.team, p.position === 1, 24);
 
   return `<div class="live-card${isBench ? ' bench' : ''}" draggable="true" data-player-id="${p.id}" data-is-bench="${isBench}" data-position="${p.position}" data-team="${p.team_name}" data-is-captain="${!!p.is_captain}" data-is-vice="${!!p.is_vice_captain}" style="--team-color:${teamColor}" onclick="handleCaptainClick(${p.id})">
-    ${badge}${injuryHtml}
+    ${badge}${injuryHtml}${autoSubHtml}
     <div class="lp-photo">${kitHtml || photoHtml}</div>
     <div class="lp-name"><span style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" onclick="event.stopPropagation();openPlayerModal(${p.id})">${p.name}</span></div>
     <div class="lp-pts${p.live_points === 0 ? ' zero' : ''}">${p.live_points}</div>

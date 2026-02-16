@@ -41,7 +41,8 @@ def suggest_transfers(
 
     for out_player in squad.players:
         # Candidates: same position, affordable, won't break team limit
-        remaining_budget = budget - squad.total_cost + out_player.cost
+        # Use sell_value (FPL selling price) not market cost for budget calc
+        remaining_budget = budget - squad.total_cost + out_player.sell_value
 
         for candidate in available:
             if candidate.position != out_player.position:
