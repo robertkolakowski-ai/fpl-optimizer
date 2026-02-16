@@ -535,6 +535,13 @@
   .ob-actions { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
   .ob-demo-link { color: #8899AA; font-size: 0.82rem; text-decoration: underline; }
   .ob-demo-link:hover { color: #4da6ff; }
+  .dash-onboard-row { display: flex; gap: 0.5rem; align-items: center; width: 100%; max-width: 360px; margin: 0 auto 0.5rem; }
+  .dash-onboard-row input { flex: 1; background: #0D1B2A; border: 1px solid rgba(255,255,255,0.15); color: #F0F0F0; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.95rem; }
+  .dash-onboard-row input:focus { outline: none; border-color: #00E676; }
+  .dash-onboard-row input::placeholder { color: #556677; }
+  .dash-onboard-help { color: #667788; font-size: 0.75rem; margin-bottom: 0.6rem; }
+  .dash-onboard-help a { color: #4da6ff; }
+  .dash-onboard-error { color: #FF5252; font-size: 0.8rem; min-height: 1.2em; margin-bottom: 0.3rem; }
 
   /* Player cards for mobile My Team (Item 6) */
   .player-card-list { display: none; flex-direction: column; gap: 0.4rem; }
@@ -862,6 +869,10 @@
   .demo-dismiss:hover { color: #FF5252; }
   .demo-inline-notice { background: linear-gradient(90deg, rgba(77,166,255,0.08), rgba(0,230,118,0.04)); border: 1px solid rgba(77,166,255,0.2); border-radius: 8px; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 0.8rem; color: #8899AA; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .demo-inline-notice .demo-badge { font-size: 0.6rem; }
+  .demo-global-strip { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 1.2rem; background: linear-gradient(90deg, rgba(255,184,0,0.08), rgba(77,166,255,0.06)); border-bottom: 1px solid rgba(255,184,0,0.15); font-size: 0.78rem; color: #8899AA; flex-wrap: wrap; }
+  .demo-global-strip.hidden { display: none; }
+  .demo-global-strip a { color: #4da6ff; text-decoration: underline; margin-left: auto; }
+  .demo-global-strip .demo-badge { background: linear-gradient(135deg, #FFB800, #FF9100); color: #0D1B2A; }
 
   /* ==================== MATCH ANALYSIS MODULE ==================== */
   .sidebar-section-label { padding: 0.6rem 1.2rem 0.3rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #556677; user-select: none; }
@@ -1240,83 +1251,67 @@
     </div>
 
     <div class="sidebar-nav">
-      <div class="sidebar-section-label">FANTASY TOOLS</div>
-      <!-- Dashboard -->
+      <div class="sidebar-section-label">QUICK ACCESS</div>
       <div class="sidebar-item active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
         <span class="si-icon">&#9733;</span>
         <span class="si-label">Dashboard</span>
       </div>
-
-      <!-- Team Management -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-team', this)">
-        <span class="si-icon">&#9917;</span>
-        <span class="si-label">Team Management</span>
-        <span class="si-arrow">&#9654;</span>
+      <div class="sidebar-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">
+        <span class="si-icon">&#9889;</span>
+        <span class="si-label">Live GW</span>
       </div>
-      <div class="sidebar-sub" id="sub-team">
-        <div class="sidebar-sub-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">Live GW</div>
-        <div class="sidebar-sub-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">My Team</div>
+      <div class="sidebar-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
+        <span class="si-icon">&#169;</span>
+        <span class="si-label">Captain Picks</span>
       </div>
-
-      <!-- Transfers -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-transfers', this)">
+      <div class="sidebar-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
         <span class="si-icon">&#8644;</span>
-        <span class="si-label">Transfers</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-transfers">
-        <div class="sidebar-sub-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">Transfer Planner</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Suggestions</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">Multi-GW Planner</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">Chip Strategy</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">Gain vs Hit</div>
+        <span class="si-label">Transfer Planner</span>
       </div>
 
-      <!-- Leagues -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-leagues', this)">
-        <span class="si-icon">&#127942;</span>
-        <span class="si-label">Leagues</span>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">MY TEAM</div>
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-myteam', this)">
+        <span class="si-icon">&#9917;</span>
+        <span class="si-label">My Team</span>
         <span class="si-arrow">&#9654;</span>
       </div>
-      <div class="sidebar-sub" id="sub-leagues">
-        <div class="sidebar-sub-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">Standings</div>
+      <div class="sidebar-sub" id="sub-myteam">
+        <div class="sidebar-sub-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">My Team</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Transfer Suggestions</div>
+        <div class="sidebar-sub-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">League Standings</div>
         <div class="sidebar-sub-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">Rival Comparison</div>
       </div>
 
-      <!-- Fixtures -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-fixtures', this)">
-        <span class="si-icon">&#128197;</span>
-        <span class="si-label">Fixtures</span>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">ANALYSIS</div>
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-analysis', this)">
+        <span class="si-icon">&#128202;</span>
+        <span class="si-label">Player &amp; Fixtures</span>
         <span class="si-arrow">&#9654;</span>
       </div>
-      <div class="sidebar-sub" id="sub-fixtures">
-        <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Schedule & CS%</div>
+      <div class="sidebar-sub" id="sub-analysis">
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
+        <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare Players</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
+        <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Fixture Schedule</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
       </div>
 
-      <!-- Player Stats -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-playerstats', this)">
-        <span class="si-icon">&#128202;</span>
-        <span class="si-label">Player Stats</span>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">PLANNING</div>
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-planning', this)">
+        <span class="si-icon">&#128161;</span>
+        <span class="si-label">Strategy Tools</span>
         <span class="si-arrow">&#9654;</span>
       </div>
-      <div class="sidebar-sub" id="sub-playerstats">
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare</div>
-      </div>
-
-      <!-- News & Updates -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-news', this)">
-        <span class="si-icon">&#128240;</span>
-        <span class="si-label">News &amp; Updates</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-news">
-        <div class="sidebar-sub-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">Captain Picks</div>
+      <div class="sidebar-sub" id="sub-planning">
+        <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">Multi-GW Planner</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">Chip Strategy</div>
+        <div class="sidebar-sub-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">Gain vs Hit</div>
         <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
         <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
         <div class="sidebar-sub-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')">Rotation Risk</div>
@@ -1324,7 +1319,19 @@
         <div class="sidebar-sub-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')">Rank Simulator</div>
       </div>
 
-      <!-- Draft / Waivers -->
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">MATCH ANALYSIS</div>
+      <div class="sidebar-item" onclick="toggleSidebarSub('sub-match-analysis', this)">
+        <span class="si-icon">&#9917;</span>
+        <span class="si-label">Match Centre</span>
+        <span class="si-arrow">&#9654;</span>
+      </div>
+      <div class="sidebar-sub" id="sub-match-analysis">
+        <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
+        <div class="sidebar-sub-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">Prediction Tracker</div>
+      </div>
+
+      <div class="sidebar-divider"></div>
       <div class="sidebar-item" onclick="toggleSidebarSub('sub-draft', this)">
         <span class="si-icon">&#128221;</span>
         <span class="si-label">Draft / Waivers</span>
@@ -1337,25 +1344,9 @@
       </div>
 
       <div class="sidebar-divider"></div>
-
-      <!-- Settings -->
       <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
         <span class="si-icon">&#9881;</span>
         <span class="si-label">Settings</span>
-      </div>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section-label">MATCH ANALYSIS</div>
-
-      <!-- Match Analysis group -->
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-match-analysis', this)">
-        <span class="si-icon">&#9917;</span>
-        <span class="si-label">Match Analysis</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-match-analysis">
-        <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
-        <div class="sidebar-sub-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">Prediction Tracker</div>
       </div>
     </div>
   </nav>
@@ -1379,6 +1370,11 @@
       <span class="inline-spinner" id="uhb-sync-spinner"></span>
       <span style="color:#555;font-size:0.65rem;" id="uhb-last-sync"></span>
     </div>
+    <div class="demo-global-strip hidden" id="demo-global-strip">
+      <span class="demo-badge">DEMO DATA</span>
+      <span>Viewing sample data &mdash; not your real team.</span>
+      <a href="#" onclick="switchNav('nav-settings');return false">Connect your team</a>
+    </div>
     <div class="container">
 
       <!-- ==================== DASHBOARD ==================== -->
@@ -1386,10 +1382,10 @@
 
         <!-- Entry cards: two pathways -->
         <div class="dash-grid" id="dash-entry-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;">
-          <div class="dash-card" onclick="switchNav('nav-settings')">
+          <div class="dash-card" onclick="var el=$('dash-fpl-input');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'})}else{switchNav('nav-settings')}">
             <div class="dc-icon">&#9889;</div>
-            <div class="dc-title">Optimize your FPL team</div>
-            <div class="dc-desc">Connect your team and get AI-powered squad optimization</div>
+            <div class="dc-title">Connect your FPL team</div>
+            <div class="dc-desc">Enter your FPL ID below to unlock AI-powered optimization</div>
           </div>
           <div class="dash-card" onclick="switchNav('nav-match-centre')">
             <div class="dc-icon">&#9917;</div>
@@ -1401,7 +1397,7 @@
         <!-- Welcome -->
         <div class="dash-welcome">
           <h2 id="dash-title">Dashboard</h2>
-          <p id="dash-subtitle">Load your FPL ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see your live overview.</p>
+          <p id="dash-subtitle">Enter your FPL ID below to see your live overview.</p>
         </div>
 
         <!-- Top stats -->
@@ -1428,14 +1424,7 @@
           </div>
         </div>
 
-        <!-- Demo banner -->
-        <div id="demo-banner" class="demo-banner hidden">
-          <div class="demo-banner-content">
-            <span class="demo-badge">DEMO</span>
-            <span class="demo-text">You're viewing sample data — this is not your real team.</span>
-            <button class="btn btn-sm" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect your team &rarr;</button>
-          </div>
-        </div>
+        <!-- Demo banner removed — replaced by global demo-global-strip -->
 
         <!-- Onboarding: shown when no user connected -->
         <div id="dash-empty-state">
@@ -1448,7 +1437,12 @@
               <div class="ob-benefit"><span class="ob-check">&#10003;</span> Track your rank, league position and chip strategy</div>
             </div>
             <div class="ob-actions">
-              <button class="btn" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect My Team</button>
+              <div class="dash-onboard-row">
+                <input type="text" id="dash-fpl-input" placeholder="FPL ID or profile URL" onkeydown="if(event.key==='Enter')loadUserFromDashboard()" oninput="autoDetectFplId(this)">
+                <button class="btn" id="dash-load-btn" onclick="loadUserFromDashboard()">Connect</button>
+              </div>
+              <div class="dash-onboard-help">Find your ID at <a href="https://fantasy.premierleague.com" target="_blank" rel="noopener">fantasy.premierleague.com</a> &rarr; My Team &rarr; URL contains your ID</div>
+              <div class="dash-onboard-error" id="dash-onboard-error"></div>
               <a href="#" class="ob-demo-link" onclick="activateDemo();return false;">or try with demo data</a>
             </div>
           </div>
@@ -2680,27 +2674,38 @@ function applyCardLabels(tableEl) {
   });
 }
 
-// Skeleton loading: generate placeholder rows
-function showSkeleton(containerId, count) {
-  const el = $(containerId);
-  if (!el) return;
-  el.innerHTML = Array.from({length: count}, () =>
+// Skeleton loading: generate placeholder HTML
+function skeletonCardsHtml(count) {
+  return Array.from({length: count || 4}, () =>
     `<div class="skeleton-card"><div class="skeleton" style="width:60%;height:16px"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>`
   ).join('');
 }
-function showSkeletonTable(containerId, rows, cols) {
-  const el = $(containerId);
-  if (!el) return;
-  el.innerHTML = Array.from({length: rows}, () =>
-    `<tr>${Array.from({length: cols}, (_, j) => `<td><div class="skeleton" style="height:14px;width:${j === 0 ? '40' : '60'}%"></div></td>`).join('')}</tr>`
-  ).join('');
+function skeletonTableHtml(rows, cols) {
+  return `<table style="width:100%;border-collapse:collapse;">${Array.from({length: rows || 8}, () =>
+    `<tr>${Array.from({length: cols || 5}, (_, j) => `<td style="padding:0.4rem"><div class="skeleton" style="height:14px;width:${j === 0 ? '40' : '60'}%"></div></td>`).join('')}</tr>`
+  ).join('')}</table>`;
 }
-function showSkeletonStats(containerId, count) {
-  const el = $(containerId);
+function skeletonStatsHtml(count) {
+  return `<div style="display:flex;gap:0.8rem;flex-wrap:wrap;">${Array.from({length: count || 4}, () =>
+    `<div class="stat-card" style="flex:1;min-width:100px;"><div class="skeleton" style="height:12px;width:60%;margin:0 auto 0.3rem"></div><div class="skeleton" style="height:22px;width:40%;margin:0 auto"></div></div>`
+  ).join('')}</div>`;
+}
+// Legacy wrappers (inject into container by id)
+function showSkeleton(containerId, count) { const el = $(containerId); if (el) el.innerHTML = skeletonCardsHtml(count); }
+function showSkeletonTable(containerId, rows, cols) { const el = $(containerId); if (el) el.innerHTML = skeletonTableHtml(rows, cols); }
+function showSkeletonStats(containerId, count) { const el = $(containerId); if (el) el.innerHTML = skeletonStatsHtml(count); }
+
+/** Show a loader element with skeleton content instead of plain spinner.
+ *  type: 'cards' | 'table' | 'stats' | 'default'
+ *  opts: { count, rows, cols } */
+function showModuleLoader(loaderId, type, opts) {
+  const el = $(loaderId);
   if (!el) return;
-  el.innerHTML = Array.from({length: count}, () =>
-    `<div class="stat-card"><div class="skeleton" style="height:12px;width:60%;margin:0 auto 0.3rem"></div><div class="skeleton" style="height:22px;width:40%;margin:0 auto"></div></div>`
-  ).join('');
+  if (type === 'cards') el.innerHTML = skeletonCardsHtml(opts?.count);
+  else if (type === 'table') el.innerHTML = skeletonTableHtml(opts?.rows, opts?.cols);
+  else if (type === 'stats') el.innerHTML = skeletonStatsHtml(opts?.count);
+  else el.innerHTML = '<div class="spinner"></div><div class="loader-text">Loading...</div>';
+  el.classList.add('active');
 }
 
 // Dashboard accordion for mobile rail sections
@@ -2766,9 +2771,11 @@ function switchNav(panelId) {
   const bnMap = {
     'nav-dashboard': 'nav-dashboard',
     'nav-team-live': 'nav-dashboard', 'nav-team-myteam': 'nav-dashboard',
+    'nav-news-captain': 'nav-dashboard',
     'nav-transfers-planner': 'nav-transfers-planner', 'nav-transfers-suggestions': 'nav-transfers-planner',
     'nav-transfers-optimizer': 'nav-transfers-planner', 'nav-transfers-multigw': 'nav-transfers-planner',
     'nav-transfers-chips': 'nav-transfers-planner', 'nav-transfers-gain': 'nav-transfers-planner',
+    'nav-leagues-standings': 'nav-transfers-planner', 'nav-leagues-rival': 'nav-transfers-planner',
     'nav-fixtures-fdr': 'nav-fixtures-fdr', 'nav-fixtures-schedule': 'nav-fixtures-fdr',
     'nav-fixtures-list': 'nav-fixtures-fdr', 'nav-fixtures-swing': 'nav-fixtures-fdr',
     'nav-playerstats-table': 'nav-playerstats-table', 'nav-playerstats-opta': 'nav-playerstats-table',
@@ -2844,8 +2851,7 @@ function loadDashboard() {
   // Show skeleton in pitch slot (safe — it gets fully replaced later)
   showSkeleton('dash-pitch-slot', 3);
 
-  const loader = $('dash-loader');
-  loader.classList.add('active');
+  showModuleLoader('dash-loader', 'stats', {count: 4});
 
   // Fire all requests in parallel
   Promise.all([
@@ -3005,7 +3011,7 @@ function loadDashboard() {
   }).catch(err => {
     console.error('Dashboard load error:', err);
   }).finally(() => {
-    loader.classList.remove('active');
+    $('dash-loader').classList.remove('active');
   });
 }
 
@@ -3318,9 +3324,22 @@ async function loadUser() {
 function showUserError(msg) { const el = $('user-error'); el.textContent = msg; el.classList.add('active'); }
 function hideUserError() { $('user-error').classList.remove('active'); }
 
+function loadUserFromDashboard() {
+  const dashInput = $('dash-fpl-input');
+  const val = dashInput ? dashInput.value.trim() : '';
+  if (!val) { if (dashInput) dashInput.focus(); return; }
+  // Sync to Settings input so loadUser() picks it up
+  $('user-id').value = val;
+  const errEl = $('dash-onboard-error');
+  if (errEl) errEl.textContent = '';
+  loadUser().catch(() => {
+    if (errEl) errEl.textContent = 'Failed to load — check your FPL ID.';
+  });
+}
+
 // Demo mode helpers
-function showDemoBanner() { $('demo-banner').classList.remove('hidden'); }
-function hideDemoBanner() { $('demo-banner').classList.add('hidden'); }
+function showDemoBanner() { const b = $('demo-banner'); if (b) b.classList.remove('hidden'); $('demo-global-strip').classList.remove('hidden'); }
+function hideDemoBanner() { const b = $('demo-banner'); if (b) b.classList.add('hidden'); $('demo-global-strip').classList.add('hidden'); }
 async function activateDemo() {
   AppState.isDemoMode = true;
   $('user-id').value = '0';
@@ -3552,8 +3571,7 @@ async function loadLive() {
   if (!AppState.userId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
   $('live-no-user').classList.add('hidden');
   await loadMetadata();
-  const loader = $('live-loader');
-  loader.classList.add('active');
+  showModuleLoader('live-loader', 'cards', {count: 3});
   $('live-content').classList.add('hidden');
 
   try {
@@ -3636,7 +3654,7 @@ async function loadLive() {
     $('live-content').innerHTML = `<div class="error-msg">Failed to load: ${err.message}</div>`;
     $('live-content').classList.remove('hidden');
   } finally {
-    loader.classList.remove('active');
+    $('live-loader').classList.remove('active');
   }
 }
 
@@ -3927,8 +3945,7 @@ function initLiveDragDrop() {
 let fdrLoaded = false;
 async function loadFDR() {
   if (fdrLoaded) return;
-  const loader = $('fdr-loader');
-  loader.classList.add('active');
+  showModuleLoader('fdr-loader', 'table', {rows: 6, cols: 8});
 
   try {
     const resp = await fetch('/api/fdr?lookahead=8');
@@ -3961,15 +3978,14 @@ async function loadFDR() {
   } catch (err) {
     $('fdr-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
   } finally {
-    loader.classList.remove('active');
+    $('fdr-loader').classList.remove('active');
   }
 }
 
 // ==================== CAPTAIN PICKS ====================
 async function loadCaptainPicks() {
   if (AppState._loaded.captain) return;
-  const loader = $('captain-loader');
-  loader.classList.add('active');
+  showModuleLoader('captain-loader', 'cards', {count: 3});
 
   try {
     const resp = await fetch('/api/captain-picks');
@@ -3997,7 +4013,7 @@ async function loadCaptainPicks() {
   } catch (err) {
     $('captain-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
   } finally {
-    loader.classList.remove('active');
+    $('captain-loader').classList.remove('active');
   }
 }
 
@@ -4068,8 +4084,7 @@ function drawCaptainEVChart(picks) {
 // ==================== PRICE CHANGES ====================
 async function loadPriceChanges() {
   if (AppState._loaded.prices) return;
-  const loader = $('prices-loader');
-  loader.classList.add('active');
+  showModuleLoader('prices-loader', 'table', {rows: 6, cols: 5});
 
   try {
     const resp = await fetch('/api/price-changes');
@@ -4082,7 +4097,7 @@ async function loadPriceChanges() {
   } catch (err) {
     $('risers-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
   } finally {
-    loader.classList.remove('active');
+    $('prices-loader').classList.remove('active');
   }
 }
 
@@ -4105,8 +4120,7 @@ function priceCard(p, isRiser) {
 // ==================== DIFFERENTIALS ====================
 let diffLoaded = false;
 async function loadDifferentials() {
-  const loader = $('diff-loader');
-  loader.classList.add('active');
+  showModuleLoader('diff-loader', 'cards', {count: 4});
   $('diff-table').classList.add('hidden');
   diffLoaded = false;
 
@@ -4134,7 +4148,7 @@ async function loadDifferentials() {
   } catch (err) {
     $('diff-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
   } finally {
-    loader.classList.remove('active');
+    $('diff-loader').classList.remove('active');
   }
 }
 
@@ -4625,9 +4639,8 @@ function toggleColumn(key, visible) {
 }
 
 function loadPlayers() {
-  const loader = $('players-loader');
   const table = $('players-table');
-  loader.classList.add('active');
+  showModuleLoader('players-loader', 'table', {rows: 8, cols: 6});
   table.classList.add('hidden');
   initColumnSelector();
 
@@ -4662,7 +4675,7 @@ function loadPlayers() {
       $('players-body').innerHTML = `<tr><td colspan="13" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
       table.classList.remove('hidden');
     })
-    .finally(() => loader.classList.remove('active'));
+    .finally(() => $('players-loader').classList.remove('active'));
 }
 
 function sortPlayers(th) {
@@ -4676,8 +4689,7 @@ function sortPlayers(th) {
 
 // ==================== FIXTURES TAB ====================
 function loadFixtures() {
-  const loader = $('fixtures-loader');
-  loader.classList.add('active');
+  showModuleLoader('fixtures-loader', 'table', {rows: 8, cols: 5});
   $('fixtures-container').innerHTML = '';
 
   fetch('/api/fixtures').then(r => r.json()).then(data => {
@@ -4699,7 +4711,7 @@ function loadFixtures() {
     renderFixtures();
   }).catch(err => {
     $('fixtures-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
-  }).finally(() => loader.classList.remove('active'));
+  }).finally(() => $('fixtures-loader').classList.remove('active'));
 }
 
 function diffBadge(diff, extra) {
@@ -4944,8 +4956,7 @@ async function loadTransferPlanner() {
 
   if (tpLoaded) { $('tp-content').classList.remove('hidden'); return; }
 
-  const loader = $('tp-loader');
-  loader.classList.add('active');
+  showModuleLoader('tp-loader', 'table', {rows: 5, cols: 5});
   $('tp-content').classList.add('hidden');
 
   try {
@@ -4963,7 +4974,7 @@ async function loadTransferPlanner() {
     $('tp-content').innerHTML = `<div class="error-msg">Failed: ${err.message}</div>`;
     $('tp-content').classList.remove('hidden');
   } finally {
-    loader.classList.remove('active');
+    $('tp-loader').classList.remove('active');
   }
 }
 
@@ -5287,9 +5298,8 @@ function debouncedLoadOpta() {
 }
 
 async function loadOptaStats() {
-  const loader = $('opta-loader');
   const table = $('opta-table');
-  loader.classList.add('active');
+  showModuleLoader('opta-loader', 'table', {rows: 8, cols: 7});
   table.classList.add('hidden');
 
   const view = $('opta-view').value;
@@ -5321,7 +5331,7 @@ async function loadOptaStats() {
     $('opta-body').innerHTML = `<tr><td colspan="12" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
     table.classList.remove('hidden');
   } finally {
-    loader.classList.remove('active');
+    $('opta-loader').classList.remove('active');
   }
 }
 
@@ -5919,10 +5929,12 @@ function autoDetectFplId(input) {
     const detectedId = match[1];
     input.value = detectedId;
     input.style.borderColor = '#00E676';
-    // Show detection feedback
-    const helpEl = $('user-id-help');
+    // Show detection feedback — find help element near this input
+    const helpEl = $('user-id-help') || (input.id === 'dash-fpl-input' ? $('dash-onboard-error') : null);
     if (helpEl) helpEl.textContent = `Team ID ${detectedId} detected`;
     setTimeout(() => { input.style.borderColor = ''; if (helpEl) helpEl.textContent = ''; }, 2500);
+    // Sync to Settings input if coming from dashboard
+    if (input.id === 'dash-fpl-input') $('user-id').value = detectedId;
     // Auto-load after debounce if URL was pasted (not bare number typed)
     if (val.includes('/')) {
       clearTimeout(autoDetectTimer);
@@ -6481,8 +6493,7 @@ async function loadMatchCentre(gw) {
   matchCentreGW = gw;
   $('match-gw-label').textContent = 'GW ' + gw;
 
-  const loader = $('match-loader');
-  loader.classList.add('active');
+  showModuleLoader('match-loader', 'cards', {count: 4});
   $('match-card-grid').innerHTML = '';
 
   try {
@@ -6494,7 +6505,7 @@ async function loadMatchCentre(gw) {
   } catch (e) {
     $('match-card-grid').innerHTML = '<div class="error-msg" style="text-align:center;padding:2rem;color:#FF5252;">Error loading predictions: ' + e.message + '</div>';
   } finally {
-    loader.classList.remove('active');
+    $('match-loader').classList.remove('active');
   }
 }
 
@@ -7263,42 +7274,36 @@ function renderTracker(data) {
     <button class="mm-close" onclick="toggleMoreMenu()">&times;</button>
   </div>
 
-  <div class="mm-group-title">Team</div>
-  <div class="mm-item" onclick="switchNav('nav-team-live')"><span class="mm-icon">&#9889;</span> Live GW</div>
+  <div class="mm-group-title">My Team</div>
   <div class="mm-item" onclick="switchNav('nav-team-myteam')"><span class="mm-icon">&#9917;</span> My Team</div>
-  <div class="mm-divider"></div>
-
-  <div class="mm-group-title">Transfers</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Suggestions</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-optimizer')"><span class="mm-icon">&#128736;</span> Squad Optimizer</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-multigw')"><span class="mm-icon">&#128197;</span> Multi-GW Planner</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-chips')"><span class="mm-icon">&#127183;</span> Chip Strategy</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-gain')"><span class="mm-icon">&#128200;</span> Gain vs Hit</div>
-  <div class="mm-divider"></div>
-
-  <div class="mm-group-title">Leagues</div>
-  <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> Standings</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Transfer Suggestions</div>
+  <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> League Standings</div>
   <div class="mm-item" onclick="switchNav('nav-leagues-rival')"><span class="mm-icon">&#9876;</span> Rival Comparison</div>
   <div class="mm-divider"></div>
 
-  <div class="mm-group-title">Fixtures</div>
-  <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Schedule & CS%</div>
+  <div class="mm-group-title">Analysis</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-opta')"><span class="mm-icon">&#128202;</span> Opta Stats & BPS</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-compare')"><span class="mm-icon">&#8596;</span> Compare Players</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Fixture Schedule</div>
   <div class="mm-item" onclick="switchNav('nav-fixtures-list')"><span class="mm-icon">&#128203;</span> Fixture List</div>
   <div class="mm-item" onclick="switchNav('nav-fixtures-swing')"><span class="mm-icon">&#128260;</span> Swing & Rotation</div>
   <div class="mm-divider"></div>
 
-  <div class="mm-group-title">Player Stats</div>
-  <div class="mm-item" onclick="switchNav('nav-playerstats-opta')"><span class="mm-icon">&#128202;</span> Opta Stats & BPS</div>
-  <div class="mm-item" onclick="switchNav('nav-playerstats-compare')"><span class="mm-icon">&#8596;</span> Compare</div>
-  <div class="mm-divider"></div>
-
-  <div class="mm-group-title">News & Analysis</div>
-  <div class="mm-item" onclick="switchNav('nav-news-captain')"><span class="mm-icon">&#169;</span> Captain Picks</div>
+  <div class="mm-group-title">Planning</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-optimizer')"><span class="mm-icon">&#128736;</span> Squad Optimizer</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-multigw')"><span class="mm-icon">&#128197;</span> Multi-GW Planner</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-chips')"><span class="mm-icon">&#127183;</span> Chip Strategy</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-gain')"><span class="mm-icon">&#128200;</span> Gain vs Hit</div>
   <div class="mm-item" onclick="switchNav('nav-news-prices')"><span class="mm-icon">&#128176;</span> Price Changes</div>
   <div class="mm-item" onclick="switchNav('nav-news-differentials')"><span class="mm-icon">&#128142;</span> Differentials</div>
   <div class="mm-item" onclick="switchNav('nav-news-rotation')"><span class="mm-icon">&#128260;</span> Rotation Risk</div>
   <div class="mm-item" onclick="switchNav('nav-news-ownership')"><span class="mm-icon">&#128101;</span> Ownership & EO</div>
   <div class="mm-item" onclick="switchNav('nav-news-ranksim')"><span class="mm-icon">&#128200;</span> Rank Simulator</div>
+  <div class="mm-divider"></div>
+
+  <div class="mm-group-title">Match Analysis</div>
+  <div class="mm-item" onclick="switchNav('nav-match-centre')"><span class="mm-icon">&#9917;</span> Match Centre</div>
+  <div class="mm-item" onclick="switchNav('nav-prediction-tracker')"><span class="mm-icon">&#128202;</span> Prediction Tracker</div>
   <div class="mm-divider"></div>
 
   <div class="mm-group-title">Draft</div>
@@ -7308,11 +7313,6 @@ function renderTracker(data) {
   <div class="mm-divider"></div>
 
   <div class="mm-item" onclick="switchNav('nav-settings')"><span class="mm-icon">&#9881;</span> Settings</div>
-
-  <div class="mm-divider"></div>
-  <div class="mm-group-title">Match Analysis</div>
-  <div class="mm-item" onclick="switchNav('nav-match-centre')"><span class="mm-icon">&#9917;</span> Match Centre</div>
-  <div class="mm-item" onclick="switchNav('nav-prediction-tracker')"><span class="mm-icon">&#128202;</span> Prediction Tracker</div>
 </div>
 
 <!-- Player Drilldown Modal (Item 17) -->
