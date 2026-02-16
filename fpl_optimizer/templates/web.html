@@ -117,6 +117,10 @@
     .card-risk-columns, .scorer-columns { grid-template-columns: 1fr; }
     .tracker-stat-cards { grid-template-columns: 1fr; }
     .referee-card .ref-stats { grid-template-columns: repeat(2, 1fr); }
+    .other-market-header { font-size: 0.82rem; padding: 0.6rem 0.8rem; }
+    .other-market-big-stat .big-val { font-size: 1.4rem; }
+    .om-stat { font-size: 1rem; }
+    .timing-label { min-width: 55px; font-size: 0.72rem; }
   }
 
   /* ==================== UTILITY ==================== */
@@ -949,6 +953,25 @@
   .scorer-prob-fill { height: 100%; background: #00E676; border-radius: 3px; }
   .scorer-prob-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; width: 45px; text-align: right; }
   .scorer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* Phase 3 — Other Markets */
+  .other-market-section { background: rgba(27,45,69,0.5); border-radius: 12px; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
+  .other-market-header { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1rem; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600; color: #CCDDEE; transition: background 0.2s; }
+  .other-market-header:hover { background: rgba(255,255,255,0.03); }
+  .other-market-body { padding: 0 1rem 1rem 1rem; }
+  .other-market-section.collapsed .other-market-body { display: none; }
+  .other-market-big-stat { text-align: center; margin-bottom: 0.5rem; }
+  .other-market-big-stat .big-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700; }
+  .other-market-big-stat .big-lbl { font-size: 0.75rem; color: #8899AA; }
+  .om-stat { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; }
+  .om-lbl { font-size: 0.72rem; color: #8899AA; }
+  .timing-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+  .timing-label { font-size: 0.78rem; min-width: 65px; color: #AABBCC; }
+  .timing-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; width: 55px; text-align: right; color: #AABBCC; }
+  .confidence-badge { font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .confidence-badge.high { background: rgba(0,230,118,0.15); color: #00E676; }
+  .confidence-badge.medium { background: rgba(255,184,0,0.15); color: #FFB800; }
+  .confidence-badge.low { background: rgba(255,82,82,0.15); color: #FF5252; }
 
   /* Tracker stat cards */
   .tracker-stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
@@ -2537,11 +2560,13 @@
           <button class="match-tab" onclick="switchMatchTab('cards')">Cards</button>
           <button class="match-tab" onclick="switchMatchTab('corners')">Corners</button>
           <button class="match-tab" onclick="switchMatchTab('shots')">Shots</button>
+          <button class="match-tab" onclick="switchMatchTab('other')">Other Markets</button>
         </div>
         <div class="match-tab-content active" id="tab-result"></div>
         <div class="match-tab-content" id="tab-cards"></div>
         <div class="match-tab-content" id="tab-corners"></div>
         <div class="match-tab-content" id="tab-shots"></div>
+        <div class="match-tab-content" id="tab-other"></div>
       </div>
 
       <!-- ==================== PREDICTION TRACKER ==================== -->
@@ -6513,7 +6538,7 @@ function applyTeamFilter(matches) {
 // ==================== MATCH DETAIL ====================
 
 let currentMatchDetail = null;
-let tabsLoaded = { result: false, cards: false, corners: false, shots: false };
+let tabsLoaded = { result: false, cards: false, corners: false, shots: false, other: false };
 
 async function viewMatchDetail(fixtureId) {
   switchNav('nav-match-detail');
@@ -6527,6 +6552,7 @@ async function viewMatchDetail(fixtureId) {
   $('tab-cards').innerHTML = '';
   $('tab-corners').innerHTML = '';
   $('tab-shots').innerHTML = '';
+  $('tab-other').innerHTML = '';
   $('match-detail-tabs').style.display = 'none';
 
   // Reset tab state
@@ -6561,6 +6587,7 @@ function switchMatchTab(tabName) {
     if (tabName === 'cards') loadCardsTab();
     if (tabName === 'corners') loadCornersTab();
     if (tabName === 'shots') loadShotsTab();
+    if (tabName === 'other') loadOtherTab();
   }
 }
 
@@ -6906,6 +6933,196 @@ function renderShotsTab(data) {
   html += '</div></div>';
 
   $('tab-shots').innerHTML = html;
+}
+
+// ==================== OTHER MARKETS TAB ====================
+
+async function loadOtherTab() {
+  const m = currentMatchDetail;
+  if (!m) return;
+  $('tab-other').innerHTML = '<div class="loader active"><div class="spinner"></div><div class="loader-text">Loading other markets...</div></div>';
+
+  try {
+    const resp = await fetch('/api/match/' + matchCentreGW + '/' + m.fixture_id + '/other');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderOtherTab(data);
+    tabsLoaded.other = true;
+  } catch (e) {
+    $('tab-other').innerHTML = '<div class="no-data-msg"><div class="icon">&#128200;</div>Could not load other markets: ' + e.message + '</div>';
+  }
+}
+
+function renderOtherTab(data) {
+  const p = data.prediction;
+  const ht = data.home_team;
+  const at = data.away_team;
+  let html = '';
+
+  function confBadge(conf) {
+    return '<span class="confidence-badge ' + conf.toLowerCase() + '">' + conf + '</span>';
+  }
+  function secStart(title, confidence, icon) {
+    return '<div class="other-market-section">'
+      + '<div class="other-market-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">'
+      + '<span>' + icon + ' ' + title + '</span>' + confBadge(confidence)
+      + '</div><div class="other-market-body">';
+  }
+  function secEnd() { return '</div></div>'; }
+
+  // --- 1. Penalty in Match ---
+  var pen = p.penalty;
+  var penYes = (pen.prob_yes * 100).toFixed(1);
+  var penNo = (pen.prob_no * 100).toFixed(1);
+  html += secStart('Penalty in Match', pen.confidence, '&#9898;');
+  html += '<div class="other-market-big-stat">'
+    + '<div class="big-val" style="color:#FFC107;">' + penYes + '%</div>'
+    + '<div class="big-lbl">Probability of at least one penalty</div></div>';
+  html += '<div class="prob-bar" style="height:10px;margin:0.5rem 0;display:flex;border-radius:5px;overflow:hidden;">'
+    + '<div style="width:' + penYes + '%;background:#FFC107;"></div>'
+    + '<div style="width:' + penNo + '%;background:rgba(255,255,255,0.08);"></div></div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:0.78rem;">'
+    + '<span style="color:#FFC107;">Yes ' + penYes + '%</span>'
+    + '<span style="color:#8899AA;">No ' + penNo + '%</span></div>';
+  if (pen.referee_penalty_rate) {
+    html += '<div style="font-size:0.75rem;color:#667788;margin-top:0.5rem;">Referee penalty rate: '
+      + pen.referee_penalty_rate.toFixed(2) + ' per match</div>';
+  }
+  html += secEnd();
+
+  // --- 2. First Goal Timing ---
+  var fg = p.first_goal_timing;
+  html += secStart('First Goal Timing', fg.confidence, '&#9200;');
+  fg.intervals.forEach(function(iv) {
+    var pct = (iv.prob * 100).toFixed(1);
+    var barW = Math.min(iv.prob * 300, 100);
+    var isMax = iv.label === fg.most_likely_interval;
+    var barColor = isMax ? '#00E676' : '#4da6ff';
+    html += '<div class="timing-row">'
+      + '<span class="timing-label">' + iv.label + '</span>'
+      + '<div class="ou-bar" style="flex:1;"><div class="ou-bar-fill" style="width:' + barW + '%;background:' + barColor + ';"></div></div>'
+      + '<span class="timing-pct">' + pct + '%' + (isMax ? ' &#9733;' : '') + '</span></div>';
+  });
+  html += '<div style="font-size:0.78rem;color:#667788;margin-top:0.5rem;">No goal (0-0): '
+    + (fg.no_goal_prob * 100).toFixed(1) + '%</div>';
+  html += secEnd();
+
+  // --- 3. HT/FT ---
+  var htft = p.ht_ft;
+  html += secStart('Half-Time / Full-Time', htft.confidence, '&#128337;');
+  html += '<div style="display:flex;gap:1rem;margin-bottom:1rem;">';
+  html += '<div style="flex:1;"><div style="font-size:0.78rem;color:#8899AA;margin-bottom:0.3rem;">Half-Time</div>';
+  ['home', 'draw', 'away'].forEach(function(r) {
+    var label = r === 'home' ? ht : r === 'away' ? at : 'Draw';
+    var pct = (htft.ht_result[r] * 100).toFixed(1);
+    html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + label + '</span><span>' + pct + '%</span></div>'
+      + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%;"></div></div></div>';
+  });
+  html += '</div><div style="flex:1;"><div style="font-size:0.78rem;color:#8899AA;margin-bottom:0.3rem;">Full-Time</div>';
+  ['home', 'draw', 'away'].forEach(function(r) {
+    var label = r === 'home' ? ht : r === 'away' ? at : 'Draw';
+    var pct = (htft.ft_result[r] * 100).toFixed(1);
+    html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + label + '</span><span>' + pct + '%</span></div>'
+      + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%;"></div></div></div>';
+  });
+  html += '</div></div>';
+
+  html += '<div style="font-size:0.82rem;color:#AABBCC;margin-bottom:0.3rem;">Most Likely HT/FT Combos</div>';
+  htft.ht_ft_matrix.slice(0, 6).forEach(function(c) {
+    var htLabel = c.ht === '1' ? ht : c.ht === '2' ? at : 'Draw';
+    var ftLabel = c.ft === '1' ? ht : c.ft === '2' ? at : 'Draw';
+    var pct = (c.prob * 100).toFixed(1);
+    var barW = Math.min(c.prob * 400, 100);
+    html += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">'
+      + '<span style="font-size:0.78rem;min-width:130px;color:#CCDDEE;">' + htLabel + ' / ' + ftLabel + '</span>'
+      + '<div class="ou-bar" style="flex:1;"><div class="ou-bar-fill" style="width:' + barW + '%;"></div></div>'
+      + '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;color:#AABBCC;width:42px;text-align:right;">' + pct + '%</span></div>';
+  });
+  html += secEnd();
+
+  // --- 4. First Corner / First Card ---
+  var fc = p.first_corner_card;
+  html += secStart('First Corner / First Card', fc.confidence, '&#127937;');
+  var hcPct = (fc.first_corner.home_prob * 100).toFixed(1);
+  var acPct = (fc.first_corner.away_prob * 100).toFixed(1);
+  html += '<div style="margin-bottom:1rem;"><div style="font-size:0.82rem;color:#AABBCC;margin-bottom:0.3rem;">First Corner</div>'
+    + '<div class="corner-dom-labels"><span>' + ht + ' ' + hcPct + '%</span><span>' + acPct + '% ' + at + '</span></div>'
+    + '<div class="corner-dom-bar"><div class="corner-dom-home" style="width:' + hcPct + '%"></div>'
+    + '<div class="corner-dom-away" style="width:' + acPct + '%"></div></div></div>';
+  var hkPct = (fc.first_card.home_prob * 100).toFixed(1);
+  var akPct = (fc.first_card.away_prob * 100).toFixed(1);
+  html += '<div><div style="font-size:0.82rem;color:#AABBCC;margin-bottom:0.3rem;">First Card</div>'
+    + '<div class="corner-dom-labels"><span>' + ht + ' ' + hkPct + '%</span><span>' + akPct + '% ' + at + '</span></div>'
+    + '<div class="corner-dom-bar"><div class="corner-dom-home" style="width:' + hkPct + '%;background:#FFC107;"></div>'
+    + '<div class="corner-dom-away" style="width:' + akPct + '%;background:#FF5252;"></div></div></div>';
+  html += secEnd();
+
+  // --- 5. Cards & Corners per Half ---
+  var ph = p.per_half;
+  html += secStart('Cards & Corners per Half', ph.confidence, '&#128202;');
+  html += '<div style="margin-bottom:1rem;"><div style="font-size:0.82rem;color:#FFC107;margin-bottom:0.5rem;">Cards per Half</div>'
+    + '<div style="display:flex;justify-content:space-around;text-align:center;">'
+    + '<div><div class="om-stat">' + ph.cards.first_half.toFixed(1) + '</div><div class="om-lbl">1st Half</div></div>'
+    + '<div><div class="om-stat">' + ph.cards.second_half.toFixed(1) + '</div><div class="om-lbl">2nd Half</div></div>'
+    + '<div><div class="om-stat" style="color:#FFC107;">' + ph.cards.total.toFixed(1) + '</div><div class="om-lbl">Total</div></div></div>'
+    + '<div style="margin-top:0.5rem;">'
+    + '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>1H Over 1.5</span><span>' + (ph.cards.first_half_over_1_5 * 100).toFixed(1) + '%</span></div>'
+    + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + (ph.cards.first_half_over_1_5 * 100).toFixed(1) + '%;background:#FFC107;"></div></div></div>'
+    + '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>2H Over 1.5</span><span>' + (ph.cards.second_half_over_1_5 * 100).toFixed(1) + '%</span></div>'
+    + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + (ph.cards.second_half_over_1_5 * 100).toFixed(1) + '%;background:#FFC107;"></div></div></div>'
+    + '</div></div>';
+
+  html += '<div><div style="font-size:0.82rem;color:#4da6ff;margin-bottom:0.5rem;">Corners per Half</div>'
+    + '<div style="display:flex;justify-content:space-around;text-align:center;">'
+    + '<div><div class="om-stat">' + ph.corners.first_half.toFixed(1) + '</div><div class="om-lbl">1st Half</div></div>'
+    + '<div><div class="om-stat">' + ph.corners.second_half.toFixed(1) + '</div><div class="om-lbl">2nd Half</div></div>'
+    + '<div><div class="om-stat" style="color:#4da6ff;">' + ph.corners.total.toFixed(1) + '</div><div class="om-lbl">Total</div></div></div>'
+    + '<div style="margin-top:0.5rem;">'
+    + '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>1H Over 4.5</span><span>' + (ph.corners.first_half_over_4_5 * 100).toFixed(1) + '%</span></div>'
+    + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + (ph.corners.first_half_over_4_5 * 100).toFixed(1) + '%;"></div></div></div>'
+    + '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>2H Over 4.5</span><span>' + (ph.corners.second_half_over_4_5 * 100).toFixed(1) + '%</span></div>'
+    + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + (ph.corners.second_half_over_4_5 * 100).toFixed(1) + '%;"></div></div></div>'
+    + '</div></div>';
+  html += secEnd();
+
+  // --- 6. Free Kicks ---
+  var fk = p.free_kicks;
+  html += secStart('Free Kicks', fk.confidence, '&#9917;');
+  html += '<div style="display:flex;justify-content:space-around;text-align:center;">'
+    + '<div><div class="om-stat" style="color:#4da6ff;">' + fk.expected_total.toFixed(1) + '</div><div class="om-lbl">Total FK</div></div>'
+    + '<div><div class="om-stat">' + fk.expected_home_awarded.toFixed(1) + '</div><div class="om-lbl">' + ht + ' awarded</div></div>'
+    + '<div><div class="om-stat">' + fk.expected_away_awarded.toFixed(1) + '</div><div class="om-lbl">' + at + ' awarded</div></div></div>';
+  html += secEnd();
+
+  // --- 7. Offsides ---
+  var off = p.offsides;
+  html += secStart('Offsides', off.confidence, '&#128681;');
+  html += '<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:0.8rem;">'
+    + '<div><div class="om-stat">' + off.expected_total.toFixed(1) + '</div><div class="om-lbl">Total</div></div>'
+    + '<div><div class="om-stat">' + off.expected_home.toFixed(1) + '</div><div class="om-lbl">' + ht + '</div></div>'
+    + '<div><div class="om-stat">' + off.expected_away.toFixed(1) + '</div><div class="om-lbl">' + at + '</div></div></div>';
+  [{ label: ht, ou: off.home_over_under }, { label: at, ou: off.away_over_under }].forEach(function(t) {
+    html += '<div style="font-size:0.78rem;color:#AABBCC;margin-bottom:0.3rem;">' + t.label + ':</div>';
+    Object.keys(t.ou).forEach(function(k) {
+      var lbl = k.replace(/_/g, '.').replace('over.', 'Over ');
+      var pct = (t.ou[k] * 100).toFixed(1);
+      html += '<div class="ou-bar-wrap"><div class="ou-bar-label"><span>' + lbl + '</span><span>' + pct + '%</span></div>'
+        + '<div class="ou-bar"><div class="ou-bar-fill" style="width:' + pct + '%;background:#FF7043;"></div></div></div>';
+    });
+  });
+  html += secEnd();
+
+  // --- 8. Throw-ins ---
+  var ti = p.throw_ins;
+  html += secStart('Throw-ins', ti.confidence, '&#129354;');
+  html += '<div class="other-market-big-stat">'
+    + '<div class="big-val">' + ti.expected_total.toFixed(0) + '</div>'
+    + '<div class="big-lbl">Expected throw-ins</div></div>';
+  html += '<div style="font-size:0.78rem;color:#667788;text-align:center;">Range: '
+    + ti.expected_range[0] + ' – ' + ti.expected_range[1] + '</div>';
+  html += secEnd();
+
+  $('tab-other').innerHTML = html;
 }
 
 // ==================== PREDICTION TRACKER ====================

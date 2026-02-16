@@ -21,7 +21,7 @@ from .api import (
 from .models import Player, Squad
 from .optimizer import select_squad
 from .football_data import get_fd_team_id, get_match_referee, get_referee_data, get_team_stats, fetch_season_matches
-from .predictions import generate_predictions, predict_cards, predict_corners, predict_shots, get_player_card_risks
+from .predictions import generate_predictions, predict_cards, predict_corners, predict_shots, get_player_card_risks, predict_other_markets
 from .transfers import suggest_transfers
 
 app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
@@ -2641,6 +2641,46 @@ def api_match_shots(gw, match_id):
         return jsonify({
             "has_external_data": True,
             "prediction": shot_pred,
+            "home_team": pred.home_team_short,
+            "away_team": pred.away_team_short,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/match/<int:gw>/<int:match_id>/other")
+def api_match_other(gw, match_id):
+    """Other markets — penalty, offsides, free kicks, throw-ins,
+    first goal timing, first corner/card, HT/FT, per-half stats."""
+    try:
+        predictions = _get_cached_predictions(gw)
+        pred = next((p for p in predictions if p.fixture_id == match_id), None)
+        if not pred:
+            return jsonify({"error": "Match not found"}), 404
+
+        team_stats = _get_cached_team_stats()
+        home_ts = team_stats.get(pred.home_team_id)
+        away_ts = team_stats.get(pred.away_team_id)
+        home_ts_d = home_ts.to_dict() if home_ts else None
+        away_ts_d = away_ts.to_dict() if away_ts else None
+
+        # Referee data (for penalty prediction)
+        fd_matches, ref_stats = _get_cached_referee_data()
+        ref_name = None
+        home_fd_id = _resolve_fd_team_id(pred.home_team_id)
+        away_fd_id = _resolve_fd_team_id(pred.away_team_id)
+        if home_fd_id and away_fd_id and fd_matches:
+            ref_name = get_match_referee(fd_matches, home_fd_id, away_fd_id)
+        ref_s = ref_stats.get(ref_name).to_dict() if ref_name and ref_name in ref_stats else None
+
+        other_pred = predict_other_markets(
+            home_ts_d, away_ts_d, ref_s,
+            pred.home_xg, pred.away_xg,
+        )
+
+        return jsonify({
+            "has_external_data": True,
+            "prediction": other_pred,
             "home_team": pred.home_team_short,
             "away_team": pred.away_team_short,
         })

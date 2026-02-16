@@ -211,6 +211,18 @@ _PL_AVG_YELLOWS_PER_MATCH = 3.5  # Premier League historical average
 _PL_AVG_REDS_PER_MATCH = 0.12
 _PL_AVG_PENALTIES_PER_MATCH = 0.28
 
+# Phase 3 — Other Markets constants
+_PL_AVG_OFFSIDES_PER_TEAM = 2.0
+_PL_AVG_FOULS_PER_MATCH = 22.0
+_PL_AVG_FREE_KICKS_PER_MATCH = 24.0
+_PL_AVG_THROW_INS_PER_MATCH = 44.0
+_PL_AVG_GOALS_FIRST_HALF_SHARE = 0.45
+_PL_AVG_GOALS_SECOND_HALF_SHARE = 0.55
+_PL_AVG_CARDS_FIRST_HALF_SHARE = 0.38
+_PL_AVG_CARDS_SECOND_HALF_SHARE = 0.62
+_PL_AVG_CORNERS_FIRST_HALF_SHARE = 0.47
+_PL_AVG_CORNERS_SECOND_HALF_SHARE = 0.53
+
 
 def build_referee_stats(matches: list[dict]) -> dict[str, RefereeStats]:
     """Build referee stats from season matches.

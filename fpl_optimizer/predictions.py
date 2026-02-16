@@ -684,3 +684,320 @@ def get_player_card_risks(
 
     risks.sort(key=lambda x: x["risk_score"], reverse=True)
     return risks
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 — Other Markets prediction functions
+# ---------------------------------------------------------------------------
+
+_PL_AVG_YELLOWS = 3.5
+_PL_AVG_PENALTIES = 0.28
+_PL_AVG_OFFSIDES_PER_TEAM = 2.0
+_PL_AVG_FREE_KICKS = 24.0
+_PL_AVG_THROW_INS = 44.0
+
+
+def predict_penalty_in_match(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    referee_stats: dict | None,
+) -> dict:
+    """Predict probability of at least one penalty in the match.
+
+    Blend: 60% referee penalty rate + 40% team foul proxy from card rates.
+    """
+    ref_pen_rate = referee_stats.get("penalty_rate", _PL_AVG_PENALTIES) if referee_stats else _PL_AVG_PENALTIES
+
+    home_cards = home_stats.get("avg_cards_home", 1.0) if home_stats else 1.0
+    away_cards = away_stats.get("avg_cards_away", 1.0) if away_stats else 1.0
+    foul_intensity = (home_cards + away_cards) / _PL_AVG_YELLOWS
+    team_pen_rate = _PL_AVG_PENALTIES * foul_intensity
+
+    expected = 0.6 * ref_pen_rate + 0.4 * team_pen_rate
+    prob_yes = 1.0 - _poisson_pmf(0, expected)
+
+    return {
+        "expected_penalties": round(expected, 3),
+        "prob_yes": round(prob_yes, 4),
+        "prob_no": round(1.0 - prob_yes, 4),
+        "referee_penalty_rate": round(ref_pen_rate, 3),
+        "confidence": "MEDIUM",
+    }
+
+
+def predict_offsides(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Predict offside count per team.
+
+    Proxy: higher attacking intensity (xG) → more offsides.
+    """
+    home_intensity = home_xg / DEFAULT_HOME_GOALS if DEFAULT_HOME_GOALS > 0 else 1.0
+    away_intensity = away_xg / DEFAULT_AWAY_GOALS if DEFAULT_AWAY_GOALS > 0 else 1.0
+
+    exp_home = max(0.5, min(5.0, _PL_AVG_OFFSIDES_PER_TEAM * home_intensity))
+    exp_away = max(0.5, min(5.0, _PL_AVG_OFFSIDES_PER_TEAM * away_intensity))
+
+    def _ou(lam):
+        return {
+            "over_1_5": round(1.0 - sum(_poisson_pmf(k, lam) for k in range(2)), 4),
+            "over_2_5": round(1.0 - sum(_poisson_pmf(k, lam) for k in range(3)), 4),
+            "over_3_5": round(1.0 - sum(_poisson_pmf(k, lam) for k in range(4)), 4),
+        }
+
+    return {
+        "expected_home": round(exp_home, 1),
+        "expected_away": round(exp_away, 1),
+        "expected_total": round(exp_home + exp_away, 1),
+        "home_over_under": _ou(exp_home),
+        "away_over_under": _ou(exp_away),
+        "confidence": "LOW",
+    }
+
+
+def predict_free_kicks(
+    home_stats: dict | None,
+    away_stats: dict | None,
+) -> dict:
+    """Predict free kick count. Correlates with cards at ~3:1 ratio."""
+    home_cards = home_stats.get("avg_cards_home", 1.0) if home_stats else 1.0
+    away_cards = away_stats.get("avg_cards_away", 1.0) if away_stats else 1.0
+    total_cards = home_cards + away_cards
+    foul_ratio = total_cards / _PL_AVG_YELLOWS if _PL_AVG_YELLOWS > 0 else 1.0
+
+    expected_total = max(15.0, min(35.0, _PL_AVG_FREE_KICKS * foul_ratio))
+
+    # FK awarded TO home comes from away fouls (and vice versa)
+    if total_cards > 0:
+        home_awarded = expected_total * (away_cards / total_cards)
+        away_awarded = expected_total * (home_cards / total_cards)
+    else:
+        home_awarded = expected_total / 2
+        away_awarded = expected_total / 2
+
+    return {
+        "expected_total": round(expected_total, 1),
+        "expected_home_awarded": round(home_awarded, 1),
+        "expected_away_awarded": round(away_awarded, 1),
+        "confidence": "MEDIUM",
+    }
+
+
+def predict_throw_ins(
+    home_stats: dict | None,
+    away_stats: dict | None,
+) -> dict:
+    """Predict throw-in count from match intensity proxy."""
+    home_shots = home_stats.get("avg_shots_est", 13.0) if home_stats else 13.0
+    away_shots = away_stats.get("avg_shots_est", 11.0) if away_stats else 11.0
+    total_shots = home_shots + away_shots
+    intensity_ratio = total_shots / 24.0  # PL avg ~24 shots/match
+
+    expected = max(30.0, min(60.0, _PL_AVG_THROW_INS * intensity_ratio))
+    range_low = int(expected - 6)
+    range_high = int(expected + 6)
+
+    return {
+        "expected_total": round(expected, 0),
+        "expected_range": [range_low, range_high],
+        "confidence": "LOW",
+    }
+
+
+def predict_first_goal_timing(
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Predict first goal time interval using exponential distribution.
+
+    P(first goal in [a,b]) = e^(-lambda*a) - e^(-lambda*b)
+    where lambda = combined goals per minute.
+    """
+    combined_xg = max(0.1, home_xg + away_xg)
+    lam = combined_xg / 90.0  # goals per minute
+
+    intervals = []
+    bounds = [(0, 15), (15, 30), (30, 45), (45, 60), (60, 75), (75, 90)]
+    labels = ["0-15 min", "16-30 min", "31-45 min", "46-60 min", "61-75 min", "76-90 min"]
+
+    for (a, b), label in zip(bounds, labels):
+        prob = math.exp(-lam * a) - math.exp(-lam * b)
+        intervals.append({"label": label, "prob": round(max(0, prob), 4)})
+
+    no_goal = math.exp(-lam * 90)
+    most_likely = max(intervals, key=lambda x: x["prob"])["label"]
+
+    return {
+        "intervals": intervals,
+        "no_goal_prob": round(no_goal, 4),
+        "most_likely_interval": most_likely,
+        "confidence": "HIGH",
+    }
+
+
+def predict_first_corner_first_card(
+    home_stats: dict | None,
+    away_stats: dict | None,
+) -> dict:
+    """Predict which team gets first corner and first card.
+
+    Race between two Poisson processes:
+    P(home first) = home_rate / (home_rate + away_rate).
+    """
+    home_corner = home_stats.get("avg_corners_home_est", 5.0) if home_stats else 5.0
+    away_corner = away_stats.get("avg_corners_away_est", 4.5) if away_stats else 4.5
+    total_corner = home_corner + away_corner
+    p_home_corner = home_corner / total_corner if total_corner > 0 else 0.5
+
+    home_card = home_stats.get("avg_cards_home", 1.0) if home_stats else 1.0
+    away_card = away_stats.get("avg_cards_away", 1.0) if away_stats else 1.0
+    total_card = home_card + away_card
+    p_home_card = home_card / total_card if total_card > 0 else 0.5
+
+    return {
+        "first_corner": {
+            "home_prob": round(p_home_corner, 4),
+            "away_prob": round(1.0 - p_home_corner, 4),
+        },
+        "first_card": {
+            "home_prob": round(p_home_card, 4),
+            "away_prob": round(1.0 - p_home_card, 4),
+        },
+        "confidence": "HIGH",
+    }
+
+
+def predict_half_time_full_time(
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Predict HT/FT result combinations.
+
+    Splits xG into halves (45%/55%), builds Poisson model per half.
+    """
+    h1_home = home_xg * 0.45
+    h1_away = away_xg * 0.45
+    h2_home = home_xg * 0.55
+    h2_away = away_xg * 0.55
+
+    max_g = 5
+
+    def _half_probs(h_xg, a_xg):
+        """Return 1X2 probabilities for a half."""
+        home_w, draw, away_w = 0.0, 0.0, 0.0
+        for i in range(max_g):
+            for j in range(max_g):
+                p = _poisson_pmf(i, h_xg) * _poisson_pmf(j, a_xg)
+                if i > j:
+                    home_w += p
+                elif i == j:
+                    draw += p
+                else:
+                    away_w += p
+        return {"home": round(home_w, 4), "draw": round(draw, 4), "away": round(away_w, 4)}
+
+    ht_result = _half_probs(h1_home, h1_away)
+    ft_result = _half_probs(home_xg, away_xg)  # full match for FT
+
+    # Build 9-combo HT/FT matrix
+    ht_map = {"home": "1", "draw": "X", "away": "2"}
+    ft_map = {"home": "1", "draw": "X", "away": "2"}
+    combos = []
+    for ht_key in ("home", "draw", "away"):
+        for ft_key in ("home", "draw", "away"):
+            # Approximate: P(HT=x, FT=y) ≈ P(HT=x) * P(FT=y | HT=x)
+            # Simplified: treat halves as roughly independent
+            h2_result = _half_probs(h2_home, h2_away)
+            # P(FT=y) given HT=x: need the second half to produce the right overall
+            # Simplification: P(HT=x) × P(FT=y) adjusted by consistency factor
+            ht_p = ht_result[ht_key]
+            ft_p = ft_result[ft_key]
+            # If HT and FT agree, boost slightly; if they disagree, reduce
+            if ht_key == ft_key:
+                combo_p = ht_p * ft_p * 1.3
+            elif (ht_key == "draw"):
+                combo_p = ht_p * ft_p * 1.0
+            else:
+                combo_p = ht_p * ft_p * 0.7
+            combos.append({
+                "ht": ht_map[ht_key],
+                "ft": ft_map[ft_key],
+                "prob": combo_p,
+            })
+
+    # Normalize
+    total_p = sum(c["prob"] for c in combos)
+    if total_p > 0:
+        for c in combos:
+            c["prob"] = round(c["prob"] / total_p, 4)
+
+    combos.sort(key=lambda x: x["prob"], reverse=True)
+
+    return {
+        "ht_result": ht_result,
+        "ft_result": ft_result,
+        "ht_ft_matrix": combos,
+        "confidence": "HIGH",
+    }
+
+
+def predict_per_half_stats(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Predict cards and corners per half using PL split ratios."""
+    home_cards = home_stats.get("avg_cards_home", 1.0) if home_stats else 1.0
+    away_cards = away_stats.get("avg_cards_away", 1.0) if away_stats else 1.0
+    total_cards = home_cards + away_cards
+
+    home_corners = home_stats.get("avg_corners_home_est", 5.0) if home_stats else 5.0
+    away_corners = away_stats.get("avg_corners_away_est", 4.5) if away_stats else 4.5
+    total_corners = home_corners + away_corners
+
+    cards_h1 = total_cards * 0.38
+    cards_h2 = total_cards * 0.62
+    corners_h1 = total_corners * 0.47
+    corners_h2 = total_corners * 0.53
+
+    return {
+        "cards": {
+            "first_half": round(cards_h1, 1),
+            "second_half": round(cards_h2, 1),
+            "total": round(total_cards, 1),
+            "first_half_over_1_5": round(1.0 - sum(_poisson_pmf(k, cards_h1) for k in range(2)), 4),
+            "second_half_over_1_5": round(1.0 - sum(_poisson_pmf(k, cards_h2) for k in range(2)), 4),
+        },
+        "corners": {
+            "first_half": round(corners_h1, 1),
+            "second_half": round(corners_h2, 1),
+            "total": round(total_corners, 1),
+            "first_half_over_4_5": round(1.0 - sum(_poisson_pmf(k, corners_h1) for k in range(5)), 4),
+            "second_half_over_4_5": round(1.0 - sum(_poisson_pmf(k, corners_h2) for k in range(5)), 4),
+        },
+        "confidence": "MEDIUM",
+    }
+
+
+def predict_other_markets(
+    home_stats: dict | None,
+    away_stats: dict | None,
+    referee_stats: dict | None,
+    home_xg: float,
+    away_xg: float,
+) -> dict:
+    """Compute all 'Other Markets' predictions in a single call."""
+    return {
+        "penalty": predict_penalty_in_match(home_stats, away_stats, referee_stats),
+        "offsides": predict_offsides(home_stats, away_stats, home_xg, away_xg),
+        "free_kicks": predict_free_kicks(home_stats, away_stats),
+        "throw_ins": predict_throw_ins(home_stats, away_stats),
+        "first_goal_timing": predict_first_goal_timing(home_xg, away_xg),
+        "first_corner_card": predict_first_corner_first_card(home_stats, away_stats),
+        "ht_ft": predict_half_time_full_time(home_xg, away_xg),
+        "per_half": predict_per_half_stats(home_stats, away_stats, home_xg, away_xg),
+    }
