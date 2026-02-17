@@ -175,7 +175,32 @@ def recommend_chips(
     results = {}
     window = range(current_gw.id, min(current_gw.id + 10, 39))
 
+    # Helper: is a player likely available? (chance_of_playing: None=assumed fit, 0-50=doubtful/injured)
+    def availability(p: Player) -> float:
+        """Return 0.0–1.0 availability weight. None chance_of_playing = 1.0 (fit)."""
+        if p.chance_of_playing is None:
+            return 1.0
+        return p.chance_of_playing / 100.0
+
+    def is_available(p: Player) -> bool:
+        """Player is considered available if chance_of_playing > 50 or unknown."""
+        return p.chance_of_playing is None or p.chance_of_playing > 50
+
+    # Identify bench players (not in best XI by ep_next)
+    sorted_squad = sorted(squad_players, key=lambda p: p.ep_next, reverse=True)
+    gks = [p for p in sorted_squad if p.position == 1]
+    outfield = [p for p in sorted_squad if p.position != 1]
+    starting_xi_ids = {p.id for p in gks[:1] + outfield[:10]}
+    bench_players = [p for p in squad_players if p.id not in starting_xi_ids]
+
     # --- BENCH BOOST: Best on DGW with strong bench ---
+    # Penalize heavily if bench players are injured/doubtful
+    bench_injured = [p for p in bench_players if not is_available(p)]
+    bb_warning = ""
+    if bench_injured:
+        names = ", ".join(p.name for p in bench_injured)
+        bb_warning = f" WARNING: {len(bench_injured)} bench player(s) unavailable ({names})"
+
     best_bb = {"gw": None, "score": 0, "reason": "", "dgw_teams": 0}
     for gw_id in window:
         tf = gw_team_fixtures.get(gw_id, {})
@@ -183,14 +208,24 @@ def recommend_chips(
                         if player_map.get(pid) and tf.get(player_map[pid].team, 0) >= 2)
         total_fixtures = sum(1 for pid in squad_ids
                              if player_map.get(pid) and tf.get(player_map[pid].team, 0) >= 1)
-        score = dgw_count * 3 + total_fixtures
+        # Weight by availability — injured bench players reduce BB value
+        bench_avail = sum(availability(p) for p in bench_players
+                          if tf.get(p.team, 0) >= 1)
+        score = dgw_count * 3 + total_fixtures + bench_avail * 2
+        # Penalize if bench has injured players
+        score -= len(bench_injured) * 4
         if score > best_bb["score"]:
+            reason = f"{dgw_count} DGW players, {total_fixtures}/15 with fixtures"
+            if bench_avail < len(bench_players):
+                avail_count = sum(1 for p in bench_players if is_available(p))
+                reason += f", {avail_count}/{len(bench_players)} bench fit"
             best_bb = {"gw": gw_id, "score": score, "dgw_teams": dgw_count,
-                       "reason": f"{dgw_count} DGW players, {total_fixtures}/15 with fixtures"}
+                       "reason": reason + bb_warning}
 
     results["bench_boost"] = best_bb
 
     # --- TRIPLE CAPTAIN: Highest xPts player in user's squad in a DGW ---
+    # Skip injured/doubtful players
     best_tc = {"gw": None, "score": 0, "reason": "", "player": ""}
     for gw_id in window:
         tf = gw_team_fixtures.get(gw_id, {})
@@ -198,16 +233,21 @@ def recommend_chips(
             p = player_map.get(pid)
             if not p:
                 continue
+            if not is_available(p):
+                continue
             if tf.get(p.team, 0) >= 2:
                 tc_score = p.ep_next * 3 if p.ep_next else p.form * 2
+                # Weight by availability
+                tc_score *= availability(p)
                 if tc_score > best_tc["score"]:
                     best_tc = {"gw": gw_id, "score": round(tc_score, 1),
                                "player": p.name,
                                "reason": f"{p.name} ({teams_dict.get(p.team, '???')}) DGW"}
 
     if not best_tc["gw"]:
-        # Fallback: highest ep_next player in squad
-        squad_in_map = [player_map[pid] for pid in squad_ids if pid in player_map]
+        # Fallback: highest ep_next available player in squad
+        squad_in_map = [player_map[pid] for pid in squad_ids
+                        if pid in player_map and is_available(player_map[pid])]
         top = max(squad_in_map, key=lambda p: p.ep_next, default=None)
         if top:
             best_tc = {"gw": current_gw.id, "score": round(top.ep_next * 2, 1),
@@ -215,16 +255,24 @@ def recommend_chips(
                        "reason": f"{top.name} highest xPts in squad (no DGW found)"}
     results["triple_captain"] = best_tc
 
-    # --- FREE HIT: Best for BGW where squad has fewest fixtures ---
+    # --- FREE HIT: Best for BGW where squad has fewest fixtures OR many injured ---
     best_fh = {"gw": None, "score": 0, "reason": "", "missing": 0}
+    squad_injured = [p for p in squad_players if not is_available(p)]
     for gw_id in window:
         tf = gw_team_fixtures.get(gw_id, {})
         missing = sum(1 for pid in squad_ids
                       if player_map.get(pid) and tf.get(player_map[pid].team, 0) == 0)
-        if missing >= 3 and missing > best_fh["missing"]:
-            best_fh = {"gw": gw_id, "score": missing * 2,
-                       "missing": missing,
-                       "reason": f"{missing} squad players without fixture"}
+        # Count injured players as effectively missing too
+        injured_with_fixture = sum(1 for p in squad_injured
+                                   if tf.get(p.team, 0) >= 1)
+        effective_missing = missing + injured_with_fixture
+        if effective_missing >= 3 and effective_missing > best_fh["missing"]:
+            reason = f"{missing} without fixture"
+            if injured_with_fixture:
+                reason += f", {injured_with_fixture} injured"
+            best_fh = {"gw": gw_id, "score": effective_missing * 2,
+                       "missing": effective_missing,
+                       "reason": reason}
     if not best_fh["gw"]:
         best_fh["reason"] = "No significant blank GWs detected"
     results["free_hit"] = best_fh
