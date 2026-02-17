@@ -1567,6 +1567,7 @@ def api_optimize():
     lookahead = int(data.get("lookahead", 5))
     user_id = data.get("user_id", "").strip() if data.get("user_id") else ""
     risk_mode = data.get("risk_mode", "balanced")
+    bank_adjust = float(data.get("bank_adjust", 0))
     if risk_mode not in ("safe", "balanced", "aggressive"):
         risk_mode = "balanced"
 
@@ -1585,6 +1586,8 @@ def api_optimize():
                     squad_players, bank = _demo_user_team()
                 else:
                     squad_players, bank = load_user_team(uid, players, gameweeks)
+                # Apply bank adjustment (user correction for selling price differences)
+                bank += bank_adjust
                 # Build a Squad from the user's current team
                 user_squad = Squad(players=squad_players)
                 user_squad.budget_remaining = bank
