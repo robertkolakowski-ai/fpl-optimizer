@@ -1783,6 +1783,31 @@
             </div>
           </div>
 
+          <div class="tab-content" id="tab-my-team">
+            <div class="stat-row" id="opt-user-summary"></div>
+            <div class="section">
+              <div class="section-title blue">My Starting XI</div>
+              <div class="table-wrap">
+                <table class="table-freeze"><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">Score</th></tr></thead>
+                <tbody id="opt-user-starting-body"></tbody></table>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title blue">My Bench</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Pos</th><th>Player</th><th>Team</th><th class="right">Cost</th><th class="right">Score</th></tr></thead>
+                <tbody id="opt-user-bench-body"></tbody></table>
+              </div>
+            </div>
+            <div class="section hidden" id="opt-user-transfers-section">
+              <div class="section-title blue">Suggested Transfers</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>#</th><th>Out</th><th>In</th><th class="right">Gain</th><th class="right" title="Expected points gain next GW">EP Gain</th><th class="right">Cost</th></tr></thead>
+                <tbody id="opt-user-transfers-body"></tbody></table>
+              </div>
+            </div>
+          </div>
+
           <div class="tab-content" id="tab-top-players">
             <div id="top-players-container"></div>
           </div>
@@ -4915,7 +4940,11 @@ async function runOptimizer() {
         $('tab-bar').insertBefore(tab, document.querySelector('#tab-bar .tab[data-tab="top-players"]'));
       }
 
-      // Also populate the dedicated My Team panel
+      // Populate the optimizer's My Team tab
+      renderSummary($('opt-user-summary'), data.user_team.squad);
+      renderSquad($('opt-user-starting-body'), $('opt-user-bench-body'), data.user_team.squad);
+      renderTransfers($('opt-user-transfers-section'), $('opt-user-transfers-body'), data.user_team.transfers);
+      // Also populate the dedicated My Team nav panel
       renderSummary($('user-summary'), data.user_team.squad);
       renderSquad($('user-starting-body'), $('user-bench-body'), data.user_team.squad);
       renderTransfers($('user-transfers-section'), $('user-transfers-body'), data.user_team.transfers);
