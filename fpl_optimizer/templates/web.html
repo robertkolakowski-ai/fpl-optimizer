@@ -874,6 +874,31 @@
   .demo-global-strip a { color: #4da6ff; text-decoration: underline; margin-left: auto; }
   .demo-global-strip .demo-badge { background: linear-gradient(135deg, #FFB800, #FF9100); color: #0D1B2A; }
 
+  /* ==================== GUIDED TOUR ==================== */
+  .tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 600; transition: opacity 0.3s; }
+  .tour-overlay.hidden { opacity: 0; pointer-events: none; }
+  .tour-spotlight { position: relative !important; z-index: 610 !important; box-shadow: 0 0 0 4px rgba(0,230,118,0.4), 0 0 20px rgba(0,230,118,0.15) !important; border-radius: 10px !important; background: rgba(27,45,69,0.95) !important; }
+  .tour-tooltip { position: fixed; z-index: 620; max-width: 380px; width: calc(100vw - 2rem); background: rgba(27,45,69,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(0,230,118,0.3); border-radius: 14px; padding: 1.3rem 1.4rem; box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05); animation: panelFadeIn 0.3s ease; }
+  .tour-tooltip.hidden { display: none; }
+  .tour-tooltip-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 700; color: #00E676; margin-bottom: 0.5rem; }
+  .tour-tooltip-text { font-size: 0.85rem; color: #CCDDEE; line-height: 1.55; margin-bottom: 1rem; }
+  .tour-tooltip-footer { display: flex; justify-content: space-between; align-items: center; }
+  .tour-tooltip-progress { font-size: 0.72rem; color: #667788; font-family: 'JetBrains Mono', monospace; }
+  .tour-tooltip-actions { display: flex; gap: 0.5rem; }
+  .tour-tooltip-actions .btn { font-size: 0.82rem; padding: 0.4rem 1rem; min-height: auto; }
+  .tour-tooltip-actions .btn-outline { font-size: 0.78rem; padding: 0.35rem 0.8rem; min-height: auto; }
+  .tour-tooltip-arrow { position: absolute; width: 12px; height: 12px; background: rgba(27,45,69,0.97); border: 1px solid rgba(0,230,118,0.3); transform: rotate(45deg); }
+  .tour-tooltip-arrow.arrow-top { top: -7px; left: 2rem; border-bottom: none; border-right: none; }
+  .tour-tooltip-arrow.arrow-bottom { bottom: -7px; left: 2rem; border-top: none; border-left: none; }
+  .tour-tooltip-arrow.arrow-left { left: -7px; top: 1.5rem; border-top: none; border-right: none; }
+  .tour-tooltip-arrow.arrow-right { right: -7px; top: 1.5rem; border-bottom: none; border-left: none; }
+  .tour-start-link { color: #4da6ff; font-size: 0.8rem; text-decoration: underline; margin-left: 0.6rem; }
+  .tour-start-link:hover { color: #00E676; }
+  @media (max-width: 768px) {
+    .tour-tooltip { max-width: calc(100vw - 1.5rem); left: 0.75rem !important; right: 0.75rem; transform: none !important; }
+    .tour-spotlight { box-shadow: 0 0 0 3px rgba(0,230,118,0.4) !important; }
+  }
+
   /* ==================== MATCH ANALYSIS MODULE ==================== */
   .sidebar-section-label { padding: 0.6rem 1.2rem 0.3rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #556677; user-select: none; }
 
@@ -1344,12 +1369,31 @@
       </div>
 
       <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="tourStart()">
+        <span class="si-icon">?</span>
+        <span class="si-label">Guide</span>
+      </div>
       <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
         <span class="si-icon">&#9881;</span>
         <span class="si-label">Settings</span>
       </div>
     </div>
   </nav>
+
+  <!-- ==================== GUIDED TOUR ==================== -->
+  <div class="tour-overlay hidden" id="tour-overlay" onclick="tourNext()"></div>
+  <div class="tour-tooltip hidden" id="tour-tooltip">
+    <div class="tour-tooltip-arrow hidden" id="tour-arrow"></div>
+    <div class="tour-tooltip-title" id="tour-title"></div>
+    <div class="tour-tooltip-text" id="tour-text"></div>
+    <div class="tour-tooltip-footer">
+      <span class="tour-tooltip-progress" id="tour-progress"></span>
+      <div class="tour-tooltip-actions">
+        <button class="btn-outline" onclick="event.stopPropagation();tourEnd()" id="tour-skip-btn">Skip</button>
+        <button class="btn" onclick="event.stopPropagation();tourNext()" id="tour-next-btn">Next</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== MAIN CONTENT ==================== -->
   <div class="main-content">
@@ -1397,7 +1441,7 @@
         <!-- Welcome -->
         <div class="dash-welcome">
           <h2 id="dash-title">Dashboard</h2>
-          <p id="dash-subtitle">Enter your FPL ID below to see your live overview.</p>
+          <p id="dash-subtitle">Enter your FPL ID below to see your live overview. <a href="#" onclick="tourStart();return false" class="tour-start-link">Take a tour</a></p>
         </div>
 
         <!-- Top stats -->
@@ -7268,6 +7312,214 @@ function renderTracker(data) {
 
   $('tracker-content').innerHTML = html;
 }
+
+// ==================== GUIDED TOUR ====================
+const TOUR_STEPS = [
+  {
+    target: null, position: 'center',
+    title: 'Welcome to FPL Optimizer',
+    text: 'This tool helps you make smarter FPL decisions using data, xG models, and fixture analysis. Let us show you around \u2014 it takes about 30 seconds.'
+  },
+  {
+    target: '#dash-entry-cards', position: 'bottom',
+    title: 'Your Dashboard',
+    text: 'This is your home base. Once you connect your FPL team, you\'ll see live points, captain performance, overall rank, and a mini pitch view \u2014 all in one place.',
+    onEnter: () => switchNav('nav-dashboard')
+  },
+  {
+    target: '.onboarding-card', position: 'top',
+    title: 'Connect Your Team',
+    text: 'Enter your FPL ID or paste your profile URL here. Find it at fantasy.premierleague.com under Points or My Team \u2014 the number in the URL is your ID. Or try demo data first!'
+  },
+  {
+    target: '.sidebar-item[data-nav="nav-team-live"]', position: 'right',
+    title: 'Live Gameweek',
+    text: 'Track your team\'s live points as matches are played. See who\'s on the pitch, bonus projections, and auto-sub activity in real time.'
+  },
+  {
+    target: '.sidebar-item[data-nav="nav-news-captain"]', position: 'right',
+    title: 'Captain Picks',
+    text: 'Data-driven captain recommendations ranked by composite score \u2014 combining xG, form, fixture difficulty, and expected points. Updated every gameweek.'
+  },
+  {
+    target: '.sidebar-item[data-nav="nav-transfers-planner"]', position: 'right',
+    title: 'Transfer Planner',
+    text: 'View your full squad with composite scores and get AI-powered transfer suggestions ranked by expected points gain versus hit cost.'
+  },
+  {
+    target: '#sub-analysis', position: 'right',
+    title: 'Player & Fixture Analysis',
+    text: 'Dive deep: search all 700+ players with advanced filters, compare players side by side, explore the FDR heatmap, and analyse fixture swings for rotation planning.',
+    onEnter: () => { const el = document.querySelector('[onclick*="sub-analysis"]'); if (el) toggleSidebarSub('sub-analysis', el); }
+  },
+  {
+    target: '#sub-planning', position: 'right',
+    title: 'Strategy & Planning',
+    text: 'Power tools: Squad Optimizer uses linear programming to build the mathematically best 15-man squad. Multi-GW Planner maps transfers across weeks. Chip Strategy tells you when to play each chip.',
+    onEnter: () => { const el = document.querySelector('[onclick*="sub-planning"]'); if (el) toggleSidebarSub('sub-planning', el); }
+  },
+  {
+    target: '#sub-match-analysis', position: 'right',
+    title: 'Match Centre',
+    text: 'Poisson-based match predictions with scoreline probabilities, expected cards, corners, shots, penalties, HT/FT, and more. Every match, every gameweek.',
+    onEnter: () => { const el = document.querySelector('[onclick*="sub-match-analysis"]'); if (el) toggleSidebarSub('sub-match-analysis', el); }
+  },
+  {
+    target: null, position: 'center',
+    title: 'You\'re all set!',
+    text: 'Start by connecting your FPL team on the dashboard, or explore with demo data. You can replay this tour anytime from the "Guide" button in the sidebar.'
+  },
+];
+
+let tourCurrentStep = 0;
+let tourActive = false;
+
+function tourStart() {
+  tourCurrentStep = 0;
+  tourActive = true;
+  // Ensure sidebar is visible on desktop, and we're on dashboard
+  switchNav('nav-dashboard');
+  if (window.innerWidth > 768) $('sidebar').classList.add('open');
+  $('tour-overlay').classList.remove('hidden');
+  $('tour-tooltip').classList.remove('hidden');
+  tourShowStep(0);
+}
+
+function tourNext() {
+  if (!tourActive) return;
+  tourCleanup();
+  tourCurrentStep++;
+  if (tourCurrentStep >= TOUR_STEPS.length) { tourEnd(); return; }
+  tourShowStep(tourCurrentStep);
+}
+
+function tourShowStep(idx) {
+  const step = TOUR_STEPS[idx];
+  const tooltip = $('tour-tooltip');
+  const arrow = $('tour-arrow');
+
+  // Run onEnter callback
+  if (step.onEnter) step.onEnter();
+
+  // Update content
+  $('tour-title').textContent = step.title;
+  $('tour-text').textContent = step.text;
+  $('tour-progress').textContent = (idx + 1) + ' of ' + TOUR_STEPS.length;
+
+  // Update buttons
+  const isLast = idx === TOUR_STEPS.length - 1;
+  $('tour-next-btn').textContent = isLast ? 'Get Started' : 'Next';
+  $('tour-skip-btn').style.display = isLast ? 'none' : '';
+
+  // Reset tooltip position
+  tooltip.style.left = '';
+  tooltip.style.top = '';
+  tooltip.style.right = '';
+  tooltip.style.bottom = '';
+  tooltip.style.transform = '';
+  arrow.className = 'tour-tooltip-arrow hidden';
+
+  // Spotlight target
+  if (step.target) {
+    const el = document.querySelector(step.target);
+    if (el) {
+      el.classList.add('tour-spotlight');
+      // Small delay to let sidebar expand before measuring position
+      setTimeout(() => positionTooltip(el, step.position || 'bottom'), 80);
+      return;
+    }
+  }
+  // Center for welcome/finish or missing target
+  centerTooltip();
+}
+
+function positionTooltip(targetEl, position) {
+  const tooltip = $('tour-tooltip');
+  const arrow = $('tour-arrow');
+  const rect = targetEl.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Ensure target is in view
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Recalculate after possible scroll
+  setTimeout(() => {
+    const r = targetEl.getBoundingClientRect();
+    let top, left;
+
+    if (position === 'right') {
+      top = Math.max(10, Math.min(r.top, vh - 280));
+      left = Math.min(r.right + 16, vw - 400);
+      if (left < r.right + 16) { // Not enough space on right, go below
+        top = r.bottom + 12;
+        left = Math.max(10, r.left);
+        arrow.className = 'tour-tooltip-arrow arrow-top';
+      } else {
+        arrow.className = 'tour-tooltip-arrow arrow-left';
+      }
+    } else if (position === 'bottom') {
+      top = r.bottom + 12;
+      left = Math.max(10, Math.min(r.left, vw - 400));
+      arrow.className = 'tour-tooltip-arrow arrow-top';
+    } else if (position === 'top') {
+      top = r.top - 12;
+      left = Math.max(10, Math.min(r.left, vw - 400));
+      arrow.className = 'tour-tooltip-arrow arrow-bottom';
+      // Measure tooltip height to place above
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = '0px';
+      tooltip.style.visibility = 'hidden';
+      tooltip.style.display = 'block';
+      const tH = tooltip.offsetHeight;
+      tooltip.style.visibility = '';
+      top = r.top - tH - 12;
+      if (top < 10) { top = r.bottom + 12; arrow.className = 'tour-tooltip-arrow arrow-top'; }
+    } else {
+      centerTooltip();
+      return;
+    }
+
+    // Clamp to viewport
+    top = Math.max(10, Math.min(top, vh - 200));
+    left = Math.max(10, Math.min(left, vw - 400));
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }, 120);
+}
+
+function centerTooltip() {
+  const tooltip = $('tour-tooltip');
+  tooltip.style.left = '50%';
+  tooltip.style.top = '50%';
+  tooltip.style.transform = 'translate(-50%, -50%)';
+  $('tour-arrow').className = 'tour-tooltip-arrow hidden';
+}
+
+function tourCleanup() {
+  document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+}
+
+function tourEnd() {
+  tourCleanup();
+  tourActive = false;
+  $('tour-overlay').classList.add('hidden');
+  $('tour-tooltip').classList.add('hidden');
+  localStorage.setItem('fpl_tour_done', '1');
+}
+
+// Auto-start tour on first visit (after a short delay)
+window.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('fpl_tour_done') && !localStorage.getItem('fpl_user_id')) {
+    setTimeout(tourStart, 1500);
+  }
+});
+
+// Escape key to close tour
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && tourActive) tourEnd();
+});
 
 </script>
 
