@@ -972,7 +972,7 @@
 
   /* Bet Builder */
   .bet-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; align-items: start; }
-  .bet-matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; }
+  .bet-matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 0.8rem; }
   .bet-match-card { background: rgba(27,45,69,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; }
   .bet-match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; font-size: 0.82rem; }
   .bet-match-teams { font-weight: 600; color: #F0F0F0; }
@@ -1003,7 +1003,7 @@
   .bet-confidence-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
   .bet-suggested-section { margin-bottom: 1.5rem; }
   .bet-suggested-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; color: #FFB800; margin-bottom: 0.6rem; }
-  .bet-acca-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
+  .bet-acca-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
   .bet-acca-card { background: linear-gradient(135deg, rgba(27,45,69,0.8), rgba(27,45,69,0.4)); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.8rem; cursor: pointer; transition: all 0.2s; }
   .bet-acca-card:hover { border-color: rgba(255,184,0,0.4); transform: translateY(-2px); }
   .bet-acca-card .acca-name { font-weight: 600; color: #FFB800; font-size: 0.85rem; margin-bottom: 0.3rem; }
@@ -1013,7 +1013,17 @@
   @media (max-width: 768px) {
     .bet-builder-layout { grid-template-columns: 1fr; }
     .bet-slip { position: static; }
+    .bet-matches { grid-template-columns: 1fr; }
     .bet-acca-cards { grid-template-columns: 1fr 1fr; }
+    .bet-acca-card { padding: 0.6rem; }
+    .bet-acca-card .acca-legs { font-size: 0.65rem; }
+    .bet-suggested-section { margin-bottom: 1rem; }
+  }
+  @media (max-width: 420px) {
+    .bet-acca-cards { grid-template-columns: 1fr; }
+    .bet-match-card { padding: 0.6rem; }
+    .bet-odd-btn { padding: 0.35rem 0.2rem; font-size: 0.72rem; }
+    .bet-odd-btn .odd-label { font-size: 0.6rem; }
   }
 
   .match-detail-header { text-align: center; margin-bottom: 1.5rem; }
