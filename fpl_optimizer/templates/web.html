@@ -6080,6 +6080,9 @@ async function loadChipStrategy() {
       if (!chipUsedGws[c.name]) chipUsedGws[c.name] = [];
       chipUsedGws[c.name].push('GW' + c.event);
     });
+    const confColors = { high: '#51cf66', medium: '#FFB800', low: '#8899AA' };
+    const confLabels = { high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence' };
+
     $('chips-cards').innerHTML = chips.map(c => {
       const d = data[c.key] || {};
       const avail = chipAvailCount[c.apiName] || 0;
@@ -6092,16 +6095,57 @@ async function loadChipStrategy() {
       if (allUsed) statusLabel = `<span style="color:#FF5252;font-size:0.72rem;font-weight:600;margin-left:0.5rem;">USED (${used}/${total})</span>`;
       else if (used > 0) statusLabel = `<span style="color:#FFB800;font-size:0.72rem;font-weight:600;margin-left:0.5rem;">${avail}/${total} left</span>`;
       else if (total > 1) statusLabel = `<span style="color:#51cf66;font-size:0.72rem;margin-left:0.5rem;">${avail}/${total}</span>`;
-      return `<div class="waiver-card" style="border-top:3px solid ${c.color};${opacity}">
+
+      if (allUsed) {
+        return `<div class="waiver-card" style="border-top:3px solid ${c.color};${opacity}">
+          <div class="wc-header"><span class="wc-name">${c.icon} ${c.name}${statusLabel}</span><span style="color:${c.color};font-weight:700;">—</span></div>
+          <div class="wc-meta">Played ${usedGws.join(' & ')}</div>
+        </div>`;
+      }
+
+      const conf = d.confidence || 'low';
+      const confBadge = `<span style="background:${confColors[conf]};color:#0D1B2A;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:0.4rem;">${confLabels[conf]}</span>`;
+
+      const adviceHtml = (d.advice || []).map(a =>
+        `<div style="color:#CCDDEE;font-size:0.78rem;padding:3px 0 3px 12px;border-left:2px solid ${c.color}40;margin:2px 0;">${a}</div>`
+      ).join('');
+
+      const warningsHtml = (d.warnings || []).map(w =>
+        `<div style="color:#FF8A80;font-size:0.78rem;padding:3px 0 3px 12px;border-left:2px solid #FF5252;margin:2px 0;">⚠ ${w}</div>`
+      ).join('');
+
+      return `<div class="waiver-card" style="border-top:3px solid ${c.color};">
         <div class="wc-header">
           <span class="wc-name">${c.icon} ${c.name}${statusLabel}</span>
-          <span style="color:${c.color};font-weight:700;font-size:0.9rem;">${allUsed ? '—' : d.gw ? 'GW' + d.gw : 'N/A'}</span>
+          <span style="color:${c.color};font-weight:700;font-size:0.9rem;">${d.gw ? 'GW' + d.gw : 'N/A'}${confBadge}</span>
         </div>
-        <div class="wc-meta">${allUsed ? `Played ${usedGws.join(' & ')}` : d.reason || 'No recommendation available'}</div>
-        ${!allUsed && d.player ? `<div style="color:#F0F0F0;font-size:0.82rem;margin-top:0.3rem;">Player: <strong>${d.player}</strong></div>` : ''}
-        ${!allUsed && d.dgw_teams ? `<div style="color:#8899AA;font-size:0.78rem;margin-top:0.2rem;">DGW players: ${d.dgw_teams}</div>` : ''}
+        <div class="wc-meta">${d.reason || 'No recommendation available'}</div>
+        ${d.player ? `<div style="color:#F0F0F0;font-size:0.82rem;margin-top:0.3rem;">Player: <strong>${d.player}</strong></div>` : ''}
+        ${adviceHtml ? `<div style="margin-top:0.5rem;">${adviceHtml}</div>` : ''}
+        ${warningsHtml ? `<div style="margin-top:0.4rem;">${warningsHtml}</div>` : ''}
       </div>`;
     }).join('');
+
+    // General advice section
+    const ga = data.general_advice || [];
+    const sh = data.squad_health || {};
+    let generalHtml = '';
+    if (ga.length || sh.injured) {
+      generalHtml += '<div class="section" style="margin-top:1rem;"><div class="section-title blue">Strategic Overview</div>';
+      if (sh.injured || sh.rotation_risk || sh.low_form || sh.poor_fixtures) {
+        generalHtml += '<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.8rem;">';
+        if (sh.injured) generalHtml += `<div style="background:rgba(255,82,82,0.15);border:1px solid #FF5252;border-radius:6px;padding:6px 12px;font-size:0.78rem;"><strong>${sh.injured}</strong> injured</div>`;
+        if (sh.rotation_risk) generalHtml += `<div style="background:rgba(255,184,0,0.15);border:1px solid #FFB800;border-radius:6px;padding:6px 12px;font-size:0.78rem;"><strong>${sh.rotation_risk}</strong> rotation risk</div>`;
+        if (sh.low_form) generalHtml += `<div style="background:rgba(255,138,128,0.15);border:1px solid #FF8A80;border-radius:6px;padding:6px 12px;font-size:0.78rem;"><strong>${sh.low_form}</strong> poor form</div>`;
+        if (sh.poor_fixtures) generalHtml += `<div style="background:rgba(136,153,170,0.15);border:1px solid #8899AA;border-radius:6px;padding:6px 12px;font-size:0.78rem;"><strong>${sh.poor_fixtures}</strong> tough fixtures</div>`;
+        generalHtml += `<div style="background:rgba(77,166,255,0.15);border:1px solid #4da6ff;border-radius:6px;padding:6px 12px;font-size:0.78rem;"><strong>${sh.gws_remaining}</strong> GWs left</div>`;
+        generalHtml += '</div>';
+      }
+      ga.forEach(a => { generalHtml += `<div style="color:#AABBCC;font-size:0.82rem;padding:4px 0 4px 12px;border-left:2px solid #4da6ff40;margin:3px 0;">${a}</div>`; });
+      generalHtml += '</div>';
+    }
+    $('chips-cards').innerHTML += generalHtml;
+
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
   finally { loader.classList.remove('active'); }
