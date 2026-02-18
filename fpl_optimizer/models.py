@@ -91,6 +91,9 @@ class Player:
     red_cards: int = 0
     own_goals: int = 0
     starts: int = 0
+    penalties_order: int = 0
+    direct_freekicks_order: int = 0
+    corners_order: int = 0
     rotation_risk: float = 0.0
     projected_minutes: float = 0.0
     selling_price: float = 0.0  # FPL selling price (0 = not set, use cost)

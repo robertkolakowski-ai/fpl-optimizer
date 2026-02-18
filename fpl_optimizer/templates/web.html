@@ -195,6 +195,16 @@
   .user-header-bar .uhb-name { color: #00E676; font-weight: 600; font-size: 0.85rem; }
   .user-header-bar .uhb-sync { background: none; border: 1px solid rgba(255,255,255,0.1); color: #4da6ff; border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.72rem; cursor: pointer; margin-left: auto; transition: all 0.15s; }
   .user-header-bar .uhb-sync:hover { border-color: #4da6ff; background: rgba(77,166,255,0.1); }
+  .uhb-cache-age { font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+  .uhb-cache-age.fresh { color: #00E676; border-color: rgba(0,230,118,0.2); }
+  .uhb-cache-age.stale { color: #FFB800; border-color: rgba(255,184,0,0.2); }
+  .uhb-cache-age.old { color: #FF5252; border-color: rgba(255,82,82,0.2); }
+
+  /* Accessibility */
+  .skip-link { position: absolute; left: -9999px; top: 0; background: #00E676; color: #0D1B2A; padding: 0.5rem 1rem; font-weight: 600; z-index: 9999; border-radius: 0 0 4px 0; }
+  .skip-link:focus { left: 0; }
+  .sidebar-item:focus-visible, .sidebar-sub-item:focus-visible { outline: 2px solid #00E676; outline-offset: -2px; border-radius: 6px; }
+  .bottom-nav button:focus-visible { outline: 2px solid #00E676; outline-offset: -2px; }
   .chip-badge { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin: 0.1rem; }
   .chip-badge.available { background: rgba(0,230,118,0.12); color: #00E676; border: 1px solid rgba(0,230,118,0.3); }
   .chip-badge.used { background: rgba(136,136,136,0.12); color: #667788; border: 1px solid rgba(255,255,255,0.1); text-decoration: line-through; }
@@ -267,6 +277,11 @@
   .skeleton-card .skeleton { margin-bottom: 0.5rem; height: 12px; }
   .skeleton-card .skeleton:first-child { width: 60%; height: 16px; }
   .error-msg { background: #2d1b1b; border: 1px solid #FF5252; color: #FF5252; border-radius: 8px; padding: 0.8rem 1.2rem; text-align: center; margin: 1rem 0; }
+  .error-retry { background: rgba(255,82,82,0.08); border: 1px solid rgba(255,82,82,0.3); border-radius: 12px; padding: 2rem; text-align: center; margin: 1rem 0; }
+  .error-retry-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .error-retry-msg { color: #FF8A80; font-size: 0.85rem; margin-bottom: 1rem; }
+  .error-retry-btn { background: rgba(255,82,82,0.15); border: 1px solid #FF5252; color: #FF5252; border-radius: 8px; padding: 0.5rem 1.2rem; cursor: pointer; font-size: 0.82rem; transition: all 0.2s; }
+  .error-retry-btn:hover { background: rgba(255,82,82,0.3); }
 
   /* Filters bar */
   .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: end; }
@@ -955,6 +970,52 @@
   .prediction-disclaimer { font-size: 0.7rem; color: #556677; text-align: center; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1.5rem; }
   .prediction-disclaimer a { color: #4da6ff; }
 
+  /* Bet Builder */
+  .bet-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; align-items: start; }
+  .bet-matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; }
+  .bet-match-card { background: rgba(27,45,69,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; }
+  .bet-match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; font-size: 0.82rem; }
+  .bet-match-teams { font-weight: 600; color: #F0F0F0; }
+  .bet-match-xg { font-size: 0.72rem; color: #8899AA; }
+  .bet-market-row { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .bet-market-label { font-size: 0.68rem; color: #667788; text-transform: uppercase; margin-bottom: 0.2rem; }
+  .bet-odd-btn { flex: 1; text-align: center; padding: 0.4rem 0.3rem; border-radius: 6px; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #CCDDEE; }
+  .bet-odd-btn:hover { border-color: #FFB800; background: rgba(255,184,0,0.08); }
+  .bet-odd-btn.selected { border-color: #FFB800; background: rgba(255,184,0,0.15); color: #FFB800; font-weight: 600; }
+  .bet-odd-btn .odd-label { font-size: 0.65rem; color: #667788; display: block; }
+  .bet-odd-btn .odd-value { font-weight: 600; }
+  .bet-slip { background: rgba(27,45,69,0.8); border: 1px solid rgba(255,184,0,0.2); border-radius: 12px; position: sticky; top: 1rem; }
+  .bet-slip-header { background: linear-gradient(135deg, rgba(255,184,0,0.15), rgba(255,184,0,0.05)); padding: 0.7rem 1rem; border-radius: 12px 12px 0 0; font-weight: 600; color: #FFB800; font-size: 0.9rem; border-bottom: 1px solid rgba(255,184,0,0.15); }
+  .bet-slip-items { padding: 0.6rem; min-height: 80px; }
+  .bet-slip-empty { color: #556677; font-size: 0.82rem; text-align: center; padding: 1.5rem 0.5rem; }
+  .bet-slip-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.78rem; }
+  .bet-slip-item .bsi-match { color: #8899AA; font-size: 0.7rem; }
+  .bet-slip-item .bsi-pick { color: #F0F0F0; }
+  .bet-slip-item .bsi-odds { color: #FFB800; font-weight: 600; }
+  .bet-slip-item .bsi-remove { cursor: pointer; color: #FF5252; font-size: 0.7rem; margin-left: 0.5rem; opacity: 0.6; }
+  .bet-slip-item .bsi-remove:hover { opacity: 1; }
+  .bet-slip-footer { padding: 0.7rem 1rem; border-top: 1px solid rgba(255,184,0,0.15); }
+  .bet-slip-total { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem; }
+  .bet-slip-total .label { color: #8899AA; }
+  .bet-slip-total .value { color: #FFB800; font-weight: 700; }
+  .bet-confidence { margin-top: 0.4rem; }
+  .bet-confidence-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 0.3rem; }
+  .bet-confidence-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bet-suggested-section { margin-bottom: 1.5rem; }
+  .bet-suggested-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; color: #FFB800; margin-bottom: 0.6rem; }
+  .bet-acca-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
+  .bet-acca-card { background: linear-gradient(135deg, rgba(27,45,69,0.8), rgba(27,45,69,0.4)); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  .bet-acca-card:hover { border-color: rgba(255,184,0,0.4); transform: translateY(-2px); }
+  .bet-acca-card .acca-name { font-weight: 600; color: #FFB800; font-size: 0.85rem; margin-bottom: 0.3rem; }
+  .bet-acca-card .acca-desc { color: #8899AA; font-size: 0.72rem; margin-bottom: 0.4rem; }
+  .bet-acca-card .acca-legs { font-size: 0.72rem; color: #CCDDEE; }
+  .bet-acca-card .acca-odds { color: #00E676; font-weight: 700; font-size: 0.9rem; margin-top: 0.3rem; }
+  @media (max-width: 768px) {
+    .bet-builder-layout { grid-template-columns: 1fr; }
+    .bet-slip { position: static; }
+    .bet-acca-cards { grid-template-columns: 1fr 1fr; }
+  }
+
   .match-detail-header { text-align: center; margin-bottom: 1.5rem; }
   .match-detail-header .teams { font-size: 1.2rem; font-weight: 600; }
   .match-detail-header .datetime { color: #667788; font-size: 0.82rem; margin: 0.3rem 0; }
@@ -1219,9 +1280,87 @@
   .pm-breakdown-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
   .pm-breakdown-fill { height: 100%; border-radius: 3px; background: #00E676; transition: width 0.3s; }
   .pm-breakdown-val { width: 40px; text-align: right; font-family: 'JetBrains Mono', monospace; }
+
+  /* Player form chart tab */
+  .pm-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.06); }
+  .pm-tab { padding: 0.5rem 1rem; font-size: 0.8rem; color: #8899AA; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .pm-tab.active { color: #4da6ff; border-bottom-color: #4da6ff; }
+  .pm-form-table { width: 100%; font-size: 0.72rem; border-collapse: collapse; margin-top: 0.5rem; }
+  .pm-form-table th { color: #8899AA; text-align: left; padding: 0.25rem 0.3rem; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .pm-form-table td { padding: 0.25rem 0.3rem; font-family: 'JetBrains Mono', monospace; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+  /* Set Pieces panel */
+  .sp-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 768px) { .sp-columns { grid-template-columns: 1fr; } }
+  .sp-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1rem; }
+  .sp-card h4 { font-size: 0.85rem; margin-bottom: 0.6rem; color: #4da6ff; }
+  .sp-team-group { margin-bottom: 0.6rem; }
+  .sp-team-label { font-size: 0.7rem; color: #8899AA; font-weight: 600; margin-bottom: 0.2rem; }
+  .sp-player { display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0; font-size: 0.78rem; }
+  .sp-order { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+  .sp-order-1 { background: #00E676; color: #0D1B2A; }
+  .sp-order-2 { background: #FFB800; color: #0D1B2A; }
+  .sp-order-3 { background: rgba(255,255,255,0.15); color: #8899AA; }
+
+  /* Lineup Predictor */
+  .lp-pitch { background: linear-gradient(180deg, #1a5c2a 0%, #237a36 50%, #1a5c2a 100%); border-radius: 12px; padding: 1.5rem 1rem; margin-bottom: 1rem; position: relative; min-height: 340px; }
+  .lp-pitch-row { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .lp-pitch-player { text-align: center; width: 70px; }
+  .lp-pitch-shirt { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); margin: 0 auto 0.2rem; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; }
+  .lp-pitch-name { font-size: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lp-pitch-prob { font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; }
+  .lp-prob-high { color: #00E676; }
+  .lp-prob-mid { color: #FFB800; }
+  .lp-prob-low { color: #FF5252; }
+  .lp-squad-table { width: 100%; font-size: 0.78rem; border-collapse: collapse; }
+  .lp-squad-table th { text-align: left; padding: 0.4rem 0.5rem; color: #8899AA; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .lp-squad-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+  /* Season History */
+  .sh-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+  .sh-stat { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.6rem; text-align: center; }
+  .sh-stat .label { font-size: 0.65rem; color: #8899AA; }
+  .sh-stat .value { font-size: 1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .sh-charts { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .sh-chart-wrap { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1rem; }
+  .sh-chart-wrap h4 { font-size: 0.82rem; margin-bottom: 0.5rem; color: #4da6ff; }
+
+  /* League Differentials */
+  .ld-section { margin-bottom: 1.5rem; }
+  .ld-section h4 { font-size: 0.85rem; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+  .ld-badge { padding: 0.15rem 0.5rem; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
+  .ld-badge-diff { background: rgba(0,230,118,0.15); color: #00E676; }
+  .ld-badge-threat { background: rgba(255,82,82,0.15); color: #FF5252; }
+  .ld-badge-template { background: rgba(77,166,255,0.15); color: #4da6ff; }
+  .ld-player-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 0.3rem; font-size: 0.78rem; }
+  .ld-player-row .name { font-weight: 600; flex: 1; }
+  .ld-player-row .meta { color: #8899AA; font-size: 0.7rem; }
+
+  /* Captain Scenarios */
+  .cs-toggle { display: flex; gap: 0; margin-bottom: 1rem; }
+  .cs-toggle-btn { padding: 0.4rem 0.8rem; font-size: 0.75rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #8899AA; cursor: pointer; transition: all 0.2s; }
+  .cs-toggle-btn:first-child { border-radius: 6px 0 0 6px; }
+  .cs-toggle-btn:last-child { border-radius: 0 6px 6px 0; }
+  .cs-toggle-btn.active { background: rgba(77,166,255,0.15); color: #4da6ff; border-color: #4da6ff; }
+  .cs-scenario { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+  .cs-card { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 0.8rem; display: flex; align-items: center; gap: 1rem; }
+  .cs-card .name { font-weight: 600; font-size: 0.85rem; flex: 1; }
+  .cs-card .metric { text-align: center; min-width: 55px; }
+  .cs-card .metric .val { font-size: 0.9rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .cs-card .metric .lbl { font-size: 0.6rem; color: #8899AA; }
+  .cs-strategy { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
+  .cs-strategy-protect { background: rgba(77,166,255,0.15); color: #4da6ff; }
+  .cs-strategy-attack { background: rgba(0,230,118,0.15); color: #00E676; }
+
+  /* Export buttons */
+  .export-btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; font-size: 0.7rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #8899AA; cursor: pointer; transition: all 0.2s; }
+  .export-btn:hover { background: rgba(77,166,255,0.15); color: #4da6ff; border-color: #4da6ff; }
+  .export-bar { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; justify-content: flex-end; }
 </style>
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
 
 <!-- Mobile top bar -->
 <div class="mobile-topbar">
@@ -1250,7 +1389,7 @@
 <div class="app-shell">
 
   <!-- ==================== SIDEBAR ==================== -->
-  <nav class="sidebar" id="sidebar">
+  <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
     <div class="sidebar-brand">
       <h1>
         <div class="logo-monogram">
@@ -1306,6 +1445,8 @@
         <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Transfer Suggestions</div>
         <div class="sidebar-sub-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">League Standings</div>
         <div class="sidebar-sub-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">Rival Comparison</div>
+        <div class="sidebar-sub-item" data-nav="nav-season-history" onclick="switchNav('nav-season-history')">Season History</div>
+        <div class="sidebar-sub-item" data-nav="nav-league-diff" onclick="switchNav('nav-league-diff')">League Differentials</div>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -1323,6 +1464,8 @@
         <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Fixture Schedule</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
         <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
+        <div class="sidebar-sub-item" data-nav="nav-set-pieces" onclick="switchNav('nav-set-pieces')">Set Pieces</div>
+        <div class="sidebar-sub-item" data-nav="nav-lineup-predictor" onclick="switchNav('nav-lineup-predictor')">Lineup Predictor</div>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -1353,6 +1496,7 @@
       </div>
       <div class="sidebar-sub" id="sub-match-analysis">
         <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
+        <div class="sidebar-sub-item" data-nav="nav-bet-builder" onclick="switchNav('nav-bet-builder')">Bet Builder</div>
         <div class="sidebar-sub-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">Prediction Tracker</div>
       </div>
 
@@ -1396,12 +1540,12 @@
   </div>
 
   <!-- ==================== MAIN CONTENT ==================== -->
-  <div class="main-content">
+  <div class="main-content" role="main" id="main-content">
     <div class="fixture-ticker" id="fixture-ticker">
       <div class="ticker-track" id="ticker-track"><span style="color:#555;font-size:0.75rem;">Loading fixtures...</span></div>
     </div>
     <!-- Persistent User Header Bar -->
-    <div class="user-header-bar" id="user-header-bar">
+    <div class="user-header-bar" id="user-header-bar" role="banner" aria-label="Team overview">
       <span class="uhb-name" id="uhb-name"></span>
       <div class="uhb-item"><span class="uhb-label">Rank</span><span class="uhb-value blue" id="uhb-rank">-</span></div>
       <div class="uhb-item"><span class="uhb-label">Points</span><span class="uhb-value green" id="uhb-points">-</span></div>
@@ -1413,6 +1557,7 @@
       <button class="uhb-sync" onclick="syncUser()" id="uhb-sync-btn">&#x21bb; Sync</button>
       <span class="inline-spinner" id="uhb-sync-spinner"></span>
       <span style="color:#555;font-size:0.65rem;" id="uhb-last-sync"></span>
+      <span class="uhb-cache-age" id="uhb-cache-age" title="Backend data freshness"></span>
     </div>
     <div class="demo-global-strip hidden" id="demo-global-strip">
       <span class="demo-badge">DEMO DATA</span>
@@ -1590,7 +1735,11 @@
       <!-- ==================== TEAM: LIVE GW ==================== -->
       <div class="nav-panel" id="nav-team-live">
         <div class="section">
-          <div class="section-title blue">Live Gameweek Points</div>
+          <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+            <div class="section-title blue" style="margin:0;">Live Gameweek Points</div>
+            <span class="live-poll-indicator hidden" id="live-poll-indicator" style="font-size:0.68rem;color:#00E676;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:4px;padding:0.15rem 0.5rem;">Auto-updating</span>
+            <button class="live-poll-toggle hidden" id="live-poll-toggle" onclick="toggleLivePolling()" style="font-size:0.65rem;background:none;border:1px solid rgba(255,255,255,0.1);color:#8899AA;border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;">⏸ Pause</button>
+          </div>
           <p id="live-no-user" style="color:#8899AA;font-size:0.85rem;">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see live points.</p>
           <div id="live-content" class="hidden">
             <div class="stat-row" id="live-stats"></div>
@@ -2249,6 +2398,7 @@
           </div>
           <div class="loader" id="players-loader"><div class="spinner"></div><div class="loader-text">Loading players...</div></div>
           <div id="players-column-selector"></div>
+          <div class="export-bar"><button class="export-btn" onclick="exportTableToCSV('players-table','fpl_players.csv')">&#128229; Export CSV</button></div>
           <div class="table-wrap">
             <table id="players-table" class="hidden table-freeze">
               <thead id="players-thead"><tr>
@@ -2342,6 +2492,7 @@
         <div class="section">
           <div class="section-title">Captain Picks — Next GW</div>
           <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
+          <div class="export-bar"><button class="export-btn" onclick="exportTableToCSV('captain-table','captain_picks.csv')">&#128229; CSV</button><button class="export-btn" onclick="exportCanvasToImage('captain-ev-canvas','captain_ev.png')">&#128247; Save Chart</button></div>
           <div class="table-wrap">
             <table id="captain-table" class="hidden">
               <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">xPts</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
@@ -2655,6 +2806,98 @@
         <div id="tracker-content"></div>
       </div>
 
+      <!-- ==================== BET BUILDER ==================== -->
+      <div class="nav-panel" id="nav-bet-builder">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#FFB800;font-size:1.2rem;margin-bottom:0.2rem;">Bet Builder</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Build your dream accumulator from our prediction model</p>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="gw-selector">
+            <button onclick="changeBetGW(-1)">&larr;</button>
+            <span class="gw-label" id="bet-gw-label">GW --</span>
+            <button onclick="changeBetGW(1)">&rarr;</button>
+          </div>
+        </div>
+        <div class="loader" id="bet-loader"><div class="spinner"></div><div class="loader-text">Loading predictions...</div></div>
+        <div id="bet-suggested-accas"></div>
+        <div class="bet-builder-layout" id="bet-builder-layout">
+          <div class="bet-matches" id="bet-matches"></div>
+          <div class="bet-slip" id="bet-slip">
+            <div class="bet-slip-header">Your Bet Slip</div>
+            <div class="bet-slip-items" id="bet-slip-items"><div class="bet-slip-empty">Click odds to add selections</div></div>
+            <div class="bet-slip-footer" id="bet-slip-footer"></div>
+          </div>
+        </div>
+        <div class="prediction-disclaimer" style="margin-top:1.5rem;">
+          For entertainment purposes only &mdash; not gambling advice. All probabilities are model estimates.
+        </div>
+      </div>
+
+      <!-- ==================== SET PIECES ==================== -->
+      <div class="nav-panel" id="nav-set-pieces">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">Set Piece Takers</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Penalty, free kick & corner takers by team</p>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <select id="sp-team-filter" onchange="loadSetPieces()" style="background:#1B2D45;color:#F0F0F0;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.82rem;">
+            <option value="">All Teams</option>
+          </select>
+          <div class="export-bar" style="display:inline-flex;margin-left:0.5rem;"><button class="export-btn" onclick="exportTableToCSV('sp-table','set_pieces.csv')">&#128229; CSV</button></div>
+        </div>
+        <div id="sp-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
+        <div id="sp-content" class="sp-columns"></div>
+        <table id="sp-table" class="hidden"></table>
+      </div>
+
+      <!-- ==================== LINEUP PREDICTOR ==================== -->
+      <div class="nav-panel" id="nav-lineup-predictor">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">Lineup Predictor</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Starting probability based on starts, minutes, availability & rotation</p>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <select id="lp-team-filter" onchange="loadLineupPredictor()" style="background:#1B2D45;color:#F0F0F0;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.82rem;">
+            <option value="">Select a Team</option>
+          </select>
+        </div>
+        <div id="lp-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
+        <div id="lp-pitch" class="lp-pitch hidden"></div>
+        <div id="lp-squad" class="hidden"></div>
+      </div>
+
+      <!-- ==================== SEASON HISTORY ==================== -->
+      <div class="nav-panel" id="nav-season-history">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">Season History</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Your GW-by-GW performance trajectory</p>
+        </div>
+        <div class="export-bar"><button class="export-btn" onclick="exportCanvasToImage('sh-points-canvas','season_points.png')">&#128247; Save Points Chart</button><button class="export-btn" onclick="exportCanvasToImage('sh-rank-canvas','season_rank.png')">&#128247; Save Rank Chart</button><button class="export-btn" onclick="exportTableToCSV('sh-table','season_history.csv')">&#128229; CSV</button></div>
+        <div id="sh-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
+        <div id="sh-summary" class="sh-summary hidden"></div>
+        <div id="sh-charts" class="sh-charts hidden">
+          <div class="sh-chart-wrap"><h4>GW Points</h4><canvas id="sh-points-canvas" width="700" height="220"></canvas></div>
+          <div class="sh-chart-wrap"><h4>Overall Rank</h4><canvas id="sh-rank-canvas" width="700" height="220"></canvas></div>
+        </div>
+        <div id="sh-table-wrap" class="hidden" style="margin-top:1rem;max-height:400px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- ==================== LEAGUE DIFFERENTIALS ==================== -->
+      <div class="nav-panel" id="nav-league-diff">
+        <div style="margin-bottom:1rem;">
+          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">League Differentials</h2>
+          <p style="color:#8899AA;font-size:0.82rem;">Players that set you apart from mini-league rivals</p>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <select id="ld-league-select" onchange="loadLeagueDiff()" style="background:#1B2D45;color:#F0F0F0;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.82rem;">
+            <option value="">Select League</option>
+          </select>
+        </div>
+        <div id="ld-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
+        <div id="ld-content" class="hidden"></div>
+      </div>
+
     </div><!-- /container -->
   </div><!-- /main-content -->
 
@@ -2689,8 +2932,26 @@ function demoNotice() {
 }
 
 let teamsMap = {};
-let playersSort = { col: 'total_points', dir: 'desc' };
+let playersSort = JSON.parse(localStorage.getItem('fpl_players_sort') || 'null') || { col: 'total_points', dir: 'desc' };
 let fixturesData = null;
+
+// ==================== PREFERENCE HELPERS ====================
+function savePref(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+function loadPref(key, fallback) { try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; } catch(e) { return fallback; } }
+
+// ==================== ERROR RETRY HELPER ====================
+function showRetryError(containerId, message, retryFn) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = `<div class="error-retry">
+    <div class="error-retry-icon">&#9888;</div>
+    <div class="error-retry-msg">${message || 'Something went wrong'}</div>
+    <button class="error-retry-btn" onclick="this.textContent='Retrying...';this.disabled=true;">&#x21bb; Retry</button>
+  </div>`;
+  el.classList.remove('hidden');
+  const btn = el.querySelector('.error-retry-btn');
+  if (btn) btn.addEventListener('click', () => { retryFn(); });
+}
 let debounceTimer = null;
 let compareTimer = null;
 let compareIds = [];
@@ -2728,12 +2989,45 @@ function toggleSidebarSub(subId, parentItem) {
   // Close all other subs
   document.querySelectorAll('.sidebar-sub').forEach(s => s.classList.remove('open'));
   document.querySelectorAll('.si-arrow').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.sidebar-item[aria-expanded]').forEach(i => i.setAttribute('aria-expanded', 'false'));
 
   if (!isOpen) {
     sub.classList.add('open');
     if (arrow) arrow.classList.add('open');
+    parentItem.setAttribute('aria-expanded', 'true');
+  } else {
+    parentItem.setAttribute('aria-expanded', 'false');
   }
 }
+
+// ==================== ACCESSIBILITY ====================
+(function initA11y() {
+  // Add tabindex and roles to sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'menuitem');
+    if (item.querySelector('.si-arrow')) {
+      item.setAttribute('aria-expanded', 'false');
+      const subId = item.nextElementSibling?.id;
+      if (subId) item.setAttribute('aria-controls', subId);
+    }
+    item.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
+    });
+  });
+  document.querySelectorAll('.sidebar-sub-item').forEach(item => {
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'menuitem');
+    item.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
+    });
+  });
+  // Add aria-live to loaders
+  document.querySelectorAll('.loader').forEach(l => {
+    l.setAttribute('aria-live', 'polite');
+    l.setAttribute('aria-busy', 'false');
+  });
+})();
 
 // Card-mode: add data-label attributes to table cells for mobile card layout
 function applyCardLabels(tableEl) {
@@ -2799,12 +3093,23 @@ function initDashAccordions() {
 }
 
 function switchNav(panelId) {
+  // Persist last panel
+  savePref('fpl_last_panel', panelId);
+
+  // Stop live polling when leaving live panel
+  if (panelId !== 'nav-team-live') stopLivePolling();
+
   // Hide all panels
   document.querySelectorAll('.nav-panel').forEach(p => p.classList.remove('active'));
 
   // Show target panel
   const panel = $(panelId);
-  if (panel) panel.classList.add('active');
+  if (panel) {
+    panel.classList.add('active');
+    // Focus management for accessibility
+    const heading = panel.querySelector('h2, .section-title, .panel-title');
+    if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({preventScroll: true}); }
+  }
 
   // Update sidebar active state
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -2855,7 +3160,9 @@ function switchNav(panelId) {
     'nav-playerstats-table': 'nav-playerstats-table', 'nav-playerstats-opta': 'nav-playerstats-table',
     'nav-playerstats-compare': 'nav-playerstats-table',
     'nav-match-centre': 'nav-match-centre', 'nav-match-detail': 'nav-match-centre',
-    'nav-prediction-tracker': 'nav-match-centre',
+    'nav-bet-builder': 'nav-match-centre', 'nav-prediction-tracker': 'nav-match-centre',
+    'nav-set-pieces': 'nav-playerstats-table', 'nav-lineup-predictor': 'nav-playerstats-table',
+    'nav-season-history': 'nav-dashboard', 'nav-league-diff': 'nav-transfers-planner',
   };
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
   const bnTarget = bnMap[panelId];
@@ -2888,7 +3195,12 @@ function switchNav(panelId) {
   if (panelId === 'nav-news-ownership') loadOwnership();
   if (panelId === 'nav-news-ranksim') { /* manual button */ }
   if (panelId === 'nav-match-centre') loadMatchCentre();
+  if (panelId === 'nav-bet-builder') loadBetBuilder();
   if (panelId === 'nav-prediction-tracker') loadPredictionTracker();
+  if (panelId === 'nav-set-pieces') loadSetPieces();
+  if (panelId === 'nav-lineup-predictor') loadLineupPredictor();
+  if (panelId === 'nav-season-history') loadSeasonHistory();
+  if (panelId === 'nav-league-diff') loadLeagueDiffInit();
 
   // Keep demo banner visible when in demo mode
   if (AppState.isDemoMode) showDemoBanner();
@@ -3171,6 +3483,7 @@ renderRecentUsers();
       $('uhb-bank').textContent = cd.bank ? cd.bank + 'M' : '-';
       $('uhb-fts').textContent = cd.free_transfers || '1';
       $('user-header-bar').classList.add('active');
+      startCacheAgePolling();
       // Update optimizer budget from cached data
       if (cd.team_value && cd.bank) {
         const totalBudget = parseFloat(cd.team_value) + parseFloat(cd.bank);
@@ -3203,6 +3516,20 @@ renderRecentUsers();
       if (stickyConnect) stickyConnect.classList.add('visible');
     }
   }
+
+  // Restore persisted preferences
+  const savedView = loadPref('fpl_player_view', null);
+  if (savedView) { const sel = $('player-view-mode'); if (sel) sel.value = savedView; }
+  const savedMatchSort = loadPref('fpl_match_sort', null);
+  if (savedMatchSort) { const sel = $('match-sort'); if (sel) sel.value = savedMatchSort; }
+
+  // Restore last panel (only if user is connected — otherwise dashboard is fine)
+  if (saved) {
+    const lastPanel = loadPref('fpl_last_panel', null);
+    if (lastPanel && lastPanel !== 'nav-dashboard') {
+      setTimeout(() => switchNav(lastPanel), 200);
+    }
+  }
 })();
 
 // Sync button handler
@@ -3220,6 +3547,26 @@ async function syncUser() {
     $('uhb-sync-spinner').classList.remove('active');
     $('uhb-sync-btn').disabled = false;
   }
+}
+
+// ==================== CACHE AGE INDICATOR ====================
+let _cacheAgeTimer = null;
+async function updateCacheAge() {
+  const el = $('uhb-cache-age');
+  if (!el || !$('user-header-bar').classList.contains('active')) return;
+  try {
+    const resp = await fetch('/api/cache-status');
+    const data = await resp.json();
+    if (data.age < 0) { el.textContent = ''; return; }
+    const mins = Math.floor(data.age / 60);
+    el.textContent = mins < 1 ? 'Data: <1m' : `Data: ${mins}m`;
+    el.className = 'uhb-cache-age ' + (mins < 2 ? 'fresh' : mins < 5 ? 'stale' : 'old');
+  } catch(e) { /* silent */ }
+}
+function startCacheAgePolling() {
+  if (_cacheAgeTimer) return;
+  updateCacheAge();
+  _cacheAgeTimer = setInterval(updateCacheAge, 30000);
 }
 
 // ==================== FIXTURE TICKER ====================
@@ -3307,6 +3654,7 @@ async function loadUser() {
     $('uhb-bank').textContent = data.bank ? data.bank + 'M' : '-';
     $('uhb-fts').textContent = data.free_transfers || '1';
     $('user-header-bar').classList.add('active');
+    startCacheAgePolling();
 
     // Hide sticky connect CTA (user is now connected)
     const stickyConnect = $('sticky-connect-cta');
@@ -3641,6 +3989,60 @@ function handleCaptainClick(playerId) {
   saveLineup();
 }
 
+// ==================== LIVE GW AUTO-POLLING ====================
+let livePollingTimer = null;
+let livePollingPaused = false;
+
+function stopLivePolling() {
+  if (livePollingTimer) { clearInterval(livePollingTimer); livePollingTimer = null; }
+  const ind = $('live-poll-indicator');
+  if (ind) ind.classList.add('hidden');
+  const tog = $('live-poll-toggle');
+  if (tog) tog.classList.add('hidden');
+}
+
+async function pollLive() {
+  if (livePollingPaused || !AppState.userId) return;
+  try {
+    const resp = await fetch(`/api/live/${AppState.userId}`);
+    const data = await resp.json();
+    if (!resp.ok || data.error) return;
+
+    data.picks = loadSavedLineup(data.picks);
+    livePicksData = data.picks;
+    const benchPts = data.picks.filter(p => p.multiplier === 0).reduce((s, p) => s + p.raw_points, 0);
+    const startPts = data.picks.filter(p => p.multiplier > 0).reduce((s, p) => s + p.raw_points * p.multiplier, 0);
+
+    // Update stats silently
+    $('live-stats').innerHTML = `
+      <div class="stat-card"><div class="label">${data.gameweek_name}</div><div class="value blue">${startPts}${data.hits ? `<span style="font-size:0.7rem;color:#FF5252"> (-${data.hits})</span>` : ''}</div></div>
+      <div class="stat-card"><div class="label">On Bench</div><div class="value red">${benchPts}</div></div>
+      ${data.overall_rank ? `<div class="stat-card"><div class="label">Overall Rank</div><div class="value">${data.overall_rank.toLocaleString()}</div></div>` : ''}
+    `;
+
+    // Update individual player point badges on pitch cards
+    data.picks.forEach(p => {
+      const card = document.querySelector(`.live-player[data-player-id="${p.id}"]`);
+      if (card) {
+        const ptsEl = card.querySelector('.lp-pts');
+        if (ptsEl) ptsEl.textContent = p.is_captain ? p.raw_points * 2 : p.raw_points;
+      }
+    });
+
+    // Flash update indicator
+    const ind = $('live-poll-indicator');
+    if (ind) { ind.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+    if (!data.is_live) stopLivePolling();
+  } catch(e) { /* silent fail */ }
+}
+
+function toggleLivePolling() {
+  livePollingPaused = !livePollingPaused;
+  const btn = $('live-poll-toggle');
+  if (btn) btn.textContent = livePollingPaused ? '▶ Resume' : '⏸ Pause';
+}
+
 async function loadLive() {
   if (!AppState.userId) { $('live-no-user').classList.remove('hidden'); $('live-content').classList.add('hidden'); return; }
   $('live-no-user').classList.add('hidden');
@@ -3724,9 +4126,19 @@ async function loadLive() {
 
     $('live-content').classList.remove('hidden');
     liveLoaded = true;
+
+    // Start auto-polling if matches are in progress
+    if (data.is_live && !livePollingTimer) {
+      livePollingTimer = setInterval(pollLive, 60000);
+      const ind = $('live-poll-indicator');
+      if (ind) ind.classList.remove('hidden');
+      const tog = $('live-poll-toggle');
+      if (tog) tog.classList.remove('hidden');
+    } else if (!data.is_live) {
+      stopLivePolling();
+    }
   } catch (err) {
-    $('live-content').innerHTML = `<div class="error-msg">Failed to load: ${err.message}</div>`;
-    $('live-content').classList.remove('hidden');
+    showRetryError('live-content', err.message, loadLive);
   } finally {
     $('live-loader').classList.remove('active');
   }
@@ -4085,7 +4497,7 @@ async function loadCaptainPicks() {
     $('captain-ev-section').classList.remove('hidden');
     AppState._loaded.captain = true;
   } catch (err) {
-    $('captain-table').parentElement.innerHTML += `<div class="error-msg">${err.message}</div>`;
+    showRetryError('captain-loader', err.message, loadCaptainPicks);
   } finally {
     $('captain-loader').classList.remove('active');
   }
@@ -4259,7 +4671,7 @@ async function loadRotationRisk() {
     applyCardLabels($('rotation-table'));
     rotationLoaded = true;
   } catch (err) {
-    $('rotation-body').innerHTML = `<tr><td colspan="10" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
+    $('rotation-body').innerHTML = `<tr><td colspan="10"><div class="error-retry" style="margin:0"><div class="error-retry-icon">&#9888;</div><div class="error-retry-msg">${err.message}</div><button class="error-retry-btn" onclick="loadRotationRisk()">&#x21bb; Retry</button></div></td></tr>`;
     $('rotation-table').classList.remove('hidden');
   } finally {
     loader.classList.remove('active');
@@ -4597,6 +5009,7 @@ let lastPlayersData = [];
 
 function switchPlayerView() {
   const mode = $('player-view-mode').value;
+  savePref('fpl_player_view', mode);
   const thead = $('players-thead');
   if (mode === 'advanced') {
     thead.innerHTML = `<tr>
@@ -4634,10 +5047,14 @@ function switchPlayerView() {
   renderPlayersBody(lastPlayersData);
 }
 
-function renderPlayersBody(players) {
+const VIRTUAL_PAGE_SIZE = 50;
+let _playersRenderedCount = 0;
+let _playersScrollBound = false;
+
+function playerRowHtml(p) {
   const mode = $('player-view-mode').value;
   if (mode === 'advanced') {
-    $('players-body').innerHTML = players.map(p => `<tr>
+    return `<tr>
       <td class="score">${p.total_points}</td>
       <td class="pos">${p.position_name}</td>
       <td>${playerLink(p)}</td>
@@ -4651,25 +5068,54 @@ function renderPlayersBody(players) {
       <td class="right">${p.ict_index.toFixed(1)}</td>
       <td class="right">${p.ep_next.toFixed(1)}</td>
       <td class="right" style="color:#4da6ff">${p.selected_by_percent}%</td>
-    </tr>`).join('');
-  } else {
-    $('players-body').innerHTML = players.map(p => `<tr>
-      <td class="score">${p.total_points}</td>
-      <td class="pos">${p.position_name}</td>
-      <td>${playerLink(p)}</td>
-      <td>${p.team_name}</td>
-      <td class="right cost">${p.cost.toFixed(1)}</td>
-      <td class="right">${p.form.toFixed(1)}</td>
-      <td class="right">${p.goals}</td>
-      <td class="right">${p.assists}</td>
-      <td class="right">${p.clean_sheets}</td>
-      <td class="right">${p.bonus}</td>
-      <td class="right">${p.points_per_game.toFixed(1)}</td>
-      <td class="right">${p.minutes}</td>
-      <td class="right" style="color:#4da6ff">${p.selected_by_percent}%</td>
-    </tr>`).join('');
+    </tr>`;
   }
+  return `<tr>
+    <td class="score">${p.total_points}</td>
+    <td class="pos">${p.position_name}</td>
+    <td>${playerLink(p)}</td>
+    <td>${p.team_name}</td>
+    <td class="right cost">${p.cost.toFixed(1)}</td>
+    <td class="right">${p.form.toFixed(1)}</td>
+    <td class="right">${p.goals}</td>
+    <td class="right">${p.assists}</td>
+    <td class="right">${p.clean_sheets}</td>
+    <td class="right">${p.bonus}</td>
+    <td class="right">${p.points_per_game.toFixed(1)}</td>
+    <td class="right">${p.minutes}</td>
+    <td class="right" style="color:#4da6ff">${p.selected_by_percent}%</td>
+  </tr>`;
+}
+
+function renderPlayersBody(players) {
+  _playersRenderedCount = Math.min(players.length, VIRTUAL_PAGE_SIZE);
+  $('players-body').innerHTML = players.slice(0, _playersRenderedCount).map(playerRowHtml).join('');
   applyCardLabels($('players-table'));
+
+  // Show count indicator
+  if (players.length > _playersRenderedCount) {
+    const remaining = players.length - _playersRenderedCount;
+    $('players-body').insertAdjacentHTML('afterend', '');
+    // Bind scroll for lazy load
+    if (!_playersScrollBound) {
+      _playersScrollBound = true;
+      const scrollContainer = document.querySelector('.main-content');
+      scrollContainer.addEventListener('scroll', function playersScrollHandler() {
+        if (_playersRenderedCount >= lastPlayersData.length) return;
+        const tbody = $('players-body');
+        if (!tbody) return;
+        const rect = tbody.getBoundingClientRect();
+        // If bottom of table is within 300px of viewport bottom, load more
+        if (rect.bottom < window.innerHeight + 300) {
+          const nextBatch = lastPlayersData.slice(_playersRenderedCount, _playersRenderedCount + VIRTUAL_PAGE_SIZE);
+          if (nextBatch.length > 0) {
+            tbody.insertAdjacentHTML('beforeend', nextBatch.map(playerRowHtml).join(''));
+            _playersRenderedCount += nextBatch.length;
+          }
+        }
+      });
+    }
+  }
 }
 
 // ==================== COLUMN SELECTOR (Item 16) ====================
@@ -4746,7 +5192,7 @@ function loadPlayers() {
       AppState._loaded.players = true;
     })
     .catch(err => {
-      $('players-body').innerHTML = `<tr><td colspan="13" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
+      $('players-body').innerHTML = `<tr><td colspan="13"><div class="error-retry" style="margin:0"><div class="error-retry-icon">&#9888;</div><div class="error-retry-msg">${err.message}</div><button class="error-retry-btn" onclick="loadPlayers()">&#x21bb; Retry</button></div></td></tr>`;
       table.classList.remove('hidden');
     })
     .finally(() => $('players-loader').classList.remove('active'));
@@ -4756,6 +5202,7 @@ function sortPlayers(th) {
   const col = th.dataset.sort;
   if (playersSort.col === col) playersSort.dir = playersSort.dir === 'desc' ? 'asc' : 'desc';
   else { playersSort.col = col; playersSort.dir = col === 'name' ? 'asc' : 'desc'; }
+  savePref('fpl_players_sort', playersSort);
   document.querySelectorAll('#players-table th.sortable').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
   th.classList.add(playersSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
   loadPlayers();
@@ -4784,7 +5231,7 @@ function loadFixtures() {
     AppState._loaded.fixtures = true;
     renderFixtures();
   }).catch(err => {
-    $('fixtures-container').innerHTML = `<div class="error-msg">${err.message}</div>`;
+    showRetryError('fixtures-container', err.message, loadFixtures);
   }).finally(() => $('fixtures-loader').classList.remove('active'));
 }
 
@@ -5049,8 +5496,7 @@ async function loadTransferPlanner() {
     $('tp-content').classList.remove('hidden');
     tpLoaded = true;
   } catch (err) {
-    $('tp-content').innerHTML = `<div class="error-msg">Failed: ${err.message}</div>`;
-    $('tp-content').classList.remove('hidden');
+    showRetryError('tp-content', err.message, loadTransferPlanner);
   } finally {
     $('tp-loader').classList.remove('active');
   }
@@ -5406,7 +5852,7 @@ async function loadOptaStats() {
     table.classList.remove('hidden');
     optaLoaded = true;
   } catch (err) {
-    $('opta-body').innerHTML = `<tr><td colspan="12" style="text-align:center;color:#FF5252">${err.message}</td></tr>`;
+    $('opta-body').innerHTML = `<tr><td colspan="12"><div class="error-retry" style="margin:0"><div class="error-retry-icon">&#9888;</div><div class="error-retry-msg">${err.message}</div><button class="error-retry-btn" onclick="loadOptaStats()">&#x21bb; Retry</button></div></td></tr>`;
     table.classList.remove('hidden');
   } finally {
     $('opta-loader').classList.remove('active');
@@ -5985,10 +6431,139 @@ async function openPlayerModal(playerId) {
         <span class="in">+${p.transfers_in_event.toLocaleString()}</span>
         <span class="out">-${p.transfers_out_event.toLocaleString()}</span>
       </div>
+      <div class="pm-tabs" style="margin-top:1rem;">
+        <div class="pm-tab active" onclick="pmSwitchTab(this,'pm-tab-breakdown')">Breakdown</div>
+        <div class="pm-tab" onclick="pmSwitchTab(this,'pm-tab-form');loadPlayerFormChart(${playerId})">Form</div>
+      </div>
+      <div id="pm-tab-breakdown"></div>
+      <div id="pm-tab-form" class="hidden">
+        <canvas id="pm-form-canvas" width="420" height="180" style="width:100%;max-width:420px;"></canvas>
+        <div id="pm-form-table-wrap" style="max-height:200px;overflow-y:auto;margin-top:0.5rem;"></div>
+      </div>
     `;
   } catch(e) {
     content.innerHTML = `<div class="error-msg">${e.message}</div>`;
   }
+}
+
+function pmSwitchTab(el, tabId) {
+  el.parentElement.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['pm-tab-breakdown','pm-tab-form'].forEach(id => {
+    const el2 = $(id);
+    if (el2) el2.classList.toggle('hidden', id !== tabId);
+  });
+}
+
+async function loadPlayerFormChart(playerId) {
+  const wrap = $('pm-form-table-wrap');
+  const canvas = $('pm-form-canvas');
+  if (!wrap || !canvas) return;
+  wrap.innerHTML = '<div style="text-align:center;color:#8899AA;font-size:0.78rem;">Loading...</div>';
+  try {
+    const resp = await fetch(`/api/player/${playerId}/history`);
+    const data = await resp.json();
+    if (data.error || !data.history || data.history.length === 0) {
+      wrap.innerHTML = '<div style="color:#8899AA;font-size:0.78rem;">No history data available</div>';
+      return;
+    }
+    const history = data.history.slice(-15);
+    drawPlayerFormChart(canvas, history);
+    wrap.innerHTML = `<table class="pm-form-table"><thead><tr><th>GW</th><th>Pts</th><th>Min</th><th>G</th><th>A</th><th>xG</th><th>xA</th><th>BPS</th></tr></thead><tbody>${
+      history.map(h => `<tr><td>${h.gw}</td><td style="color:#00E676;font-weight:700;">${h.points}</td><td>${h.minutes}</td><td>${h.goals}</td><td>${h.assists}</td><td>${h.xG.toFixed(2)}</td><td>${h.xA.toFixed(2)}</td><td>${h.bps}</td></tr>`).join('')
+    }</tbody></table>`;
+  } catch(e) {
+    wrap.innerHTML = `<div style="color:#FF5252;font-size:0.78rem;">${e.message}</div>`;
+  }
+}
+
+function drawPlayerFormChart(canvas, history) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.width; const H = canvas.height;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { t: 20, r: 40, b: 25, l: 30 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+  const pts = history.map(h => h.points);
+  const xgi = history.map(h => h.xGI || (h.xG + h.xA));
+  const maxPts = Math.max(...pts, 1);
+  const maxXgi = Math.max(...xgi, 0.1);
+  const n = history.length;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch * (i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+  }
+
+  // Points line (green, filled area)
+  ctx.beginPath();
+  history.forEach((h, i) => {
+    const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+    const y = pad.t + ch - (h.points / maxPts) * ch;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#00E676'; ctx.lineWidth = 2; ctx.stroke();
+  // Fill
+  ctx.lineTo(pad.l + cw, pad.t + ch);
+  ctx.lineTo(pad.l, pad.t + ch);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,230,118,0.08)'; ctx.fill();
+
+  // xGI line (blue, dashed)
+  ctx.beginPath();
+  ctx.setLineDash([4, 3]);
+  history.forEach((h, i) => {
+    const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+    const v = h.xGI || (h.xG + h.xA);
+    const y = pad.t + ch - (v / maxXgi) * ch;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#4da6ff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dots
+  history.forEach((h, i) => {
+    const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+    const y = pad.t + ch - (h.points / maxPts) * ch;
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#00E676'; ctx.fill();
+  });
+
+  // X labels
+  ctx.fillStyle = '#8899AA'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+  history.forEach((h, i) => {
+    if (n <= 10 || i % 2 === 0) {
+      const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+      ctx.fillText('GW' + h.gw, x, pad.t + ch + 14);
+    }
+  });
+
+  // Y labels (left = pts, right = xGI)
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i / 4) * ch + 3;
+    ctx.fillText(Math.round(maxPts * i / 4), pad.l - 4, y);
+  }
+  ctx.textAlign = 'left'; ctx.fillStyle = '#4da6ff';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i / 4) * ch + 3;
+    ctx.fillText((maxXgi * i / 4).toFixed(1), pad.l + cw + 4, y);
+  }
+
+  // Legend
+  ctx.fillStyle = '#00E676'; ctx.fillRect(pad.l, 4, 12, 3);
+  ctx.fillStyle = '#8899AA'; ctx.font = '8px Inter'; ctx.textAlign = 'left';
+  ctx.fillText('Points', pad.l + 16, 8);
+  ctx.fillStyle = '#4da6ff'; ctx.fillRect(pad.l + 60, 4, 12, 3);
+  ctx.fillText('xGI', pad.l + 76, 8);
 }
 
 function closePlayerModal() {
@@ -6180,6 +6755,8 @@ async function loadOwnership() {
   if (AppState.userId) params.push(`user_id=${AppState.userId}`);
   const savedLeague = localStorage.getItem('fpl_league_id');
   if (savedLeague && AppState.userId) params.push(`league_id=${savedLeague}`);
+  const rankBand = (window._eoRankBand || 'overall');
+  if (rankBand !== 'overall') params.push(`rank_band=${rankBand}`);
   if (params.length) url += '?' + params.join('&');
 
   try {
@@ -6244,6 +6821,30 @@ async function loadOwnership() {
       }).join('');
       applyCardLabels($('eo-league-body').closest('table'));
       $('eo-league-section').style.display = '';
+    }
+
+    // Captain scenarios
+    if (data.captain_scenarios && data.captain_scenarios.length) {
+      let csEl = $('eo-captain-scenarios');
+      if (!csEl) {
+        const wrap = document.createElement('div');
+        wrap.id = 'eo-captain-scenarios';
+        wrap.style.marginTop = '1.5rem';
+        $('eo-content').appendChild(wrap);
+        csEl = wrap;
+      }
+      csEl.innerHTML = `<h3 style="font-size:0.9rem;margin-bottom:0.6rem;">Captaincy Deep Dive</h3>
+        <div class="cs-toggle" style="margin-bottom:0.8rem;">
+          <button class="cs-toggle-btn ${rankBand === 'overall' ? 'active' : ''}" onclick="window._eoRankBand='overall';loadOwnership()">Overall</button>
+          <button class="cs-toggle-btn ${rankBand === '100k' ? 'active' : ''}" onclick="window._eoRankBand='100k';loadOwnership()">Top 100k</button>
+          <button class="cs-toggle-btn ${rankBand === '10k' ? 'active' : ''}" onclick="window._eoRankBand='10k';loadOwnership()">Top 10k</button>
+        </div>
+        <div class="cs-scenario">${data.captain_scenarios.map(s => `<div class="cs-card">
+          <div class="name">${s.name}<br><span style="font-size:0.7rem;color:#8899AA;">EO: ${s.eo}%</span></div>
+          <div class="metric"><div class="val" style="color:#00E676;">+${s.haul_gain_if_captain}</div><div class="lbl">Haul gain</div></div>
+          <div class="metric"><div class="val" style="color:#FF5252;">${s.haul_loss_if_not_captain}</div><div class="lbl">Miss cost</div></div>
+          <div class="cs-strategy cs-strategy-${s.strategy.toLowerCase()}">${s.strategy_text}</div>
+        </div>`).join('')}</div>`;
     }
 
     content.style.display = '';
@@ -6625,7 +7226,7 @@ async function loadMatchCentre(gw) {
     matchCentreData = data.matches;
     renderMatchCards(data.matches);
   } catch (e) {
-    $('match-card-grid').innerHTML = '<div class="error-msg" style="text-align:center;padding:2rem;color:#FF5252;">Error loading predictions: ' + e.message + '</div>';
+    showRetryError('match-card-grid', e.message, loadMatchCentre);
   } finally {
     $('match-loader').classList.remove('active');
   }
@@ -6670,6 +7271,7 @@ function renderMatchCards(matches) {
 function sortMatchCards() {
   if (!matchCentreData) return;
   const sortBy = $('match-sort').value;
+  savePref('fpl_match_sort', sortBy);
   let sorted = [...matchCentreData];
   if (sortBy === 'confidence') {
     const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
@@ -6682,6 +7284,7 @@ function sortMatchCards() {
 
 function filterMatchCards() {
   if (!matchCentreData) return;
+  savePref('fpl_match_filter', $('match-team-filter').value);
   const sortBy = $('match-sort').value;
   let data = [...matchCentreData];
   if (sortBy === 'confidence') {
@@ -7288,6 +7891,241 @@ function renderOtherTab(data) {
   $('tab-other').innerHTML = html;
 }
 
+// ==================== BET BUILDER ====================
+let betBuilderGW = null;
+let betBuilderData = [];
+let betSlip = [];
+
+function probToDecimalOdds(prob) {
+  if (prob <= 0) return 99.0;
+  return Math.round((1 / prob) * 100) / 100;
+}
+
+function changeBetGW(delta) {
+  if (!AppState._meta || !AppState._meta.gameweeks) return;
+  const gws = AppState._meta.gameweeks;
+  const idx = gws.findIndex(g => g.id === betBuilderGW);
+  const newIdx = idx + delta;
+  if (newIdx >= 0 && newIdx < gws.length) {
+    betBuilderGW = gws[newIdx].id;
+    loadBetBuilder();
+  }
+}
+
+async function loadBetBuilder() {
+  await loadMetadata();
+  if (!betBuilderGW) {
+    const cur = AppState._meta.gameweeks.find(g => g.is_current) || AppState._meta.gameweeks.find(g => g.is_next);
+    if (cur) betBuilderGW = cur.id;
+    else return;
+  }
+  $('bet-gw-label').textContent = 'GW ' + betBuilderGW;
+  showModuleLoader('bet-loader', 'cards', {count: 4});
+  $('bet-builder-layout').style.display = 'none';
+
+  try {
+    const resp = await fetch('/api/predictions/' + betBuilderGW);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    betBuilderData = data.matches;
+    renderBetMatchCards();
+    generateSuggestedAccas();
+    $('bet-builder-layout').style.display = '';
+  } catch (e) {
+    showRetryError('bet-matches', e.message, loadBetBuilder);
+    $('bet-builder-layout').style.display = '';
+  } finally {
+    $('bet-loader').classList.remove('active');
+  }
+}
+
+function renderBetMatchCards() {
+  const grid = $('bet-matches');
+  grid.innerHTML = betBuilderData.map(m => {
+    const hw = probToDecimalOdds(m.home_win_prob);
+    const dw = probToDecimalOdds(m.draw_prob);
+    const aw = probToDecimalOdds(m.away_win_prob);
+    const o25 = probToDecimalOdds(m.over_25);
+    const u25 = probToDecimalOdds(1 - m.over_25);
+    const bttsY = probToDecimalOdds(m.btts_yes);
+    const bttsN = probToDecimalOdds(1 - m.btts_yes);
+    const mid = m.fixture_id;
+    const label = `${m.home_team_short} v ${m.away_team_short}`;
+    const isSelected = (market, pick) => betSlip.some(b => b.matchId === mid && b.market === market && b.pick === pick);
+
+    return `<div class="bet-match-card">
+      <div class="bet-match-header">
+        <span class="bet-match-teams">${m.home_team_short} vs ${m.away_team_short}</span>
+        <span class="bet-match-xg">xG: ${m.home_xg.toFixed(1)} - ${m.away_xg.toFixed(1)}</span>
+      </div>
+      <div class="bet-market-label">Result</div>
+      <div class="bet-market-row">
+        <div class="bet-odd-btn ${isSelected('1X2','H')?'selected':''}" onclick="toggleBet(${mid},'1X2','H',${hw},'${label}','${m.home_team_short} Win')">
+          <span class="odd-label">${m.home_team_short}</span><span class="odd-value">${hw.toFixed(2)}</span>
+        </div>
+        <div class="bet-odd-btn ${isSelected('1X2','D')?'selected':''}" onclick="toggleBet(${mid},'1X2','D',${dw},'${label}','Draw')">
+          <span class="odd-label">Draw</span><span class="odd-value">${dw.toFixed(2)}</span>
+        </div>
+        <div class="bet-odd-btn ${isSelected('1X2','A')?'selected':''}" onclick="toggleBet(${mid},'1X2','A',${aw},'${label}','${m.away_team_short} Win')">
+          <span class="odd-label">${m.away_team_short}</span><span class="odd-value">${aw.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="bet-market-label">Over / Under 2.5</div>
+      <div class="bet-market-row">
+        <div class="bet-odd-btn ${isSelected('O/U','O2.5')?'selected':''}" onclick="toggleBet(${mid},'O/U','O2.5',${o25},'${label}','Over 2.5')">
+          <span class="odd-label">Over</span><span class="odd-value">${o25.toFixed(2)}</span>
+        </div>
+        <div class="bet-odd-btn ${isSelected('O/U','U2.5')?'selected':''}" onclick="toggleBet(${mid},'O/U','U2.5',${u25},'${label}','Under 2.5')">
+          <span class="odd-label">Under</span><span class="odd-value">${u25.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="bet-market-label">Both Teams to Score</div>
+      <div class="bet-market-row">
+        <div class="bet-odd-btn ${isSelected('BTTS','Y')?'selected':''}" onclick="toggleBet(${mid},'BTTS','Y',${bttsY},'${label}','BTTS Yes')">
+          <span class="odd-label">Yes</span><span class="odd-value">${bttsY.toFixed(2)}</span>
+        </div>
+        <div class="bet-odd-btn ${isSelected('BTTS','N')?'selected':''}" onclick="toggleBet(${mid},'BTTS','N',${bttsN},'${label}','BTTS No')">
+          <span class="odd-label">No</span><span class="odd-value">${bttsN.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleBet(matchId, market, pick, odds, matchLabel, pickLabel) {
+  const idx = betSlip.findIndex(b => b.matchId === matchId && b.market === market && b.pick === pick);
+  if (idx >= 0) {
+    betSlip.splice(idx, 1);
+  } else {
+    // Remove other pick from same market in same match
+    betSlip = betSlip.filter(b => !(b.matchId === matchId && b.market === market));
+    betSlip.push({ matchId, market, pick, odds, matchLabel, pickLabel });
+  }
+  renderBetSlip();
+  renderBetMatchCards(); // update selected states
+}
+
+function removeBet(idx) {
+  betSlip.splice(idx, 1);
+  renderBetSlip();
+  renderBetMatchCards();
+}
+
+function renderBetSlip() {
+  const items = $('bet-slip-items');
+  const footer = $('bet-slip-footer');
+  if (betSlip.length === 0) {
+    items.innerHTML = '<div class="bet-slip-empty">Click odds to add selections</div>';
+    footer.innerHTML = '';
+    return;
+  }
+  items.innerHTML = betSlip.map((b, i) => `<div class="bet-slip-item">
+    <div><div class="bsi-match">${b.matchLabel}</div><div class="bsi-pick">${b.pickLabel}</div></div>
+    <div style="display:flex;align-items:center;"><span class="bsi-odds">${b.odds.toFixed(2)}</span><span class="bsi-remove" onclick="removeBet(${i})">&#10005;</span></div>
+  </div>`).join('');
+
+  const accaOdds = betSlip.reduce((acc, b) => acc * b.odds, 1);
+  const impliedProb = betSlip.reduce((acc, b) => acc * (1 / b.odds), 1) * 100;
+  const confColor = impliedProb > 30 ? '#00E676' : impliedProb > 10 ? '#FFB800' : '#FF5252';
+  const confLabel = impliedProb > 30 ? 'High' : impliedProb > 10 ? 'Medium' : 'Low';
+
+  footer.innerHTML = `
+    <div class="bet-slip-total"><span class="label">Selections</span><span class="value">${betSlip.length}</span></div>
+    <div class="bet-slip-total"><span class="label">Acca Odds</span><span class="value">${accaOdds.toFixed(2)}</span></div>
+    <div class="bet-confidence">
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;"><span style="color:#8899AA">Confidence</span><span style="color:${confColor}">${confLabel} (${impliedProb.toFixed(1)}%)</span></div>
+      <div class="bet-confidence-bar"><div class="bet-confidence-fill" style="width:${Math.min(impliedProb, 100)}%;background:${confColor}"></div></div>
+    </div>
+    <button class="btn" style="width:100%;margin-top:0.8rem;font-size:0.82rem;" onclick="betSlip=[];renderBetSlip();renderBetMatchCards();">Clear Slip</button>
+  `;
+}
+
+function generateSuggestedAccas() {
+  if (!betBuilderData || betBuilderData.length === 0) { $('bet-suggested-accas').innerHTML = ''; return; }
+  const accas = [];
+
+  // 1. Safe & Steady: top 3 favorites
+  const favorites = [...betBuilderData].sort((a, b) => {
+    const aMax = Math.max(a.home_win_prob, a.away_win_prob);
+    const bMax = Math.max(b.home_win_prob, b.away_win_prob);
+    return bMax - aMax;
+  }).slice(0, 3);
+  const safePicks = favorites.map(m => {
+    const isHome = m.home_win_prob > m.away_win_prob;
+    return { matchId: m.fixture_id, market: '1X2', pick: isHome ? 'H' : 'A',
+      odds: probToDecimalOdds(isHome ? m.home_win_prob : m.away_win_prob),
+      matchLabel: `${m.home_team_short} v ${m.away_team_short}`,
+      pickLabel: isHome ? `${m.home_team_short} Win` : `${m.away_team_short} Win` };
+  });
+  const safeOdds = safePicks.reduce((a, p) => a * p.odds, 1);
+  accas.push({ name: 'Safe & Steady', icon: '&#128170;',
+    desc: 'Strongest favorites to win',
+    legs: safePicks.map(p => `${p.matchLabel}: ${p.pickLabel}`),
+    odds: safeOdds, picks: safePicks });
+
+  // 2. Goals Galore: best O2.5 + BTTS combos
+  const goalsMatches = [...betBuilderData].sort((a, b) => b.over_25 - a.over_25).slice(0, 3);
+  const goalsPicks = goalsMatches.map(m => ({
+    matchId: m.fixture_id, market: 'O/U', pick: 'O2.5',
+    odds: probToDecimalOdds(m.over_25),
+    matchLabel: `${m.home_team_short} v ${m.away_team_short}`, pickLabel: 'Over 2.5' }));
+  accas.push({ name: 'Goals Galore', icon: '&#9917;',
+    desc: 'Matches most likely to see 3+ goals',
+    legs: goalsPicks.map(p => `${p.matchLabel}: ${p.pickLabel}`),
+    odds: goalsPicks.reduce((a, p) => a * p.odds, 1), picks: goalsPicks });
+
+  // 3. Underdog Special: best away wins
+  const underdogs = [...betBuilderData].filter(m => m.away_win_prob > 0.15 && m.away_win_prob < 0.45)
+    .sort((a, b) => b.away_win_prob - a.away_win_prob).slice(0, 3);
+  if (underdogs.length >= 2) {
+    const dogPicks = underdogs.map(m => ({
+      matchId: m.fixture_id, market: '1X2', pick: 'A',
+      odds: probToDecimalOdds(m.away_win_prob),
+      matchLabel: `${m.home_team_short} v ${m.away_team_short}`, pickLabel: `${m.away_team_short} Win` }));
+    accas.push({ name: 'Underdog Special', icon: '&#128293;',
+      desc: 'Away wins with value odds',
+      legs: dogPicks.map(p => `${p.matchLabel}: ${p.pickLabel}`),
+      odds: dogPicks.reduce((a, p) => a * p.odds, 1), picks: dogPicks });
+  }
+
+  // 4. Clean Sheet Club: lowest xG conceded
+  const csMatches = [...betBuilderData].filter(m => m.btts_yes < 0.45)
+    .sort((a, b) => a.btts_yes - b.btts_yes).slice(0, 3);
+  if (csMatches.length >= 2) {
+    const csPicks = csMatches.map(m => ({
+      matchId: m.fixture_id, market: 'BTTS', pick: 'N',
+      odds: probToDecimalOdds(1 - m.btts_yes),
+      matchLabel: `${m.home_team_short} v ${m.away_team_short}`, pickLabel: 'BTTS No' }));
+    accas.push({ name: 'Clean Sheet Club', icon: '&#128737;',
+      desc: 'Matches least likely for both teams to score',
+      legs: csPicks.map(p => `${p.matchLabel}: ${p.pickLabel}`),
+      odds: csPicks.reduce((a, p) => a * p.odds, 1), picks: csPicks });
+  }
+
+  $('bet-suggested-accas').innerHTML = `
+    <div class="bet-suggested-section">
+      <div class="bet-suggested-title">Suggested Accumulators</div>
+      <div class="bet-acca-cards">${accas.map(a => `
+        <div class="bet-acca-card" onclick='loadAcca(${JSON.stringify(a.picks).replace(/'/g, "&#39;")})'>
+          <div class="acca-name">${a.icon} ${a.name}</div>
+          <div class="acca-desc">${a.desc}</div>
+          <div class="acca-legs">${a.legs.join('<br>')}</div>
+          <div class="acca-odds">Combined: ${a.odds.toFixed(2)}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function loadAcca(picks) {
+  betSlip = picks;
+  renderBetSlip();
+  renderBetMatchCards();
+  // Scroll to slip on mobile
+  if (window.innerWidth <= 768) {
+    $('bet-slip').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
 // ==================== PREDICTION TRACKER ====================
 
 async function loadPredictionTracker() {
@@ -7300,7 +8138,7 @@ async function loadPredictionTracker() {
     if (data.error) throw new Error(data.error);
     renderTracker(data);
   } catch (e) {
-    $('tracker-content').innerHTML = '<div class="error-msg" style="padding:2rem;text-align:center;color:#FF5252;">Error: ' + e.message + '</div>';
+    showRetryError('tracker-content', e.message, loadPredictionTracker);
   } finally {
     $('tracker-loader').classList.remove('active');
   }
@@ -7355,6 +8193,426 @@ function renderTracker(data) {
   html += '<div class="prediction-disclaimer">Prediction accuracy is tracked automatically from matches that have finished. Model accuracy varies and should be used as one input among many. Past performance does not guarantee future results.</div>';
 
   $('tracker-content').innerHTML = html;
+}
+
+// ==================== SET PIECES ====================
+async function loadSetPieces() {
+  const loader = $('sp-loader');
+  const content = $('sp-content');
+  loader.classList.add('active');
+  content.innerHTML = '';
+  try {
+    const teamFilter = $('sp-team-filter').value;
+    const url = teamFilter ? `/api/set-pieces?team=${teamFilter}` : '/api/set-pieces';
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    // Populate team filter dropdown if empty
+    const sel = $('sp-team-filter');
+    if (sel.options.length <= 1 && data.teams) {
+      Object.values(data.teams).sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id; opt.textContent = t.short_name;
+        sel.appendChild(opt);
+      });
+    }
+
+    const players = data.players || [];
+    const pens = players.filter(p => p.penalties_order > 0).sort((a,b) => a.penalties_order - b.penalties_order);
+    const fks = players.filter(p => p.freekicks_order > 0).sort((a,b) => a.freekicks_order - b.freekicks_order);
+    const cors = players.filter(p => p.corners_order > 0).sort((a,b) => a.corners_order - b.corners_order);
+
+    function renderCard(title, list, field) {
+      if (list.length === 0) return `<div class="sp-card"><h4>${title}</h4><div style="color:#8899AA;font-size:0.78rem;">No data available</div></div>`;
+      const byTeam = {};
+      list.forEach(p => { (byTeam[p.team_name] = byTeam[p.team_name] || []).push(p); });
+      let html = `<div class="sp-card"><h4>${title}</h4>`;
+      Object.keys(byTeam).sort().forEach(team => {
+        html += `<div class="sp-team-group"><div class="sp-team-label">${team}</div>`;
+        byTeam[team].forEach(p => {
+          const order = p[field];
+          const cls = order === 1 ? 'sp-order-1' : order === 2 ? 'sp-order-2' : 'sp-order-3';
+          html += `<div class="sp-player"><span class="sp-order ${cls}">${order}</span><span>${p.name}</span><span style="color:#8899AA;font-size:0.7rem;margin-left:auto;">${p.position} ${p.cost}M</span></div>`;
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    content.innerHTML = renderCard('Penalties', pens, 'penalties_order')
+      + renderCard('Free Kicks', fks, 'freekicks_order')
+      + renderCard('Corners', cors, 'corners_order');
+
+    // Hidden CSV table
+    const spTable = $('sp-table');
+    spTable.innerHTML = '<thead><tr><th>Name</th><th>Team</th><th>Pos</th><th>Pen</th><th>FK</th><th>Cor</th><th>Cost</th></tr></thead><tbody>'
+      + players.map(p => `<tr><td>${p.name}</td><td>${p.team_name}</td><td>${p.position}</td><td>${p.penalties_order||'-'}</td><td>${p.freekicks_order||'-'}</td><td>${p.corners_order||'-'}</td><td>${p.cost}</td></tr>`).join('')
+      + '</tbody>';
+  } catch(e) {
+    showRetryError('sp-content', e.message, loadSetPieces);
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== LINEUP PREDICTOR ====================
+async function loadLineupPredictor() {
+  const loader = $('lp-loader');
+  const pitch = $('lp-pitch');
+  const squad = $('lp-squad');
+  loader.classList.add('active');
+  pitch.classList.add('hidden');
+  squad.classList.add('hidden');
+
+  const teamFilter = $('lp-team-filter').value;
+  if (!teamFilter) {
+    loader.classList.remove('active');
+    // Populate team dropdown if needed
+    try {
+      const resp = await fetch('/api/data');
+      const data = await resp.json();
+      const sel = $('lp-team-filter');
+      if (sel.options.length <= 1 && data.teams) {
+        Object.values(data.teams).sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id; opt.textContent = t.short_name + ' - ' + t.name;
+          sel.appendChild(opt);
+        });
+      }
+    } catch(e) {}
+    return;
+  }
+
+  try {
+    const resp = await fetch(`/api/lineup-predictor?team=${teamFilter}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    const xi = (data.predicted_xi || {})[teamFilter] || [];
+    const allPlayers = data.players || [];
+
+    // Build pitch
+    const gk = xi.filter(p => p.position === 1);
+    const def = xi.filter(p => p.position === 2);
+    const mid = xi.filter(p => p.position === 3);
+    const fwd = xi.filter(p => p.position === 4);
+
+    function probColor(prob) { return prob >= 80 ? 'lp-prob-high' : prob >= 50 ? 'lp-prob-mid' : 'lp-prob-low'; }
+    function playerEl(p) {
+      return `<div class="lp-pitch-player"><div class="lp-pitch-shirt">${p.start_prob}%</div><div class="lp-pitch-name">${p.name}</div><div class="lp-pitch-prob ${probColor(p.start_prob)}">${p.position_name}</div></div>`;
+    }
+
+    pitch.innerHTML = `<div class="lp-pitch-row">${fwd.map(playerEl).join('')}</div>`
+      + `<div class="lp-pitch-row">${mid.map(playerEl).join('')}</div>`
+      + `<div class="lp-pitch-row">${def.map(playerEl).join('')}</div>`
+      + `<div class="lp-pitch-row">${gk.map(playerEl).join('')}</div>`;
+    pitch.classList.remove('hidden');
+
+    // Full squad table
+    squad.innerHTML = `<h4 style="font-size:0.85rem;margin-bottom:0.5rem;">Full Squad</h4>
+      <table class="lp-squad-table"><thead><tr><th>Player</th><th>Pos</th><th>Start %</th><th>Starts</th><th>News</th></tr></thead><tbody>
+      ${allPlayers.filter(p => p.team == teamFilter).map(p => `<tr>
+        <td>${p.name}</td><td>${p.position_name}</td>
+        <td><span class="${probColor(p.start_prob)}" style="font-weight:700;">${p.start_prob}%</span></td>
+        <td>${p.starts}</td>
+        <td style="font-size:0.7rem;color:${p.news ? '#FF5252' : '#555'};">${p.news || '-'}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+    squad.classList.remove('hidden');
+  } catch(e) {
+    showRetryError('lp-pitch', e.message, loadLineupPredictor);
+    pitch.classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== SEASON HISTORY ====================
+async function loadSeasonHistory() {
+  const uid = requireUser('sh-summary');
+  if (!uid) return;
+  const loader = $('sh-loader');
+  loader.classList.add('active');
+  $('sh-summary').classList.add('hidden');
+  $('sh-charts').classList.add('hidden');
+  $('sh-table-wrap').classList.add('hidden');
+
+  try {
+    const resp = await fetch(`/api/history/${uid}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    const s = data.summary;
+    const h = data.history;
+    $('sh-summary').innerHTML = `
+      <div class="sh-stat"><div class="label">Best GW</div><div class="value" style="color:#00E676;">GW${s.best_gw} (${s.best_pts})</div></div>
+      <div class="sh-stat"><div class="label">Worst GW</div><div class="value" style="color:#FF5252;">GW${s.worst_gw} (${s.worst_pts})</div></div>
+      <div class="sh-stat"><div class="label">Avg Pts</div><div class="value">${s.avg_points}</div></div>
+      <div class="sh-stat"><div class="label">Best Rank</div><div class="value" style="color:#4da6ff;">${s.best_rank ? s.best_rank.toLocaleString() : '-'}</div></div>
+      <div class="sh-stat"><div class="label">Current Rank</div><div class="value">${s.current_rank ? s.current_rank.toLocaleString() : '-'}</div></div>
+      <div class="sh-stat"><div class="label">Total Hits</div><div class="value" style="color:${s.total_hits > 0 ? '#FF5252' : '#00E676'};">${s.total_hits}</div></div>
+    `;
+    $('sh-summary').classList.remove('hidden');
+
+    drawSeasonPointsChart($('sh-points-canvas'), h, s.avg_points);
+    drawSeasonRankChart($('sh-rank-canvas'), h);
+    $('sh-charts').classList.remove('hidden');
+
+    // Table
+    const tableWrap = $('sh-table-wrap');
+    tableWrap.innerHTML = `<table id="sh-table" style="width:100%;font-size:0.78rem;border-collapse:collapse;">
+      <thead><tr><th style="text-align:left;padding:0.3rem;">GW</th><th>Pts</th><th>Total</th><th>Rank</th><th>Transfers</th><th>Hits</th><th>Bench</th><th>Chip</th></tr></thead>
+      <tbody>${h.map(gw => `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+        <td style="padding:0.3rem;">${gw.gw}</td><td style="text-align:center;color:#00E676;font-weight:700;">${gw.points}</td>
+        <td style="text-align:center;">${gw.total_points}</td>
+        <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.72rem;">${gw.overall_rank ? gw.overall_rank.toLocaleString() : '-'}</td>
+        <td style="text-align:center;">${gw.transfers}</td>
+        <td style="text-align:center;color:${gw.hits > 0 ? '#FF5252' : '#555'};">${gw.hits > 0 ? '-' + gw.hits : '0'}</td>
+        <td style="text-align:center;">${gw.bench_points}</td>
+        <td style="text-align:center;font-size:0.7rem;color:#FFB800;">${gw.chip || ''}</td>
+      </tr>`).join('')}</tbody></table>`;
+    tableWrap.classList.remove('hidden');
+  } catch(e) {
+    showRetryError('sh-summary', e.message, loadSeasonHistory);
+    $('sh-summary').classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+function drawSeasonPointsChart(canvas, history, avgPts) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = 700, H = 220;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = '100%'; canvas.style.maxWidth = W + 'px'; canvas.style.height = 'auto';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { t: 15, r: 15, b: 25, l: 35 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+  const pts = history.map(h => h.points);
+  const maxPts = Math.max(...pts, 1);
+  const n = pts.length;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch * (1 - i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+  }
+
+  // Avg line
+  const avgY = pad.t + ch - (avgPts / maxPts) * ch;
+  ctx.setLineDash([5, 3]); ctx.strokeStyle = '#FFB800'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, avgY); ctx.lineTo(pad.l + cw, avgY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#FFB800'; ctx.font = '9px Inter'; ctx.textAlign = 'left';
+  ctx.fillText('Avg: ' + avgPts, pad.l + cw - 50, avgY - 4);
+
+  // Line + fill
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+    const y = pad.t + ch - (p / maxPts) * ch;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#00E676'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(pad.l + (n - 1) / Math.max(n - 1, 1) * cw, pad.t + ch);
+  ctx.lineTo(pad.l, pad.t + ch); ctx.closePath();
+  ctx.fillStyle = 'rgba(0,230,118,0.1)'; ctx.fill();
+
+  // Chip badges
+  ctx.font = 'bold 8px Inter'; ctx.textAlign = 'center';
+  history.forEach((h, i) => {
+    if (h.chip) {
+      const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+      ctx.fillStyle = '#FFB800';
+      ctx.fillText(h.chip.toUpperCase().slice(0, 2), x, pad.t + ch + 22);
+    }
+  });
+
+  // X labels
+  ctx.fillStyle = '#8899AA'; ctx.font = '9px Inter';
+  history.forEach((h, i) => {
+    if (n <= 15 || i % 3 === 0) {
+      const x = pad.l + (i / Math.max(n - 1, 1)) * cw;
+      ctx.fillText(h.gw, x, pad.t + ch + 14);
+    }
+  });
+
+  // Y labels
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    ctx.fillText(Math.round(maxPts * i / 4), pad.l - 4, pad.t + ch - (i / 4) * ch + 3);
+  }
+}
+
+function drawSeasonRankChart(canvas, history) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = 700, H = 220;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = '100%'; canvas.style.maxWidth = W + 'px'; canvas.style.height = 'auto';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { t: 15, r: 15, b: 25, l: 55 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+  const ranks = history.map(h => h.overall_rank || 0).filter(r => r > 0);
+  if (ranks.length === 0) return;
+
+  const maxRank = Math.max(...ranks);
+  const minRank = Math.min(...ranks);
+  const n = ranks.length;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (i / 4) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+  }
+
+  // Line (inverted: lower rank = higher on chart)
+  ctx.beginPath();
+  const validHistory = history.filter(h => h.overall_rank && h.overall_rank > 0);
+  validHistory.forEach((h, i) => {
+    const x = pad.l + (i / Math.max(validHistory.length - 1, 1)) * cw;
+    const y = pad.t + ((h.overall_rank - minRank) / Math.max(maxRank - minRank, 1)) * ch;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  // Color: green if improving (last < first), red if declining
+  const improving = validHistory.length > 1 && validHistory[validHistory.length - 1].overall_rank < validHistory[0].overall_rank;
+  ctx.strokeStyle = improving ? '#00E676' : '#FF5252'; ctx.lineWidth = 2; ctx.stroke();
+
+  // X labels
+  ctx.fillStyle = '#8899AA'; ctx.font = '9px Inter'; ctx.textAlign = 'center';
+  validHistory.forEach((h, i) => {
+    if (validHistory.length <= 15 || i % 3 === 0) {
+      const x = pad.l + (i / Math.max(validHistory.length - 1, 1)) * cw;
+      ctx.fillText(h.gw, x, pad.t + ch + 14);
+    }
+  });
+
+  // Y labels (rank, inverted)
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const rank = Math.round(minRank + (maxRank - minRank) * (i / 4));
+    const y = pad.t + (i / 4) * ch + 3;
+    ctx.fillText(rank.toLocaleString(), pad.l - 4, y);
+  }
+}
+
+// ==================== LEAGUE DIFFERENTIALS ====================
+function loadLeagueDiffInit() {
+  const uid = requireUser('ld-content');
+  if (!uid) { $('ld-content').classList.remove('hidden'); return; }
+  // Populate league dropdown from user data
+  const sel = $('ld-league-select');
+  if (sel.options.length <= 1 && AppState.userData && AppState.userData.leagues) {
+    AppState.userData.leagues.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id; opt.textContent = l.name;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function loadLeagueDiff() {
+  const uid = requireUser('ld-content');
+  if (!uid) return;
+  const lid = $('ld-league-select').value;
+  if (!lid) return;
+
+  const loader = $('ld-loader');
+  const content = $('ld-content');
+  loader.classList.add('active');
+  content.classList.add('hidden');
+
+  try {
+    const resp = await fetch(`/api/league-differentials/${lid}?user_id=${uid}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    let html = '';
+
+    // Differentials
+    html += '<div class="ld-section"><h4><span class="ld-badge ld-badge-diff">YOUR DIFFERENTIALS</span> Players only you (or few rivals) own</h4>';
+    if (data.differentials.length === 0) {
+      html += '<div style="color:#8899AA;font-size:0.78rem;">No differentials found — your team is very template!</div>';
+    } else {
+      data.differentials.forEach(p => {
+        html += `<div class="ld-player-row"><span class="name">${p.name}</span><span class="meta">${p.team} ${p.position} ${p.cost}M</span><span style="color:#00E676;font-weight:600;">${p.rival_ownership}/${data.rival_count} rivals</span></div>`;
+      });
+    }
+    html += '</div>';
+
+    // Threats
+    html += '<div class="ld-section"><h4><span class="ld-badge ld-badge-threat">THREATS</span> Players rivals own that you don\'t</h4>';
+    if (data.threats.length === 0) {
+      html += '<div style="color:#8899AA;font-size:0.78rem;">No significant threats found.</div>';
+    } else {
+      data.threats.forEach(p => {
+        html += `<div class="ld-player-row"><span class="name">${p.name}</span><span class="meta">${p.team} ${p.position} ${p.cost}M</span><span style="color:#FF5252;font-weight:600;">${p.rival_ownership}/${data.rival_count} rivals</span></div>`;
+      });
+    }
+    html += '</div>';
+
+    // Template
+    if (data.template && data.template.length > 0) {
+      html += '<div class="ld-section"><h4><span class="ld-badge ld-badge-template">TEMPLATE</span> Players you share with most rivals</h4>';
+      data.template.forEach(p => {
+        html += `<div class="ld-player-row"><span class="name">${p.name}</span><span class="meta">${p.team} ${p.position}</span><span style="color:#4da6ff;">${p.rival_ownership}/${data.rival_count}</span></div>`;
+      });
+      html += '</div>';
+    }
+
+    content.innerHTML = html;
+    content.classList.remove('hidden');
+  } catch(e) {
+    content.innerHTML = `<div class="error-msg">${e.message}</div>`;
+    content.classList.remove('hidden');
+  } finally {
+    loader.classList.remove('active');
+  }
+}
+
+// ==================== CSV / IMAGE EXPORT ====================
+function exportTableToCSV(tableId, filename) {
+  const table = $(tableId);
+  if (!table) return;
+  const rows = [];
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('th, td').forEach(cell => {
+      let text = cell.textContent.trim().replace(/"/g, '""');
+      if (text.includes(',') || text.includes('"') || text.includes('\n')) text = '"' + text + '"';
+      cells.push(text);
+    });
+    rows.push(cells.join(','));
+  });
+  const csv = rows.join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename || 'export.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportCanvasToImage(canvasId, filename) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url; a.download = filename || 'chart.png';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
 }
 
 // ==================== GUIDED TOUR ====================
@@ -7609,6 +8867,8 @@ document.addEventListener('keydown', e => {
   <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Transfer Suggestions</div>
   <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> League Standings</div>
   <div class="mm-item" onclick="switchNav('nav-leagues-rival')"><span class="mm-icon">&#9876;</span> Rival Comparison</div>
+  <div class="mm-item" onclick="switchNav('nav-season-history')"><span class="mm-icon">&#128200;</span> Season History</div>
+  <div class="mm-item" onclick="switchNav('nav-league-diff')"><span class="mm-icon">&#128101;</span> League Differentials</div>
   <div class="mm-divider"></div>
 
   <div class="mm-group-title">Analysis</div>
@@ -7617,6 +8877,8 @@ document.addEventListener('keydown', e => {
   <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Fixture Schedule</div>
   <div class="mm-item" onclick="switchNav('nav-fixtures-list')"><span class="mm-icon">&#128203;</span> Fixture List</div>
   <div class="mm-item" onclick="switchNav('nav-fixtures-swing')"><span class="mm-icon">&#128260;</span> Swing & Rotation</div>
+  <div class="mm-item" onclick="switchNav('nav-set-pieces')"><span class="mm-icon">&#9918;</span> Set Pieces</div>
+  <div class="mm-item" onclick="switchNav('nav-lineup-predictor')"><span class="mm-icon">&#128101;</span> Lineup Predictor</div>
   <div class="mm-divider"></div>
 
   <div class="mm-group-title">Planning</div>
@@ -7633,6 +8895,7 @@ document.addEventListener('keydown', e => {
 
   <div class="mm-group-title">Match Analysis</div>
   <div class="mm-item" onclick="switchNav('nav-match-centre')"><span class="mm-icon">&#9917;</span> Match Centre</div>
+  <div class="mm-item" onclick="switchNav('nav-bet-builder')"><span class="mm-icon">&#127922;</span> Bet Builder</div>
   <div class="mm-item" onclick="switchNav('nav-prediction-tracker')"><span class="mm-icon">&#128202;</span> Prediction Tracker</div>
   <div class="mm-divider"></div>
 

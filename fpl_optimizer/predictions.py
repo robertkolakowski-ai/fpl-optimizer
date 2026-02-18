@@ -19,6 +19,8 @@ INJURY_KEYWORDS = (
 )
 
 DECAY_FACTOR = 0.9  # exponential decay per game
+RECENT_FORM_WINDOW = 3  # number of recent matches for form boost
+FORM_BOOST_SCALE = 0.08  # max form adjustment factor
 
 
 # ---------------------------------------------------------------------------
@@ -202,12 +204,14 @@ def _compute_team_strengths(
     league_avg_home = total_home_goals / total_matches if total_matches else DEFAULT_HOME_GOALS
     league_avg_away = total_away_goals / total_matches if total_matches else DEFAULT_AWAY_GOALS
 
-    # Apply exponential decay per team (most recent game = weight 1.0)
+    # Apply variable exponential decay per team
+    # Recent matches (0-5) use gentler decay (0.92), older matches use steeper decay (0.85)
     for team_id in set(f.home_team for f in finished) | set(f.away_team for f in finished):
         # Home games
         hf = home_fixtures.get(team_id, [])
         for idx, f in enumerate(reversed(hf)):
-            w = DECAY_FACTOR ** idx
+            decay = 0.92 if idx < 6 else 0.85
+            w = decay ** idx
             team_data[team_id]["home_gf_w"] += f.home_score * w
             team_data[team_id]["home_ga_w"] += f.away_score * w
             team_data[team_id]["home_w"] += w
@@ -215,12 +219,13 @@ def _compute_team_strengths(
         # Away games
         af = away_fixtures.get(team_id, [])
         for idx, f in enumerate(reversed(af)):
-            w = DECAY_FACTOR ** idx
+            decay = 0.92 if idx < 6 else 0.85
+            w = decay ** idx
             team_data[team_id]["away_gf_w"] += f.away_score * w
             team_data[team_id]["away_ga_w"] += f.home_score * w
             team_data[team_id]["away_w"] += w
 
-    # Compute strengths
+    # Compute strengths with form boost
     strengths: dict[int, dict] = {}
     for team_id, d in team_data.items():
         home_gf_avg = d["home_gf_w"] / d["home_w"] if d["home_w"] > 0 else league_avg_home
@@ -228,10 +233,31 @@ def _compute_team_strengths(
         away_gf_avg = d["away_gf_w"] / d["away_w"] if d["away_w"] > 0 else league_avg_away
         away_ga_avg = d["away_ga_w"] / d["away_w"] if d["away_w"] > 0 else league_avg_home
 
+        # Form factor: compare last N matches' scoring rate to season average
+        all_team_fixtures = sorted(
+            home_fixtures.get(team_id, []) + away_fixtures.get(team_id, []),
+            key=lambda fx: fx.gameweek or 0,
+        )
+        recent = all_team_fixtures[-RECENT_FORM_WINDOW:] if len(all_team_fixtures) >= RECENT_FORM_WINDOW else all_team_fixtures
+        if recent and total_matches > 5:
+            recent_gf = sum(
+                fx.home_score if fx.home_team == team_id else fx.away_score
+                for fx in recent
+            ) / len(recent)
+            season_gf = (home_gf_avg + away_gf_avg) / 2
+            # Positive when scoring above average recently
+            form_boost = min(max((recent_gf - season_gf) * FORM_BOOST_SCALE, -0.1), 0.1)
+        else:
+            form_boost = 0.0
+
+        # Venue strength: amplify home advantage for teams with strong home record
+        ha_ratio = (home_gf_avg / max(away_gf_avg, 0.3)) if away_gf_avg > 0 else 1.0
+        venue_boost = 1.0 + min(max((ha_ratio - 1.0) * 0.05, -0.05), 0.05)
+
         strengths[team_id] = {
-            "home_attack": home_gf_avg / league_avg_home if league_avg_home > 0 else 1.0,
+            "home_attack": ((home_gf_avg / league_avg_home) + form_boost) * venue_boost if league_avg_home > 0 else 1.0,
             "home_defense": home_ga_avg / league_avg_away if league_avg_away > 0 else 1.0,
-            "away_attack": away_gf_avg / league_avg_away if league_avg_away > 0 else 1.0,
+            "away_attack": (away_gf_avg / league_avg_away) + form_boost if league_avg_away > 0 else 1.0,
             "away_defense": away_ga_avg / league_avg_home if league_avg_home > 0 else 1.0,
         }
 

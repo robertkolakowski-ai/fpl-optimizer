@@ -98,6 +98,9 @@ def parse_players(data: dict) -> list[Player]:
             red_cards=e.get("red_cards", 0),
             own_goals=e.get("own_goals", 0),
             starts=e.get("starts", 0),
+            penalties_order=e.get("penalties_order", 0),
+            direct_freekicks_order=e.get("direct_freekicks_order", 0),
+            corners_order=e.get("corners_and_indirect_freekicks_order", 0),
         )
         players.append(p)
     return players

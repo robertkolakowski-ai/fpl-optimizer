@@ -318,6 +318,14 @@ def index():
     return render_template("web.html")
 
 
+@app.route("/api/cache-status")
+def api_cache_status():
+    """Return cache age info for the frontend freshness indicator."""
+    ts = _cache.get("ts", 0)
+    age = int(time.time() - ts) if ts else -1
+    return jsonify({"age": age, "ttl": _CACHE_TTL})
+
+
 @app.route("/api/data")
 def api_data():
     """Lightweight endpoint returning teams list for filter dropdowns."""
@@ -757,9 +765,14 @@ def api_live(user_id):
                 total_points = entry_history.get("total_points", 0)
                 team_value = 0
 
+        # Determine if any matches are in progress for this GW
+        gw_fixtures = [f for f in fixtures if f.gameweek == current_gw.id]
+        is_live = any(f.started and not f.finished for f in gw_fixtures)
+
         return jsonify({
             "gameweek": current_gw.id,
             "gameweek_name": current_gw.name,
+            "is_live": is_live,
             "picks": pick_list,
             "total_live_points": total_live,
             "total_points": total_points,
@@ -1791,6 +1804,60 @@ def api_ownership():
             except Exception:
                 league_comparison = None
 
+        # Rank band EO adjustment
+        rank_band = request.args.get("rank_band", "overall")
+        if rank_band in ("10k", "100k"):
+            for item in result:
+                own = item["ownership"]
+                ep = item["ep_next"]
+                if rank_band == "10k":
+                    # Meta players concentrated more in top 10k
+                    if own > 30 and ep > 5:
+                        mult = 1.3
+                    elif own > 15:
+                        mult = 1.15
+                    elif own < 5:
+                        mult = 0.5
+                    else:
+                        mult = 1.0
+                else:  # 100k
+                    if own > 30 and ep > 5:
+                        mult = 1.15
+                    elif own < 5:
+                        mult = 0.7
+                    else:
+                        mult = 1.0
+                item["ownership_adjusted"] = round(own * mult, 1)
+                # Recalculate captain rate for this band
+                adjusted_pool = sum(r.get("ownership_adjusted", r["ownership"]) for r in result[:10])
+                if adjusted_pool > 0:
+                    item["captain_rate"] = round((item.get("ownership_adjusted", own) / adjusted_pool) * 100, 1)
+                item["effective_ownership"] = round(item.get("ownership_adjusted", own) + item["captain_rate"], 1)
+
+        # Captain scenarios
+        captain_scenarios = []
+        for r in result[:6]:
+            ep = r["ep_next"]
+            eo = r["effective_ownership"]
+            # Scenario: player scores a brace (14 pts for MID/FWD, 12 for DEF)
+            haul_pts = 14
+            blank_pts = 2
+            # If you captain and they haul: you gain (haul * 2 - eo% * haul)
+            haul_gain = round(haul_pts * 2 * (1 - eo / 100), 1)
+            # If you don't captain and they haul: you lose
+            haul_loss = round(-haul_pts * 2 * (eo / 100), 1)
+            # If they blank and you captained:
+            blank_cost = round(blank_pts * 2 * (1 - eo / 100), 1) if eo < 50 else round(-blank_pts * (eo / 100), 1)
+            strategy = "PROTECT" if eo > 30 else "ATTACK"
+            captain_scenarios.append({
+                "id": r["id"], "name": r["name"], "eo": eo,
+                "haul_gain_if_captain": haul_gain,
+                "haul_loss_if_not_captain": haul_loss,
+                "blank_impact": blank_cost,
+                "strategy": strategy,
+                "strategy_text": f"Captaining {r['name']} = {'protecting rank' if strategy == 'PROTECT' else 'attacking rank'}",
+            })
+
         # Captain chart data
         captain_chart = [
             {"name": r["name"], "eo": r["effective_ownership"], "captain_rate": r["captain_rate"], "ep_next": r["ep_next"]}
@@ -1799,7 +1866,7 @@ def api_ownership():
 
         score_players(players, fixtures, gameweeks, teams, lookahead=5)
 
-        response = {"players": result, "captain_chart": captain_chart}
+        response = {"players": result, "captain_chart": captain_chart, "captain_scenarios": captain_scenarios, "rank_band": rank_band}
         if personal_risk:
             response["personal_risk"] = personal_risk
         if league_comparison:
@@ -2718,5 +2785,315 @@ def api_prediction_tracker():
     try:
         accuracy = _compute_tracker_accuracy()
         return jsonify(accuracy)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Set Pieces
+# ------------------------------------------------------------------ #
+@app.route("/api/set-pieces")
+def api_set_pieces():
+    """Return players with set-piece duties."""
+    try:
+        players, teams, _, _ = _get_cached_data()
+        team_filter = request.args.get("team", type=int)
+        result = []
+        for p in players:
+            if p.penalties_order == 0 and p.direct_freekicks_order == 0 and p.corners_order == 0:
+                continue
+            if team_filter and p.team != team_filter:
+                continue
+            result.append({
+                "id": p.id,
+                "name": p.name,
+                "team": p.team,
+                "team_name": teams[p.team].short_name if p.team in teams else "???",
+                "position": p.position_name,
+                "penalties_order": p.penalties_order,
+                "freekicks_order": p.direct_freekicks_order,
+                "corners_order": p.corners_order,
+                "total_points": p.total_points,
+                "goals": p.goals,
+                "assists": p.assists,
+                "xG": round(p.xG, 2),
+                "cost": p.cost,
+            })
+        result.sort(key=lambda x: (x["penalties_order"] or 99, x["freekicks_order"] or 99, x["corners_order"] or 99))
+        return jsonify({"players": result, "teams": {tid: t.to_dict() for tid, t in teams.items()}})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Player History (per-GW form data)
+# ------------------------------------------------------------------ #
+@app.route("/api/player/<int:player_id>/history")
+def api_player_history(player_id):
+    """Return per-gameweek history for a single player."""
+    try:
+        with httpx.Client(timeout=30) as client:
+            resp = client.get(f"https://fantasy.premierleague.com/api/element-summary/{player_id}/")
+            resp.raise_for_status()
+            data = resp.json()
+        history = []
+        for h in data.get("history", []):
+            history.append({
+                "gw": h.get("round"),
+                "points": h.get("total_points", 0),
+                "minutes": h.get("minutes", 0),
+                "goals": h.get("goals_scored", 0),
+                "assists": h.get("assists", 0),
+                "xG": float(h.get("expected_goals", 0)),
+                "xA": float(h.get("expected_assists", 0)),
+                "xGI": float(h.get("expected_goal_involvements", 0)),
+                "bps": h.get("bps", 0),
+                "bonus": h.get("bonus", 0),
+                "cost": h.get("value", 0) / 10.0,
+            })
+        return jsonify({"player_id": player_id, "history": history})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Lineup Predictor
+# ------------------------------------------------------------------ #
+@app.route("/api/lineup-predictor")
+def api_lineup_predictor():
+    """Return starting probability for all players, optionally filtered by team."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        compute_rotation_risk(players)
+        team_filter = request.args.get("team", type=int)
+
+        finished_gws = max(sum(1 for gw in gameweeks if gw.finished), 1)
+
+        result = []
+        for p in players:
+            if team_filter and p.team != team_filter:
+                continue
+
+            # Base: starts / finished_gws
+            starts_ratio = min(p.starts / finished_gws, 1.0) if finished_gws > 0 else 0.5
+            prob = starts_ratio
+
+            # Minutes factor
+            if p.starts > 0:
+                avg_mins = p.minutes / p.starts
+                if avg_mins > 85:
+                    prob += 0.10
+                elif avg_mins > 80:
+                    prob += 0.05
+
+            # Availability
+            if p.chance_of_playing is not None:
+                if p.chance_of_playing == 0:
+                    prob -= 0.90
+                elif p.chance_of_playing <= 25:
+                    prob -= 0.50
+                elif p.chance_of_playing <= 50:
+                    prob -= 0.30
+                elif p.chance_of_playing <= 75:
+                    prob -= 0.10
+
+            # Rotation risk
+            prob -= p.rotation_risk * 0.15
+
+            # Injury news
+            if p.news:
+                nl = p.news.lower()
+                injury_kw = ("injured", "injury", "hamstring", "knee", "ankle", "groin",
+                             "muscle", "surgery", "broken", "fracture", "illness",
+                             "suspended", "ban")
+                if any(kw in nl for kw in injury_kw):
+                    prob -= 0.20
+
+            prob = max(0.0, min(0.99, prob))
+
+            result.append({
+                "id": p.id,
+                "name": p.name,
+                "team": p.team,
+                "team_name": teams[p.team].short_name if p.team in teams else "???",
+                "position": p.position,
+                "position_name": p.position_name,
+                "cost": p.cost,
+                "start_prob": round(prob * 100, 1),
+                "starts": p.starts,
+                "minutes": p.minutes,
+                "chance_of_playing": p.chance_of_playing,
+                "news": p.news or "",
+                "rotation_risk": round(p.rotation_risk, 2),
+            })
+
+        result.sort(key=lambda x: -x["start_prob"])
+
+        # Build predicted XI per team
+        predicted_xi = {}
+        for tid, team in teams.items():
+            team_players = sorted(
+                [r for r in result if r["team"] == tid],
+                key=lambda x: -x["start_prob"],
+            )
+            # Pick best XI: 1 GK, then top outfield
+            gks = [p for p in team_players if p["position"] == 1]
+            outfield = [p for p in team_players if p["position"] != 1]
+            xi = gks[:1] + outfield[:10]
+            predicted_xi[tid] = xi
+
+        return jsonify({
+            "players": result,
+            "predicted_xi": predicted_xi,
+            "teams": {tid: t.to_dict() for tid, t in teams.items()},
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# User Season History
+# ------------------------------------------------------------------ #
+@app.route("/api/history/<int:user_id>")
+def api_user_history(user_id):
+    """Return full season GW-by-GW history for a user."""
+    try:
+        with httpx.Client(timeout=30) as client:
+            data = fetch_entry_history(client, user_id)
+        current = data.get("current", [])
+        chips = data.get("chips", [])
+        chip_map = {c["event"]: c["name"] for c in chips}
+
+        history = []
+        for gw in current:
+            history.append({
+                "gw": gw["event"],
+                "points": gw["points"],
+                "total_points": gw["total_points"],
+                "overall_rank": gw["overall_rank"],
+                "rank": gw.get("rank"),
+                "transfers": gw.get("event_transfers", 0),
+                "hits": gw.get("event_transfers_cost", 0),
+                "bench_points": gw.get("points_on_bench", 0),
+                "chip": chip_map.get(gw["event"]),
+            })
+
+        points_list = [h["points"] for h in history]
+        avg_pts = round(sum(points_list) / len(points_list), 1) if points_list else 0
+        best_gw = max(history, key=lambda h: h["points"]) if history else None
+        worst_gw = min(history, key=lambda h: h["points"]) if history else None
+        total_hits = sum(h["hits"] for h in history)
+
+        return jsonify({
+            "history": history,
+            "summary": {
+                "avg_points": avg_pts,
+                "best_gw": best_gw["gw"] if best_gw else None,
+                "best_pts": best_gw["points"] if best_gw else 0,
+                "worst_gw": worst_gw["gw"] if worst_gw else None,
+                "worst_pts": worst_gw["points"] if worst_gw else 0,
+                "best_rank": min((h["overall_rank"] for h in history), default=0),
+                "current_rank": history[-1]["overall_rank"] if history else 0,
+                "total_hits": total_hits,
+            },
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Mini-League Differentials
+# ------------------------------------------------------------------ #
+@app.route("/api/league-differentials/<int:league_id>")
+def api_league_differentials(league_id):
+    """Show differential/template/threat players vs mini-league rivals."""
+    try:
+        user_id = request.args.get("user_id", type=int)
+        if not user_id:
+            return jsonify({"error": "user_id required"}), 400
+
+        players, teams, gameweeks, _ = _get_cached_data()
+        player_map = {p.id: p for p in players}
+
+        current_gw = next((gw for gw in gameweeks if gw.is_current), None)
+        if current_gw is None:
+            current_gw = next((gw for gw in gameweeks if gw.is_next), None)
+        if current_gw is None:
+            return jsonify({"error": "Cannot determine gameweek"}), 500
+
+        with httpx.Client(timeout=30) as client:
+            standings = fetch_league_standings(client, league_id)
+            entries = standings.get("standings", {}).get("results", [])
+
+            # Get user's squad
+            user_picks_data = fetch_user_picks_full(client, user_id, current_gw.id)
+            user_pids = {pick["element"] for pick in user_picks_data.get("picks", [])}
+
+            # Get rival squads (top 10, excluding user)
+            rival_ownership: dict[int, int] = {}
+            rival_count = 0
+            for entry in entries[:11]:
+                rid = entry["entry"]
+                if rid == user_id:
+                    continue
+                rival_count += 1
+                try:
+                    rival_data = fetch_user_picks_full(client, rid, current_gw.id)
+                    for pick in rival_data.get("picks", []):
+                        pid = pick["element"]
+                        rival_ownership[pid] = rival_ownership.get(pid, 0) + 1
+                except Exception:
+                    continue
+                if rival_count >= 10:
+                    break
+
+        if rival_count == 0:
+            return jsonify({"error": "No rivals found"}), 404
+
+        # Categorize user's players
+        differentials = []
+        template = []
+        for pid in user_pids:
+            p = player_map.get(pid)
+            if not p:
+                continue
+            rival_own = rival_ownership.get(pid, 0)
+            info = {
+                "id": p.id, "name": p.name, "team": teams[p.team].short_name if p.team in teams else "???",
+                "position": p.position_name, "cost": p.cost,
+                "rival_ownership": rival_own, "rival_pct": round(rival_own / rival_count * 100, 1),
+                "total_points": p.total_points, "ep_next": p.ep_next,
+            }
+            if rival_own <= 2:
+                differentials.append(info)
+            if rival_own >= 5:
+                template.append(info)
+
+        # Threats: players owned by 3+ rivals but not by user
+        threats = []
+        for pid, count in sorted(rival_ownership.items(), key=lambda x: -x[1]):
+            if pid in user_pids or count < 3:
+                continue
+            p = player_map.get(pid)
+            if not p:
+                continue
+            threats.append({
+                "id": p.id, "name": p.name, "team": teams[p.team].short_name if p.team in teams else "???",
+                "position": p.position_name, "cost": p.cost,
+                "rival_ownership": count, "rival_pct": round(count / rival_count * 100, 1),
+                "total_points": p.total_points, "ep_next": p.ep_next,
+            })
+            if len(threats) >= 15:
+                break
+
+        differentials.sort(key=lambda x: x["rival_ownership"])
+        template.sort(key=lambda x: -x["rival_ownership"])
+
+        return jsonify({
+            "differentials": differentials,
+            "template": template,
+            "threats": threats,
+            "rival_count": rival_count,
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
