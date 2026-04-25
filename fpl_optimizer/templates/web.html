@@ -2356,6 +2356,99 @@
     .reco-row { grid-template-columns: 60px 1fr 50px; font-size: 12px; }
     .reco-row .reco-cell:nth-of-type(2), .reco-row .reco-cell:nth-of-type(3) { display: none; }
   }
+
+  /* ==================================================================
+     CHANGELOG / HVA ER NYTT
+     ================================================================== */
+  .changelog-view { display: flex; flex-direction: column; gap: var(--sp-5); }
+
+  .cl-head {
+    display: flex; gap: var(--sp-5); justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; padding-bottom: var(--sp-4); border-bottom: 1px solid var(--border-subtle);
+  }
+  .cl-eyebrow { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cl-title { font-family: var(--font-display); font-variation-settings: 'opsz' 32; font-size: 32px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em; margin-top: 4px; }
+  .cl-sub { color: var(--text-muted); font-size: var(--fs-body); margin-top: var(--sp-2); max-width: 56ch; line-height: 1.5; }
+
+  .cl-stats { display: flex; gap: var(--sp-5); align-items: baseline; }
+  .cl-stat .v { font-family: var(--font-display); font-variation-settings: 'opsz' 48; font-size: 32px; font-weight: 700; color: var(--text-strong); line-height: 1; font-variant-numeric: tabular-nums; }
+  .cl-stat .v.small { font-family: var(--font-mono); font-size: var(--fs-body); font-weight: 600; color: var(--text-default); }
+  .cl-stat:nth-child(2) .v { color: var(--brand-primary); }
+  .cl-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 4px; }
+  .cl-stat.last { display: flex; flex-direction: column; align-items: flex-start; }
+  .cl-stat.last .l { order: -1; margin-top: 0; margin-bottom: 4px; }
+
+  /* Filter chips */
+  .cl-filters { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+  .cl-filter-chip {
+    background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px;
+    padding: 6px 14px; font-family: var(--font-body); font-size: var(--fs-small); font-weight: 500;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s; min-height: 34px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .cl-filter-chip:hover { color: var(--text-strong); border-color: var(--border-strong); }
+  .cl-filter-chip.active { background: var(--text-strong); border-color: var(--text-strong); color: var(--bg-canvas); }
+  .cl-filter-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cl-filter-chip .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; opacity: 0.7; font-size: var(--fs-label); }
+
+  /* Timeline */
+  .cl-timeline { position: relative; padding-left: var(--sp-6); }
+  .cl-timeline::before {
+    content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px;
+    width: 1px; background: var(--border-default);
+  }
+  .cl-month {
+    font-family: var(--font-display); font-variation-settings: 'opsz' 24;
+    font-size: 22px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em;
+    margin: var(--sp-5) 0 var(--sp-3); padding-left: 0;
+  }
+  .cl-month:first-child { margin-top: var(--sp-3); }
+  .cl-entry {
+    position: relative; background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4) var(--sp-5);
+    margin-bottom: var(--sp-3); box-shadow: var(--shadow-1);
+  }
+  .cl-entry::before {
+    content: ''; position: absolute; left: -29px; top: 22px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg-canvas); border: 3px solid var(--text-faint);
+  }
+  .cl-entry[data-cat="feature"]::before  { border-color: var(--brand-primary); }
+  .cl-entry[data-cat="polish"]::before   { border-color: var(--warn); }
+  .cl-entry[data-cat="fix"]::before      { border-color: var(--danger); }
+  .cl-entry[data-cat="platform"]::before { border-color: var(--info); }
+  .cl-entry[data-cat="editorial"]::before{ border-color: var(--text-muted); }
+
+  .cl-entry-head { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-2); }
+  .cl-cat-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: var(--r-sm);
+    font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .cl-cat-pill[data-cat="feature"]   { background: var(--brand-primary-tint); color: var(--brand-primary-hover); }
+  .cl-cat-pill[data-cat="polish"]    { background: var(--warn-tint); color: var(--warn); }
+  .cl-cat-pill[data-cat="fix"]       { background: var(--danger-tint); color: var(--danger); }
+  .cl-cat-pill[data-cat="platform"]  { background: var(--info-tint); color: var(--info); }
+  .cl-cat-pill[data-cat="editorial"] { background: var(--bg-subtle); color: var(--text-muted); }
+
+  .cl-entry-date { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .cl-entry-title { font-family: var(--font-display); font-variation-settings: 'opsz' 24; font-size: 20px; font-weight: 600; color: var(--text-strong); margin-bottom: var(--sp-2); line-height: 1.25; letter-spacing: -0.005em; }
+  .cl-entry-body { font-size: var(--fs-body); color: var(--text-default); line-height: 1.55; }
+  .cl-entry-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: var(--sp-3); }
+  .cl-tag { background: var(--bg-subtle); color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: var(--r-sm); }
+  .cl-tag::before { content: '#'; opacity: 0.5; }
+  .cl-commits { display: flex; gap: 6px; flex-wrap: wrap; margin-top: var(--sp-2); font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .cl-commits a { color: var(--text-faint); text-decoration: none; }
+  .cl-commits a:hover { color: var(--brand-primary); text-decoration: underline; }
+
+  .si-badge.new { background: var(--brand-primary); color: var(--text-on-brand); margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: var(--r-sm); font-weight: 700; letter-spacing: 0.05em; }
+
+  @media (max-width: 600px) {
+    .cl-stats { gap: var(--sp-3); }
+    .cl-stat .v { font-size: 24px; }
+    .cl-timeline { padding-left: var(--sp-5); }
+    .cl-entry::before { left: -25px; }
+  }
 </style>
 </head>
 <body>
@@ -2444,6 +2537,11 @@
       <div class="sidebar-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">
         <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <span class="si-label" data-i18n="nav.player">Spiller</span>
+      </div>
+      <div class="sidebar-item" data-nav="nav-changelog" onclick="switchNav('nav-changelog')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>
+        <span class="si-label" data-i18n="nav.changelog">Hva er nytt</span>
+        <span class="si-badge new" id="changelog-badge" hidden>NY</span>
       </div>
       <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
         <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
@@ -3844,6 +3942,28 @@
       </div>
 
       <!-- ==================== SETTINGS ==================== -->
+      <!-- ==================== CHANGELOG / HVA ER NYTT ==================== -->
+      <div class="nav-panel" id="nav-changelog">
+        <section class="changelog-view">
+          <header class="cl-head">
+            <div>
+              <div class="cl-eyebrow" data-i18n="changelog.eyebrow">HVA ER NYTT</div>
+              <h2 class="cl-title" id="cl-title">Endringslogg</h2>
+              <p class="cl-sub" id="cl-sub">Hva som har skjedd, hva som er fikset, hva som kommer.</p>
+            </div>
+            <div class="cl-stats">
+              <div class="cl-stat"><div class="v" id="cl-count">—</div><div class="l">oppdateringer</div></div>
+              <div class="cl-stat"><div class="v" id="cl-feature-count">—</div><div class="l">features</div></div>
+              <div class="cl-stat last"><div class="l">sist oppdatert</div><div class="v small" id="cl-last">—</div></div>
+            </div>
+          </header>
+
+          <div class="cl-filters" id="cl-filters" role="tablist"></div>
+
+          <div class="cl-timeline" id="cl-timeline"></div>
+        </section>
+      </div>
+
       <div class="nav-panel" id="nav-settings">
         <h2 style="margin-bottom:1rem;font-size:1.2rem;">Innstillinger</h2>
 
@@ -4496,11 +4616,22 @@ const PlanState = {
 function setPlanMode(mode) {
   PlanState.mode = mode;
   document.querySelectorAll('.plan-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-  // Phase 4c scope: just visually switch. Wildcard/Free Hit/Multi-GW behaviours come in 4d/4e.
+  if (mode === 'next-5') {
+    // Multi-GW lever in legacy nav-transfers-multigw — open it via legacy toggle if available, else hint.
+    if (isFeatureEnabled('legacy_nav')) { switchNav('nav-transfers-multigw'); return; }
+    alert(currentLocale==='no'
+      ? 'Multi-GW er foreløpig under "Vis legacy verktøy" i Innstillinger.'
+      : 'Multi-GW currently lives behind "Show legacy tools" in Settings.');
+    return;
+  }
   if (mode === 'wildcard' || mode === 'freehit') {
-    // Show advanced optimizer auto-open as a starting point
+    // Open advanced optimizer + preset strategy + scroll into view
     const adv = document.getElementById('plan-advanced');
-    if (adv && !adv.open) adv.open = true;
+    if (adv) { adv.open = true; setTimeout(() => adv.scrollIntoView({behavior:'smooth', block:'start'}), 80); }
+    const risk = document.getElementById('risk-mode');
+    if (risk) risk.value = (mode === 'wildcard') ? 'aggressive' : 'balanced';
+    const lookahead = document.getElementById('lookahead');
+    if (lookahead) lookahead.value = (mode === 'wildcard') ? '8' : '3';
   }
 }
 
@@ -4674,29 +4805,23 @@ function swapSlots(idA, idB) {
 }
 
 async function loadPlanFdr() {
-  // Use first 5 GW fixture difficulty for each starting + key bench player
+  // Each pick already has .upcoming from /api/live (next 3 fixtures with difficulty).
+  // Pad to 5 cells using /api/fixtures team-by-team data when available.
   try {
-    const fixtures = AppState.fixturesCache || await fetch('/api/fdr').then(r => r.ok ? r.json() : null);
-    if (fixtures) AppState.fixturesCache = fixtures;
-    PlanState.fixtures = fixtures;
     const grid = $('plan-fdr-grid');
     if (!grid) return;
-    // Map team -> next 5 fixtures (assume API returns array per team or keyed by team)
-    const teamFix = (fixtures && fixtures.teams) || (fixtures || {});
     const starters = PlanState.picks.filter(p => p.slot >= 1 && p.slot <= 11);
-    const rows = starters.slice(0, 8).map(p => {
-      const team = p.team || '';
-      const fix = teamFix[team] || teamFix[p.team_id] || [];
-      const cells = (fix.fixtures || fix || []).slice(0, 5).map(f => {
-        const fdr = (f.difficulty || f.fdr || 3);
-        const opp = (f.opponent_short || f.opponent || '').slice(0,3);
-        const home = f.is_home;
-        return `<span class="plan-fdr-cell fdr-${fdr} ${home?'':'away'}">${home ? opp.toUpperCase() : opp.toLowerCase()}</span>`;
+    const rows = starters.map(p => {
+      const upcoming = Array.isArray(p.upcoming) ? p.upcoming : [];
+      const cells = upcoming.slice(0, 5).map(f => {
+        const fdr = f.difficulty || f.fdr || 3;
+        const opp = (f.opponent_short || f.opponent_team_short || f.opponent || '').slice(0, 3);
+        const home = f.is_home != null ? f.is_home : (f.home != null ? f.home : true);
+        return `<span class="plan-fdr-cell fdr-${fdr} ${home?'':'away'}">${home ? (opp||'?').toUpperCase() : (opp||'?').toLowerCase()}</span>`;
       });
-      // Pad to 5 cells
       while (cells.length < 5) cells.push('<span class="plan-fdr-cell fdr-3">—</span>');
       const posLabel = ['', 'GK', 'DEF', 'MID', 'FWD'][p.position] || '';
-      return `<div class="plan-fdr-row"><div class="fdr-name">${p.name} <span class="pos-tag">${posLabel} · ${team}</span></div>${cells.join('')}</div>`;
+      return `<div class="plan-fdr-row"><div class="fdr-name">${p.name} <span class="pos-tag">${posLabel} · ${p.team||''}</span></div>${cells.join('')}</div>`;
     }).join('');
     grid.innerHTML = rows || `<div style="padding:var(--sp-3);color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen fixture-data tilgjengelig.':'No fixture data available.'}</div>`;
   } catch (e) { console.warn('loadPlanFdr failed', e); }
@@ -5451,7 +5576,112 @@ function updateMondayPushState() {
   }
 }
 
-// Wrap switchNav to auto-load Liga + Arkiv
+// ==================== CHANGELOG / HVA ER NYTT ====================
+const ChangelogState = { data: null, filter: 'all' };
+async function loadChangelog() {
+  if (ChangelogState.data) { renderChangelog(); return; }
+  try {
+    const data = await fetch('/changelog.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null);
+    if (!data) throw new Error('no changelog');
+    ChangelogState.data = data;
+    // Track last-seen entry for "NY"-badge
+    const latest = (data.entries && data.entries[0] && data.entries[0].date) || '';
+    const seen = localStorage.getItem('fpl_changelog_seen') || '';
+    if (latest && latest > seen) {
+      const badge = $('changelog-badge'); if (badge) badge.hidden = false;
+    }
+    renderChangelog();
+  } catch (e) { console.warn('loadChangelog failed', e); }
+}
+
+function renderChangelog() {
+  const data = ChangelogState.data;
+  if (!data) return;
+  const meta = data.meta || {};
+  const cats = data.categories || {};
+  const entries = (data.entries || []).slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+  const localeKey = currentLocale === 'no' ? '_no' : '_en';
+
+  // Header
+  $('cl-title').textContent = meta['title' + localeKey] || meta.title_no || 'Endringslogg';
+  $('cl-sub').textContent = meta['subtitle' + localeKey] || meta.subtitle_no || '';
+  $('cl-count').textContent = entries.length;
+  $('cl-feature-count').textContent = entries.filter(e => e.category === 'feature').length;
+  if (entries[0]) $('cl-last').textContent = formatChangelogDate(entries[0].date);
+
+  // Filter chips
+  const counts = { all: entries.length };
+  Object.keys(cats).forEach(k => { counts[k] = entries.filter(e => e.category === k).length; });
+  const filtersEl = $('cl-filters');
+  let chips = `<button class="cl-filter-chip ${ChangelogState.filter==='all'?'active':''}" onclick="setChangelogFilter('all')">${currentLocale==='no'?'Alle':'All'} <span class="count">${counts.all}</span></button>`;
+  Object.entries(cats).forEach(([key, cat]) => {
+    if (!counts[key]) return;
+    const label = cat['label' + localeKey] || cat.label_en || key;
+    chips += `<button class="cl-filter-chip ${ChangelogState.filter===key?'active':''}" onclick="setChangelogFilter('${key}')"><span class="dot" style="background:${cat.color}"></span>${label} <span class="count">${counts[key]}</span></button>`;
+  });
+  filtersEl.innerHTML = chips;
+
+  // Timeline grouped by month
+  const visible = entries.filter(e => ChangelogState.filter === 'all' || e.category === ChangelogState.filter);
+  const groups = {};
+  visible.forEach(e => {
+    const m = (e.date || '').slice(0, 7);
+    if (!groups[m]) groups[m] = [];
+    groups[m].push(e);
+  });
+  const months = Object.keys(groups).sort().reverse();
+  let timelineHtml = '';
+  months.forEach(month => {
+    timelineHtml += `<div class="cl-month">${formatChangelogMonth(month)}</div>`;
+    groups[month].forEach(e => {
+      const cat = cats[e.category] || {};
+      const label = cat['label' + localeKey] || cat.label_en || e.category;
+      const title = e['title' + localeKey] || e.title_en || '';
+      const body = e['body' + localeKey] || e.body_en || '';
+      const tags = (e.tags || []).map(t => `<span class="cl-tag">${t}</span>`).join('');
+      const commits = (e.commits || []).map(c => `<a href="https://github.com/robertkolakowski-ai/fpl-optimizer/commit/${c}" target="_blank" rel="noopener">${c.slice(0,7)}</a>`).join(' · ');
+      timelineHtml += `<article class="cl-entry" data-cat="${e.category}">
+        <div class="cl-entry-head">
+          <span class="cl-cat-pill" data-cat="${e.category}">${label}</span>
+          <span class="cl-entry-date">${formatChangelogDate(e.date, true)}</span>
+        </div>
+        <h3 class="cl-entry-title">${title}</h3>
+        <p class="cl-entry-body">${body}</p>
+        ${tags ? `<div class="cl-entry-tags">${tags}</div>` : ''}
+        ${commits ? `<div class="cl-commits">${commits}</div>` : ''}
+      </article>`;
+    });
+  });
+  $('cl-timeline').innerHTML = timelineHtml;
+
+  // Mark as seen
+  if (entries[0]) {
+    localStorage.setItem('fpl_changelog_seen', entries[0].date);
+    const badge = $('changelog-badge'); if (badge) badge.hidden = true;
+  }
+}
+
+function setChangelogFilter(f) { ChangelogState.filter = f; renderChangelog(); }
+
+function formatChangelogDate(iso, withDay) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const months_no = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  const months_en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = currentLocale === 'no' ? months_no : months_en;
+  if (withDay) return `${d.getDate()} ${months[d.getMonth()]}`;
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+function formatChangelogMonth(monthStr) {
+  const [y, m] = monthStr.split('-');
+  const months_no = ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'];
+  const months_en = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const months = currentLocale === 'no' ? months_no : months_en;
+  return `${months[parseInt(m,10)-1]} ${y}`;
+}
+
+// Wrap switchNav to auto-load Liga + Arkiv + Changelog
 const _origSwitchNav = switchNav;
 switchNav = function(panelId) {
   _origSwitchNav(panelId);
@@ -5467,7 +5697,12 @@ switchNav = function(panelId) {
   if (panelId === 'nav-season-history' && AppState.userId && !ArkivState.history) {
     setTimeout(loadArkivView, 100);
   }
+  if (panelId === 'nav-changelog') {
+    setTimeout(loadChangelog, 50);
+  }
 };
+// Pre-load changelog meta on first paint so the NY-badge can appear in the sidebar
+document.addEventListener('DOMContentLoaded', () => { setTimeout(loadChangelog, 800); });
 
 // ----- "Fordi"-felt: human-readable reasoning (#2, #21) -----
 // Tone: kompetent venn, ikke akademisk paper.

@@ -318,6 +318,18 @@ def index():
     return render_template("web.html")
 
 
+@app.route("/changelog.json")
+def changelog_json():
+    """Serve CHANGELOG.json from the repo root for the in-app Endringslogg page."""
+    import json
+    repo_root = Path(__file__).resolve().parent.parent
+    path = repo_root / "CHANGELOG.json"
+    if not path.exists():
+        return jsonify({"meta": {}, "categories": {}, "entries": []})
+    with path.open(encoding="utf-8") as f:
+        return jsonify(json.load(f))
+
+
 @app.route("/api/cache-status")
 def api_cache_status():
     """Return cache age info for the frontend freshness indicator."""

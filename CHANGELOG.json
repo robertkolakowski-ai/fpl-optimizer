@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "title_no": "Endringslogg",
+    "title_en": "Changelog",
+    "subtitle_no": "Hva som har skjedd, hva som er fikset, hva som kommer.",
+    "subtitle_en": "What shipped, what got fixed, what's coming."
+  },
+  "categories": {
+    "feature":   { "label_no": "Feature",   "label_en": "Feature",   "color": "var(--brand-primary)" },
+    "polish":    { "label_no": "Polish",    "label_en": "Polish",    "color": "var(--warn)" },
+    "fix":       { "label_no": "Fix",       "label_en": "Fix",       "color": "var(--danger)" },
+    "platform":  { "label_no": "Plattform", "label_en": "Platform",  "color": "var(--info)" },
+    "editorial": { "label_no": "Notat",     "label_en": "Editorial", "color": "var(--text-muted)" }
+  },
+  "entries": [
+    {
+      "date": "2026-04-25",
+      "category": "fix",
+      "title_no": "Page-audit-runde 1: lyse paneler, ekte data, drepte popup-tour",
+      "title_en": "Page audit round 1: light panels, real data, killed the popup tour",
+      "body_no": "Spiller, Innstillinger og topp-kampene-stripa rendret fortsatt mørke navy-paneler — flippet alle til Paper/canvas. Auto-tour-popupen som dukket opp på Hjem hver gang er fjernet (åpnes nå bare via 'Guide' i sidebar). Plan-pitchen var tom fordi data-mappingen mot /api/live brukte feil feltnavn (id vs element, slot vs index, ep_next vs points). Liga viste 'Kunne ikke hente mini-ligaer' fordi koden traff feil endepunkter — fikset til /api/user/<id>.leagues + /api/league/<id>.",
+      "body_en": "Player, Settings and the top fixtures strip were still rendering as dark navy panels — all flipped to Paper/canvas. Auto-tour popup that fired every visit on Home is gone (opens manually via the sidebar Guide button only). The Plan pitch was empty because the /api/live data mapping used wrong field names (id vs element, slot vs index, ep_next vs points). League showed 'Could not load mini-leagues' because it called non-existent endpoints — now uses /api/user/<id>.leagues + /api/league/<id>.",
+      "tags": ["plan", "liga", "spiller", "innstillinger", "tour"],
+      "commits": ["1e9e2dc"]
+    },
+    {
+      "date": "2026-04-25",
+      "category": "fix",
+      "title_no": "I18n-katastrofe: rå-nøkler synlige på alle skjermer",
+      "title_en": "I18n catastrophe: raw keys visible on every screen",
+      "body_no": "Phase 4a trimmet ordlisten, så Phases 4b-4f la til ~80 nye data-i18n-attributter — uten at noen av dem havnet i ordboken. Resultat: 'captain.eyebrow', 'plan.formation 0-0-0', 'LIGA.YOURPLACE', 'arkiv.title' rendret som rå tekst overalt. Lagt inn full NO + EN-ordliste for wizard, Plan, Kaptein, Liga, Arkiv og Innstillinger. applyTranslations() takler nå HTML i strenger (hero.headline med <em>-emfase).",
+      "body_en": "Phase 4a trimmed the dictionary, then Phases 4b-4f sprinkled ~80 new data-i18n attrs — none of which made it into the dictionary. Result: 'captain.eyebrow', 'plan.formation 0-0-0', 'LIGA.YOURPLACE', 'arkiv.title' rendered as literal text everywhere. Added the full NO + EN dictionary for wizard, Plan, Captain, League, Archive and Settings. applyTranslations() now handles HTML inside strings (hero.headline with <em> emphasis).",
+      "tags": ["i18n", "no", "en"],
+      "commits": ["5b227ae"]
+    },
+    {
+      "date": "2026-04-25",
+      "category": "platform",
+      "title_no": "Foundation hardening: drepte død CSS, strammet cascade",
+      "title_en": "Foundation hardening: killed dead CSS, tightened cascade",
+      "body_no": "Phase 2's catch-all '[class$=\"-card\"]'-selektor stylet hver Phase 4-komponent uintendert — fjernet til fordel for eksplisitt liste over legacy-klasser. .nav-panel ble stylet som kort med dobbel-boks-effekt — reset til nøytral container. Slettet ekte død CSS: hele .brief-card-blokken (erstattet av .hjem-side-card), de fleste .ob-* og .onboarding-card (erstattet av .wizard-card), legacy token-aliases. -50 linjer netto, ingen synlig regresjon.",
+      "body_en": "Phase 2's catch-all '[class$=\"-card\"]' selector was indiscriminately styling every Phase 4 component — replaced with an explicit list of legacy classes. .nav-panel was being card-styled, causing nested box-on-box rendering — reset to a neutral container. Deleted truly dead CSS: the whole .brief-card block (superseded by .hjem-side-card), most .ob-* and .onboarding-card rules (superseded by .wizard-card), legacy token aliases. -50 lines net, no visible regression.",
+      "tags": ["cleanup", "cascade"],
+      "commits": ["24b3b13"]
+    },
+    {
+      "date": "2026-04-24",
+      "category": "feature",
+      "title_no": "Arkiv + Mandagsrapport — appens retensjons-motor",
+      "title_en": "Archive + Monday Report — the app's retention engine",
+      "body_no": "Egen Arkiv-flate som svarer 'Hadde modellen rett?'. Mandagsrapport-hero med dag-pill, GW-poeng, persentil, beste/verste valg, og en kursivert ukens lærdom som rotere basert på dine tall. Push-varsel-opt-in (browser-permission lagres lokalt, full Web Push kommer). Modellens treffrate (Captain / Transfer / Chip / Samlet). Recommendation-log: hva modellen sa, hva du gjorde, hva som faktisk skjedde, med treff-pip per uke.",
+      "body_en": "Dedicated Archive surface that answers 'Did the model get it right?'. Monday Report hero with day pill, GW points, percentile, best/worst pick, and an italicised weekly lesson that rotates based on your stats. Push notification opt-in (browser permission persisted locally; full Web Push next). Model accuracy (Captain / Transfer / Chip / Overall). Recommendation log: what the model advised, what you did, what actually happened, with hit pips per week.",
+      "tags": ["arkiv", "mandagsrapport", "retensjon"],
+      "commits": ["74989d0"]
+    },
+    {
+      "date": "2026-04-24",
+      "category": "feature",
+      "title_no": "Liga catch-up — den potensielle sleeper-vinneren",
+      "title_en": "League catch-up — the potential sleeper hit",
+      "body_no": "Mini-liga-kamp er det de fleste managere faktisk bryr seg om. Egen Liga-flate med stor 64pt mono-rang, største trussel + poenggap, kontekst-basert strategi-paragraf (leder = safe, top-3 = differensialer, nedre halvdel = aggressiv). Topp 10 rivaler med din rad uthevet, og en SVG-basert sesong-lang trend-graf som plotter topp 4 rivalers kumulative differanse vs deg per GW. Catch-up-kort: differensialer med lav eierskap, høy upside.",
+      "body_en": "Mini-league competition is what most managers actually care about. Dedicated League surface with huge 64pt mono rank, biggest threat + points gap, and a context-aware strategy paragraph (leader = safe, top-3 = differentials, bottom half = aggressive). Top 10 rivals with your row highlighted, and an SVG-based season-long trend chart plotting top 4 rivals' cumulative delta vs you per GW. Catch-up cards: differentials with low ownership, high upside.",
+      "tags": ["liga", "catch-up", "differential"],
+      "commits": ["8832edd"]
+    },
+    {
+      "date": "2026-04-24",
+      "category": "feature",
+      "title_no": "Kaptein egen seksjon med sammenligning og risikoprofil",
+      "title_en": "Captain dedicated section with comparison + risk profile",
+      "body_no": "Captain-valg er ~15% av sesongens poeng — fortjener førsteklasses plass. Hero-kort med Fraunces 56pt navn, mono 72pt projeksjon, '+1.4 vs Salah'-delta og 3-avsnitts FORDI-block. Risikoprofil-toggle (Safe/Balanced/Aggressive) re-rangerer pickene live. Top 5 alternativer som kort med form-prikker. Sammenligningsmodus: to spillere, side-ved-side, beste verdi grønn.",
+      "body_en": "Captain is ~15% of season points — deserves prime real estate. Hero card with Fraunces 56pt name, mono 72pt projection, '+1.4 vs Salah'-delta and 3-paragraph WHY block. Risk profile toggle (Safe/Balanced/Aggressive) re-ranks live. Top 5 alternatives as cards with form dots. Compare mode: two players, side-by-side, winning value highlighted green.",
+      "tags": ["captain", "comparison", "risk-profile"],
+      "commits": ["fdd1e5a"]
+    },
+    {
+      "date": "2026-04-24",
+      "category": "feature",
+      "title_no": "Plan-as-pitch — drag-and-drop og live-projeksjon",
+      "title_en": "Plan-as-pitch — drag-and-drop and live projection",
+      "body_no": "Plan-fanen er nå ekte fotballbane som hovedflate, ikke et skjema. Drag mellom posisjoner svapper slot, projeksjons-displayet rekompilerer øyeblikkelig. Posisjons-fargekoder, kapteinsbinde, vise-kapteinsbinde, rødt utropstegn for team-news. FDR-grid for startende elleveren. Transfer-sidepanel med inntil 3 forslag pluss et 'Hold heller'-kort når ingen møter +4 pts-baren — det smarteste UX-grepet i hele appen.",
+      "body_en": "Plan tab is now a real football pitch as the primary surface, not a form. Drag between positions swaps slots, the projection display recomputes instantly. Position colour stripes, captain band, vice band, red exclamation flag for team news. FDR grid for the starting eleven. Transfer panel with up to 3 suggestions plus a 'Hold instead' card when nothing meets the +4 pts bar — the smartest UX move in the whole app.",
+      "tags": ["plan", "pitch", "drag-drop"],
+      "commits": ["88aa175"]
+    },
+    {
+      "date": "2026-04-23",
+      "category": "feature",
+      "title_no": "Hjem: dominant kapteinskort + chip-tidslinje",
+      "title_en": "Home: dominant captain card + chip timeline",
+      "body_no": "Forrige fire-like-kort-Hjem byttet ut med konseptbriefens Del 05-layout: ett dominerende kapteinskort til venstre, transfer + mini-liga stable til høyre, chip-tidslinje på tvers, og en modell-footer som lenker til mandagsrapporten. Team-news-strip dukker opp torsdag-søndag eller når laget ditt har skader.",
+      "body_en": "The old four-equal-cards home swapped for concept brief Del 05 layout: one dominant captain card on the left, transfer + mini-league stacked on the right, chip timeline across, model footer linking to the Monday report. Team news strip appears Thu-Sun or when your squad has injuries.",
+      "tags": ["hjem", "captain", "chip-strategy"],
+      "commits": ["50dd1af"]
+    },
+    {
+      "date": "2026-04-23",
+      "category": "platform",
+      "title_no": "IA-pivot til 5+2 og Amber/Ink/Paper-identitet",
+      "title_en": "IA pivot to 5+2 and Amber/Ink/Paper identity",
+      "body_no": "Plan/Live/Review-modusene byttet ut med fem primære destinasjoner: Hjem · Plan · Kaptein · Liga · Arkiv (+ Spiller, Innstillinger). Bet Builder, Match Centre, Prediction Tracker, Draft skjult bak feature-flag (kode beholdt, reversibelt). Identitet swappet til konseptbriefens Amber #E5A23B primær, Paper #F6F2EB varm bakgrunn, Ink #0E1116 tekst. Display-font Fraunces (serif), body Inter Tight, mono JetBrains. Lucide SVG-ikoner — null emoji i navigasjon.",
+      "body_en": "Plan/Live/Review modes replaced with five primary destinations: Home · Plan · Captain · League · Archive (+ Player, Settings). Bet Builder, Match Centre, Prediction Tracker, Draft hidden behind feature flags (code preserved, reversible). Identity swapped to brief's Amber #E5A23B primary, Paper #F6F2EB warm background, Ink #0E1116 text. Display font Fraunces (serif), body Inter Tight, mono JetBrains. Lucide SVG icons — zero emoji in nav.",
+      "tags": ["ia", "identitet", "design"],
+      "commits": ["d38d3e4"]
+    },
+    {
+      "date": "2026-04-22",
+      "category": "feature",
+      "title_no": "USP-hero, 3-stegs onboarding og forklaringspanel",
+      "title_en": "USP hero, 3-step onboarding and explanation panel",
+      "body_no": "Hero med eksplisitt løfte: 'Vi viser deg hvorfor — ikke bare hva.' 3-stegs wizard erstatter gamle onboarding (lim inn ID → bekreft squad → 'her er din situasjon'). Hjem-brief med fire svar-kort, hver med 'fordi'-felt. Forklaringspanel som glir inn fra høyre med narrative + nøkkeltall + FDR-fargede kommende kamper. Inline glossar (xG, xA, FDR, EO, BPS, ICT, chips) — første forekomst per render får ?-tooltip.",
+      "body_en": "Hero with explicit promise: 'We show you why — not just what.' 3-step wizard replaces old onboarding (paste ID → confirm squad → 'here's your situation'). Home brief with four answer cards, each with a 'because' field. Explain panel slides in from the right with narrative + key stats + FDR-coloured upcoming fixtures. Inline glossary (xG, xA, FDR, EO, BPS, ICT, chips) — first occurrence per render gets a ? tooltip.",
+      "tags": ["onboarding", "explainability", "usp"],
+      "commits": ["c4319e9"]
+    },
+    {
+      "date": "2026-04-22",
+      "category": "platform",
+      "title_no": "Designsystem: lyst tema, tokens, mobile-first",
+      "title_en": "Design system: light theme, tokens, mobile-first",
+      "body_no": "Mørkt 'Bloomberg Terminal'-utseende byttet ut med høy-kontrast typografi-drevet system. Full :root-token-stakk for surfaces, borders, tekst, brand, semantiske farger, posisjon-farger, type-skala (Display 64 til Label 13px gulv), radii, skygger, spacing. Tabular-nums overalt der det står tall. Mobile-first med 768px og 480px breakpoints, sidebar blir drawer på mobil, ≥44px touch-targets på knapper og inputs.",
+      "body_en": "Dark 'Bloomberg Terminal' look replaced with a high-contrast typography-driven system. Full :root token stack for surfaces, borders, text, brand, semantic colours, position colours, type scale (Display 64 to Label 13px floor), radii, shadows, spacing. Tabular-nums everywhere there's a number. Mobile-first with 768px and 480px breakpoints, sidebar becomes a drawer on phones, ≥44px touch targets on buttons and inputs.",
+      "tags": ["design-system", "tokens", "mobile"],
+      "commits": ["259c153"]
+    },
+    {
+      "date": "2026-04-22",
+      "category": "platform",
+      "title_no": "Arkitektonisk fundament for redesign",
+      "title_en": "Architectural foundation for redesign",
+      "body_no": "Plan/Live/Review-modus-switcher i sidebaren (senere erstattet av 5+2). Onboarding-gate er nå blokkerende — ingen auto-demo, brukeren må lime inn Team ID eller eksplisitt klikke demo. i18n-skjelett: t() / setLocale() helpers, NO + EN locale-strenger, NO/EN-toggle i header. Premium feature-flagg-stativ (multi_gw, mini_league_spy, ai_chat) — alle gratis nå, klar for billing senere.",
+      "body_en": "Plan/Live/Review mode switcher in the sidebar (later replaced by 5+2). Onboarding gate is now blocking — no more auto-demo, user must paste Team ID or explicitly click demo. i18n skeleton: t() / setLocale() helpers, NO + EN locale strings, NO/EN toggle in header. Premium feature-flag scaffold (multi_gw, mini_league_spy, ai_chat) — all free today, wired for billing later.",
+      "tags": ["arkitektur", "i18n", "premium"],
+      "commits": ["25c616a"]
+    }
+  ]
+}
