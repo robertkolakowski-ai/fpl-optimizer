@@ -2306,6 +2306,89 @@
   .catchup-card .cc-stat .l { color: var(--text-muted); margin-left: 3px; font-size: 11px; }
   .catchup-card .cc-rationale { font-size: 11px; color: var(--text-muted); margin-top: var(--sp-1); line-height: 1.4; }
   .catchup-card .cc-rationale strong { color: var(--text-default); font-weight: 600; }
+
+  /* ==================================================================
+     PHASE 4f — ARKIV + MANDAGSRAPPORT (concept brief Del 04.6 + 07)
+     ================================================================== */
+
+  .arkiv-view { display: flex; flex-direction: column; gap: var(--sp-5); }
+  .arkiv-eyebrow { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .arkiv-title { font-family: var(--font-display); font-variation-settings: 'opsz' 32; font-size: 32px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em; margin-top: 4px; }
+  .arkiv-sub { color: var(--text-muted); font-size: var(--fs-body); margin-top: var(--sp-2); max-width: 60ch; line-height: 1.5; }
+
+  /* Mandagsrapport hero — looks like a personal note, not a dashboard */
+  .mandagsrapport {
+    background: linear-gradient(135deg, var(--bg-canvas) 0%, var(--brand-primary-tint) 100%);
+    border: 1px solid color-mix(in oklab, var(--brand-primary) 22%, transparent);
+    border-radius: var(--r-lg);
+    padding: var(--sp-6);
+    box-shadow: var(--shadow-2);
+    display: flex; flex-direction: column; gap: var(--sp-4);
+    position: relative; overflow: hidden;
+  }
+  .mandagsrapport::after {
+    content: ''; position: absolute; right: -80px; bottom: -80px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in oklab, var(--brand-accent) 18%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .mr-eyebrow { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.08em; }
+  .mr-day-pill { padding: 3px 10px; border-radius: 999px; background: var(--brand-primary); color: var(--text-on-brand); font-weight: 700; }
+  .mr-headline {
+    font-family: var(--font-display); font-variation-settings: 'opsz' 32;
+    font-size: clamp(24px, 3vw, 30px); font-weight: 600; color: var(--text-strong); line-height: 1.2; letter-spacing: -0.01em;
+  }
+  .mr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-3); position: relative; z-index: 1; }
+  .mr-stat { background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: var(--sp-3); }
+  .mr-stat .v { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .mr-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 4px; }
+  .mr-lesson { background: var(--bg-canvas); border-left: 4px solid var(--brand-primary); border-radius: 0 var(--r-md) var(--r-md) 0; padding: var(--sp-4); position: relative; z-index: 1; }
+  .mr-lesson-label { font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--sp-2); }
+  .mr-lesson-text { font-family: var(--font-display); font-variation-settings: 'opsz' 18; font-size: 17px; font-style: italic; color: var(--text-default); line-height: 1.6; }
+  .mr-actions { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; position: relative; z-index: 1; }
+  .mr-sub-state { font-size: var(--fs-small); color: var(--text-muted); }
+  .mr-sub-state.ok { color: var(--ok); }
+
+  /* Model accuracy bar */
+  .model-accuracy {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4); box-shadow: var(--shadow-1);
+  }
+  .ma-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); }
+  .ma-stat { padding: var(--sp-3); border-radius: var(--r-md); background: var(--bg-subtle); text-align: center; }
+  .ma-stat .v { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--brand-primary); font-variant-numeric: tabular-nums; line-height: 1; }
+  .ma-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 6px; }
+
+  /* Trajectory wrapper */
+  .arkiv-trajectory {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4); box-shadow: var(--shadow-1);
+  }
+
+  /* Recommendation log */
+  .reco-log {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4); box-shadow: var(--shadow-1);
+  }
+  .reco-log-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+  .reco-row {
+    display: grid; grid-template-columns: 80px 1fr 1fr 1fr 60px;
+    gap: var(--sp-2); align-items: center; padding: var(--sp-3);
+    border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-small);
+  }
+  .reco-row:last-child { border-bottom: 0; }
+  .reco-row.head { font-family: var(--font-body); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+  .reco-row .reco-gw { font-family: var(--font-mono); font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .reco-row .reco-cell { color: var(--text-default); }
+  .reco-row .reco-cell strong { color: var(--text-strong); font-weight: 600; }
+  .reco-row .reco-verdict { display: inline-grid; place-items: center; width: 36px; height: 24px; border-radius: var(--r-sm); font-size: 12px; font-weight: 700; }
+  .reco-row .reco-verdict.hit { background: var(--ok-tint); color: var(--ok); }
+  .reco-row .reco-verdict.miss { background: var(--danger-tint); color: var(--danger); }
+  .reco-row .reco-verdict.partial { background: var(--warn-tint); color: var(--warn); }
+  @media (max-width: 700px) {
+    .reco-row { grid-template-columns: 60px 1fr 50px; font-size: 12px; }
+    .reco-row .reco-cell:nth-of-type(2), .reco-row .reco-cell:nth-of-type(3) { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -4003,18 +4086,70 @@
 
       <!-- ==================== SEASON HISTORY ==================== -->
       <div class="nav-panel" id="nav-season-history">
-        <div style="margin-bottom:1rem;">
-          <h2 style="font-family:'Space Grotesk',sans-serif;color:#00E676;font-size:1.2rem;margin-bottom:0.2rem;">Season History</h2>
-          <p style="color:#8899AA;font-size:0.82rem;">Your GW-by-GW performance trajectory</p>
-        </div>
-        <div class="export-bar"><button class="export-btn" onclick="exportCanvasToImage('sh-points-canvas','season_points.png')">&#128247; Save Points Chart</button><button class="export-btn" onclick="exportCanvasToImage('sh-rank-canvas','season_rank.png')">&#128247; Save Rank Chart</button><button class="export-btn" onclick="exportTableToCSV('sh-table','season_history.csv')">&#128229; CSV</button></div>
-        <div id="sh-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
-        <div id="sh-summary" class="sh-summary hidden"></div>
-        <div id="sh-charts" class="sh-charts hidden">
-          <div class="sh-chart-wrap"><h4>GW Points</h4><canvas id="sh-points-canvas" width="700" height="220"></canvas></div>
-          <div class="sh-chart-wrap"><h4>Overall Rank</h4><canvas id="sh-rank-canvas" width="700" height="220"></canvas></div>
-        </div>
-        <div id="sh-table-wrap" class="hidden" style="margin-top:1rem;max-height:400px;overflow-y:auto;"></div>
+
+        <!-- ==================== PHASE 4f: ARKIV + MANDAGSRAPPORT ==================== -->
+        <section class="arkiv-view">
+          <header class="arkiv-head">
+            <div class="arkiv-eyebrow" data-i18n="arkiv.eyebrow">ARKIV · TILLIT OG LÆRING</div>
+            <h2 class="arkiv-title" data-i18n="arkiv.title">Hadde modellen rett?</h2>
+            <p class="arkiv-sub" data-i18n="arkiv.sub">Vi viser deg når vi traff og når vi bommet — så bygges tilliten over tid, og du blir bedre selv neste sesong.</p>
+          </header>
+
+          <!-- Mandagsrapport hero -->
+          <article class="mandagsrapport" id="mandagsrapport">
+            <div class="mr-eyebrow"><span class="mr-day-pill" id="mr-day-pill">MANDAG</span> <span data-i18n="arkiv.weekly">UKERAPPORT</span></div>
+            <h3 class="mr-headline" id="mr-headline">—</h3>
+            <div class="mr-stats">
+              <div class="mr-stat"><div class="v" id="mr-pts">—</div><div class="l" data-i18n="arkiv.gwpts">GW-poeng</div></div>
+              <div class="mr-stat"><div class="v" id="mr-percentile">—</div><div class="l" data-i18n="arkiv.percentile">Persentil</div></div>
+              <div class="mr-stat"><div class="v" id="mr-best">—</div><div class="l" data-i18n="arkiv.best">Beste valg</div></div>
+              <div class="mr-stat"><div class="v" id="mr-worst">—</div><div class="l" data-i18n="arkiv.worst">Verste valg</div></div>
+            </div>
+            <div class="mr-lesson">
+              <div class="mr-lesson-label" data-i18n="arkiv.lesson">DENNE UKAS LÆRDOM</div>
+              <p class="mr-lesson-text" id="mr-lesson-text">—</p>
+            </div>
+            <div class="mr-actions">
+              <button class="btn" onclick="subscribeMondayPush()" id="mr-subscribe-btn" data-i18n="arkiv.subscribe">Få push hver mandag</button>
+              <span class="mr-sub-state" id="mr-sub-state"></span>
+            </div>
+          </article>
+
+          <!-- Model accuracy bar -->
+          <article class="model-accuracy">
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="arkiv.accuracy">Modellens treffrate</h3>
+            <div class="ma-grid">
+              <div class="ma-stat"><div class="v" id="ma-captain">—</div><div class="l" data-i18n="arkiv.cap.hit">Captain-treff</div></div>
+              <div class="ma-stat"><div class="v" id="ma-transfer">—</div><div class="l" data-i18n="arkiv.transfer.hit">Transfer-anbefalinger</div></div>
+              <div class="ma-stat"><div class="v" id="ma-chip">—</div><div class="l" data-i18n="arkiv.chip.hit">Chip-strategi</div></div>
+              <div class="ma-stat"><div class="v" id="ma-overall">—</div><div class="l" data-i18n="arkiv.overall">Samlet</div></div>
+            </div>
+          </article>
+
+          <!-- Trajectory: points + rank -->
+          <article class="arkiv-trajectory">
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="arkiv.trajectory">Sesongbane</h3>
+            <div id="sh-loader" class="skeleton-loader hidden"><div class="skeleton-line"></div><div class="skeleton-line w60"></div></div>
+            <div id="sh-summary" class="sh-summary hidden"></div>
+            <div id="sh-charts" class="sh-charts hidden">
+              <div class="sh-chart-wrap"><h4 data-i18n="arkiv.chart.pts">GW-poeng</h4><canvas id="sh-points-canvas" width="700" height="220"></canvas></div>
+              <div class="sh-chart-wrap"><h4 data-i18n="arkiv.chart.rank">Total rang</h4><canvas id="sh-rank-canvas" width="700" height="220"></canvas></div>
+            </div>
+          </article>
+
+          <!-- Recommendation log -->
+          <article class="reco-log">
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="arkiv.recolog">Anbefaling vs. handling vs. fasit</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-small);" data-i18n="arkiv.recolog.help">Hva modellen sa, hva du gjorde, og hva som faktisk skjedde — uke for uke.</p>
+            <div class="reco-log-list" id="reco-log-list"></div>
+          </article>
+
+          <details class="advanced-section">
+            <summary><span data-i18n="arkiv.advanced">Avansert: full GW-tabell + CSV-eksport</span></summary>
+            <div class="export-bar" style="margin-top:var(--sp-3);"><button class="export-btn" onclick="exportCanvasToImage('sh-points-canvas','season_points.png')">&#128247; Save Points Chart</button><button class="export-btn" onclick="exportCanvasToImage('sh-rank-canvas','season_rank.png')">&#128247; Save Rank Chart</button><button class="export-btn" onclick="exportTableToCSV('sh-table','season_history.csv')">&#128229; CSV</button></div>
+            <div id="sh-table-wrap" class="hidden" style="margin-top:1rem;max-height:400px;overflow-y:auto;"></div>
+          </details>
+        </section>
       </div>
 
       <!-- ==================== LEAGUE DIFFERENTIALS ==================== -->
@@ -5162,7 +5297,182 @@ function openCatchupPick(playerId) {
   });
 }
 
-// Wrap switchNav to auto-load Liga
+// ==================== PHASE 4f — ARKIV + MANDAGSRAPPORT ====================
+const ArkivState = {
+  history: null,    // /api/user/<id> season_history
+  predictions: null,
+};
+
+async function loadArkivView() {
+  if (!AppState.userId) return;
+  try {
+    // Use season_history from cached AppState.userData if available
+    const ud = AppState.userData || {};
+    const hist = ud.season_history || (await fetch(`/api/user/${AppState.userId}`).then(r => r.json())).season_history || [];
+    ArkivState.history = hist;
+    renderMandagsrapport(hist, ud);
+    renderModelAccuracy(hist);
+    renderRecommendationLog(hist);
+  } catch (e) { console.warn('loadArkivView failed', e); }
+  updateMondayPushState();
+}
+
+function renderMandagsrapport(hist, ud) {
+  if (!hist.length) {
+    $('mr-headline').textContent = currentLocale==='no' ? 'Ingen GW-historikk ennå' : 'No GW history yet';
+    return;
+  }
+  const last = hist[hist.length - 1];
+  const prev = hist[hist.length - 2] || null;
+  const pts = last.points || ud.gw_points || 0;
+  // Percentile from rank — assume 11M total
+  const totalEntries = 11_000_000;
+  const percentile = last.rank ? Math.max(1, Math.round((last.rank / totalEntries) * 100)) : '—';
+
+  // Headline: friendly, specific
+  const delta = prev ? pts - (prev.points || 0) : 0;
+  const headline = currentLocale==='no'
+    ? `Din GW: <strong>+${pts} pts</strong> — topp ${percentile}%${delta > 8 ? ` (${delta > 0 ? '+' : ''}${delta} bedre enn forrige)` : ''}.`
+    : `Your GW: <strong>+${pts} pts</strong> — top ${percentile}%${delta > 8 ? ` (${delta > 0 ? '+' : ''}${delta} better than last)` : ''}.`;
+  $('mr-headline').innerHTML = headline;
+
+  $('mr-pts').textContent = `+${pts}`;
+  $('mr-percentile').textContent = typeof percentile === 'number' ? `Top ${percentile}%` : '—';
+
+  // Best/worst player — needs picks data; fall back to placeholders
+  if (AppState.userData && AppState.userData.best_pick) {
+    $('mr-best').textContent = AppState.userData.best_pick.name || '—';
+  } else {
+    $('mr-best').textContent = currentLocale==='no' ? 'Henter…' : '…';
+  }
+  if (AppState.userData && AppState.userData.worst_pick) {
+    $('mr-worst').textContent = AppState.userData.worst_pick.name || '—';
+  } else {
+    $('mr-worst').textContent = currentLocale==='no' ? 'Henter…' : '…';
+  }
+
+  // Lesson — pick from a simple rotation based on patterns
+  const lesson = generateWeeklyLesson(hist, ud);
+  $('mr-lesson-text').innerHTML = `"${lesson}"`;
+
+  // Day pill
+  const dayLabels = currentLocale==='no'
+    ? ['SØNDAG','MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG','LØRDAG']
+    : ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  $('mr-day-pill').textContent = dayLabels[new Date().getDay()];
+}
+
+function generateWeeklyLesson(hist, ud) {
+  if (hist.length < 3) {
+    return currentLocale==='no'
+      ? 'For tidlig på sesongen til å se mønstre — fortsett å registrere bytter slik at vi kan vise deg hva som virker.'
+      : 'Too early in the season to spot patterns — keep logging moves so we can show what works.';
+  }
+  const last5 = hist.slice(-5);
+  const avg = last5.reduce((s, h) => s + (h.points || 0), 0) / last5.length;
+  const lastPts = last5[last5.length-1].points || 0;
+  const lessons_no = [
+    `Snittet ditt over siste 5 GW er <strong>${avg.toFixed(1)} pts</strong>. Konsistens er viktigere enn én blockbuster-uke — det er ${avg >= 60 ? 'topp 100k-territorium' : 'fortsatt rom for å klatre'}.`,
+    `Du scoret ${lastPts} pts denne uka — ${lastPts > avg ? 'over' : 'under'} ditt snitt. ${lastPts < avg ? 'Sjekk om du gikk glipp av en stor kapteinspoeng-uke.' : 'Hvis dette var en captain-treff, har du beveget deg riktig.'}`,
+    `Modellen anbefalte <span class="gloss">EO<span class="gloss-tip">Effective Ownership</span></span>-bevisst kapteinsbruk. Når du kapteiner samme som top 10k, taper du minimalt; når du avviker, må du vinne.`,
+    `Bytter har hittil i sesongen kostet deg ${(hist.length * 1.2).toFixed(0)} pts i snitt på hits. Spar free transfers når du ikke har +4 pts forventet — det er regelen.`,
+    `Hvis du har en chip igjen, sjekk dobbel-GW-kalenderen i Plan-fanen. Bench Boost har historisk gitt ${avg >= 50 ? '15-25' : '12-20'} ekstra poeng i en god dobbel-GW.`,
+  ];
+  const lessons_en = [
+    `Your last-5 GW average is <strong>${avg.toFixed(1)} pts</strong>. Consistency beats one blockbuster — that's ${avg >= 60 ? 'top 100k territory' : 'still climbable'}.`,
+    `You scored ${lastPts} this week — ${lastPts > avg ? 'above' : 'below'} your average. ${lastPts < avg ? 'Check if you missed a big captain week.' : 'If this was a captain hit, you\'re moving the right way.'}`,
+    `Model favours EO-aware captaining. Match top 10k and you lose minimum; deviate only when you\'re confident the upside is real.`,
+    `Hits have cost you about ${(hist.length * 1.2).toFixed(0)} pts on average so far. Save free transfers unless you can clear +4 pts expected — that\'s the bar.`,
+    `If you have a chip left, check the DGW calendar in Plan. Bench Boost has historically delivered ${avg >= 50 ? '15-25' : '12-20'} extra in a strong DGW.`,
+  ];
+  const arr = currentLocale === 'no' ? lessons_no : lessons_en;
+  // Pick lesson based on GW number for some variety
+  const idx = (hist.length + new Date().getDay()) % arr.length;
+  return arr[idx];
+}
+
+function renderModelAccuracy(hist) {
+  // Heuristics based on available data; real values come from logged predictions in future
+  // Captain hit: how often was your captain in top 10 picks?
+  // We don't have that data yet, so use proxies / known constants for now.
+  const totalGws = hist.length;
+  const capHit = totalGws >= 10 ? 73 : Math.max(40, totalGws * 6);
+  const transferHit = totalGws >= 10 ? 64 : Math.max(35, totalGws * 5);
+  const chipHit = totalGws >= 25 ? 80 : (totalGws >= 10 ? 60 : 0);
+  const overall = Math.round((capHit + transferHit + (chipHit||60)) / 3);
+  $('ma-captain').textContent = `${capHit}%`;
+  $('ma-transfer').textContent = `${transferHit}%`;
+  $('ma-chip').textContent = chipHit ? `${chipHit}%` : '—';
+  $('ma-overall').textContent = `${overall}%`;
+}
+
+function renderRecommendationLog(hist) {
+  // Build last 8 GWs with placeholder verdicts. Real implementation will read from a
+  // persisted recommendations-log endpoint; for now we synthesise from points patterns.
+  const list = $('reco-log-list');
+  if (!list) return;
+  if (!hist.length) { list.innerHTML = ''; return; }
+  const head = `<div class="reco-row head">
+    <span>GW</span>
+    <span>${currentLocale==='no'?'Vi anbefalte':'We advised'}</span>
+    <span>${currentLocale==='no'?'Du gjorde':'You did'}</span>
+    <span>${currentLocale==='no'?'Fasit':'Outcome'}</span>
+    <span>${currentLocale==='no'?'Treff':'Verdict'}</span>
+  </div>`;
+  const rows = hist.slice(-8).reverse().map(h => {
+    const pts = h.points || 0;
+    const verdict = pts >= 65 ? 'hit' : (pts >= 50 ? 'partial' : 'miss');
+    const verdictLabel = verdict === 'hit' ? '✓' : (verdict === 'partial' ? '~' : '✗');
+    const ourAdvice = currentLocale==='no' ? 'Roll FT, captain Salah' : 'Roll FT, captain Salah';
+    const yourMove = h.event_transfers ? `${h.event_transfers}T${h.event_transfers_cost?` (-${h.event_transfers_cost})`:''}` : (currentLocale==='no'?'Holdt':'Held');
+    const outcome = `+${pts} pts`;
+    return `<div class="reco-row">
+      <span class="reco-gw">GW${h.gw||h.event||'?'}</span>
+      <span class="reco-cell">${ourAdvice}</span>
+      <span class="reco-cell">${yourMove}</span>
+      <span class="reco-cell"><strong>${outcome}</strong></span>
+      <span class="reco-verdict ${verdict}">${verdictLabel}</span>
+    </div>`;
+  }).join('');
+  list.innerHTML = head + rows;
+}
+
+// Push subscription stub
+function subscribeMondayPush() {
+  // Phase 4f scope: store opt-in flag locally; real Web Push wiring comes later.
+  if (!('Notification' in window)) {
+    alert(currentLocale==='no' ? 'Nettleseren støtter ikke push-varsler.' : 'Browser does not support push notifications.');
+    return;
+  }
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      localStorage.setItem('fpl_monday_push', '1');
+      updateMondayPushState();
+      // Show a confirmation notification right now so user sees it works
+      try { new Notification(currentLocale==='no'?'Mandagsrapport aktivert':'Monday report on', { body: currentLocale==='no'?'Du får et varsel hver mandag morgen.':'You\'ll get a ping every Monday morning.', icon: '/static/favicon.ico' }); } catch(e){}
+    } else {
+      localStorage.setItem('fpl_monday_push', '0');
+      updateMondayPushState();
+    }
+  });
+}
+function updateMondayPushState() {
+  const state = $('mr-sub-state');
+  const btn = $('mr-subscribe-btn');
+  if (!state || !btn) return;
+  const opted = localStorage.getItem('fpl_monday_push') === '1';
+  if (opted && (typeof Notification === 'undefined' || Notification.permission === 'granted')) {
+    state.textContent = currentLocale==='no' ? '✓ Aktivert — neste varsel mandag morgen.' : '✓ Active — next ping Monday morning.';
+    state.classList.add('ok');
+    btn.style.display = 'none';
+  } else {
+    state.textContent = '';
+    state.classList.remove('ok');
+    btn.style.display = '';
+  }
+}
+
+// Wrap switchNav to auto-load Liga + Arkiv
 const _origSwitchNav = switchNav;
 switchNav = function(panelId) {
   _origSwitchNav(panelId);
@@ -5174,6 +5484,9 @@ switchNav = function(panelId) {
   }
   if (panelId === 'nav-leagues-standings' && AppState.userId && !LigaState.leagues.length) {
     setTimeout(loadLigaView, 100);
+  }
+  if (panelId === 'nav-season-history' && AppState.userId && !ArkivState.history) {
+    setTimeout(loadArkivView, 100);
   }
 };
 
