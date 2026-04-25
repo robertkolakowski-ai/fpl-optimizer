@@ -1635,6 +1635,175 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
+
+  /* ==================================================================
+     PHASE 3 — HOME, ONBOARDING, EXPLAINABILITY
+     ================================================================== */
+
+  /* ---------- USP Hero ---------- */
+  .hero-usp {
+    background: linear-gradient(135deg, var(--brand-primary-tint) 0%, var(--brand-accent-tint) 100%);
+    border: 1px solid color-mix(in oklab, var(--brand-primary) 18%, transparent);
+    border-radius: var(--r-lg);
+    padding: var(--sp-8) var(--sp-6);
+    margin-bottom: var(--sp-6);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-usp::after {
+    content: ''; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px;
+    background: radial-gradient(circle, color-mix(in oklab, var(--brand-primary) 12%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-usp .hero-eyebrow {
+    font-family: var(--font-display); font-size: var(--fs-label); font-weight: 600;
+    color: var(--brand-primary); letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: var(--sp-2); display: inline-flex; align-items: center; gap: var(--sp-1);
+  }
+  .hero-usp h1.hero-headline {
+    font-family: var(--font-display); font-size: clamp(28px, 4vw, 44px); line-height: 1.1;
+    color: var(--text-strong); font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--sp-3);
+    max-width: 26ch;
+  }
+  .hero-usp .hero-sub {
+    font-size: var(--fs-body-lg); color: var(--text-muted); line-height: 1.5; max-width: 56ch;
+    margin-bottom: var(--sp-5);
+  }
+  .hero-usp .hero-cta-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; position: relative; z-index: 1; }
+  .hero-usp .hero-cta-row .btn { padding: 0.7rem 1.3rem; font-size: var(--fs-body-lg); }
+
+  /* ---------- 3-step onboarding wizard ---------- */
+  .wizard-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg); padding: var(--sp-6); box-shadow: var(--shadow-2);
+    max-width: 560px; margin: 0 auto;
+  }
+  .wizard-steps { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+  .wizard-step-pip {
+    flex: 1; height: 4px; border-radius: 2px; background: var(--bg-muted);
+    transition: background 0.2s;
+  }
+  .wizard-step-pip.done { background: var(--brand-primary); }
+  .wizard-step-pip.active { background: var(--brand-primary); }
+  .wizard-step-num { font-size: var(--fs-label); color: var(--text-faint); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .wizard-step-title { font-family: var(--font-display); font-size: 22px; color: var(--text-strong); font-weight: 700; margin: var(--sp-1) 0 var(--sp-2); }
+  .wizard-step-desc { font-size: var(--fs-body); color: var(--text-muted); margin-bottom: var(--sp-4); line-height: 1.5; }
+  .wizard-fpl-hint {
+    background: var(--bg-subtle); border: 1px dashed var(--border-default); border-radius: var(--r-sm);
+    padding: var(--sp-3); margin-top: var(--sp-3); font-size: var(--fs-small); color: var(--text-muted);
+  }
+  .wizard-fpl-hint code { background: var(--bg-canvas); padding: 1px 6px; border-radius: 3px; font-family: var(--font-mono); font-size: 13px; color: var(--text-strong); border: 1px solid var(--border-subtle); }
+  .wizard-fpl-hint .hl { color: var(--brand-primary); font-weight: 700; }
+  .wizard-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-5); justify-content: space-between; align-items: center; }
+  .wizard-skip { color: var(--text-faint); font-size: var(--fs-small); background: transparent; border: 0; cursor: pointer; }
+  .wizard-skip:hover { color: var(--text-muted); text-decoration: underline; }
+  .wizard-confirm-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3); background: var(--bg-subtle); border-radius: var(--r-sm); margin-bottom: var(--sp-3); }
+  .wizard-confirm-row .name { font-weight: 600; color: var(--text-strong); }
+  .wizard-confirm-row .meta { color: var(--text-muted); font-size: var(--fs-small); margin-top: 2px; }
+  .wizard-situation { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .wizard-situation .ws-stat { background: var(--bg-subtle); border-radius: var(--r-sm); padding: var(--sp-3); }
+  .wizard-situation .ws-stat .v { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .wizard-situation .ws-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 2px; }
+
+  /* ---------- Home brief: 4 answer cards (#15) ---------- */
+  .home-brief { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-6); }
+  .brief-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4);
+    cursor: pointer; transition: all 0.18s;
+    display: flex; flex-direction: column; gap: var(--sp-2);
+    box-shadow: var(--shadow-1);
+    position: relative;
+  }
+  .brief-card:hover { border-color: var(--brand-primary); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+  .brief-card .bc-eyebrow { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .brief-card .bc-eyebrow .icon { font-size: 14px; }
+  .brief-card .bc-headline { font-family: var(--font-display); font-size: 18px; color: var(--text-strong); font-weight: 700; line-height: 1.25; }
+  .brief-card .bc-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.45; }
+  .brief-card .bc-because strong { color: var(--text-default); font-weight: 600; }
+  .brief-card .bc-cta { margin-top: auto; font-size: var(--fs-label); font-weight: 600; color: var(--brand-primary); display: inline-flex; align-items: center; gap: var(--sp-1); }
+  .brief-card .bc-cta::after { content: '→'; transition: transform 0.15s; }
+  .brief-card:hover .bc-cta::after { transform: translateX(2px); }
+  .brief-card.tone-warn { border-color: color-mix(in oklab, var(--warn) 25%, var(--border-subtle)); }
+  .brief-card.tone-warn .bc-eyebrow { color: var(--warn); }
+  .brief-card.tone-info .bc-eyebrow { color: var(--info); }
+  .brief-card.tone-ok .bc-eyebrow { color: var(--ok); }
+
+  /* ---------- Explanation side-panel (#18) ---------- */
+  .explain-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw);
+    background: var(--bg-canvas); border-left: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-3); z-index: 400;
+    transform: translateX(100%); transition: transform 0.25s ease;
+    display: flex; flex-direction: column;
+  }
+  .explain-panel.open { transform: translateX(0); }
+  .explain-panel-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.4); z-index: 399;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .explain-panel-overlay.open { opacity: 1; pointer-events: auto; }
+  .ep-head { padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .ep-head .title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-strong); }
+  .ep-close { background: transparent; border: 0; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: var(--r-sm); width: 32px; height: 32px; display: grid; place-items: center; }
+  .ep-close:hover { background: var(--bg-subtle); color: var(--text-strong); }
+  .ep-body { flex: 1; overflow-y: auto; padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-5); }
+  .ep-section { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .ep-section h4 { font-family: var(--font-display); font-size: var(--fs-label); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ep-narrative { font-size: var(--fs-body); color: var(--text-default); line-height: 1.55; }
+  .ep-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
+  .ep-stat { background: var(--bg-subtle); border-radius: var(--r-sm); padding: var(--sp-3); }
+  .ep-stat .v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .ep-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 2px; }
+  .ep-fixtures { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ep-fix { padding: 4px 8px; border-radius: var(--r-sm); font-size: var(--fs-label); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ep-fix.fdr-2 { background: var(--ok-tint); color: var(--ok); }
+  .ep-fix.fdr-3 { background: var(--bg-muted); color: var(--text-muted); }
+  .ep-fix.fdr-4 { background: var(--warn-tint); color: var(--warn); }
+  .ep-fix.fdr-5 { background: var(--danger-tint); color: var(--danger); }
+
+  /* ---------- Inline glossary (#22) ---------- */
+  .gloss { position: relative; display: inline-flex; align-items: center; gap: 3px; cursor: help; border-bottom: 1px dotted var(--text-faint); }
+  .gloss::after {
+    content: '?'; display: inline-grid; place-items: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg-muted); color: var(--text-muted);
+    font-size: 10px; font-weight: 700; font-family: var(--font-body);
+    margin-left: 2px;
+  }
+  .gloss-tip {
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: var(--bg-inverse); color: #FFFFFF; padding: 8px 12px;
+    border-radius: var(--r-sm); font-size: var(--fs-label); line-height: 1.4;
+    font-weight: 400; white-space: normal; width: max-content; max-width: 240px;
+    box-shadow: var(--shadow-3); z-index: 500;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .gloss:hover .gloss-tip, .gloss:focus-within .gloss-tip { opacity: 1; }
+  .gloss-tip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: var(--bg-inverse);
+  }
+
+  /* ---------- Deadline countdown (#20) ---------- */
+  .deadline-countdown {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: var(--r-sm);
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle);
+    font-size: var(--fs-label); font-weight: 600; color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .deadline-countdown.urgent { background: var(--danger-tint); color: var(--danger); border-color: color-mix(in oklab, var(--danger) 25%, transparent); }
+  .deadline-countdown.soon { background: var(--warn-tint); color: var(--warn); border-color: color-mix(in oklab, var(--warn) 25%, transparent); }
+  .deadline-countdown .dl-icon { font-size: 12px; }
+  .deadline-countdown .dl-label { font-weight: 500; opacity: 0.8; }
+
+  /* Mobile hero/wizard */
+  @media (max-width: 480px) {
+    .hero-usp { padding: var(--sp-5) var(--sp-4); }
+    .wizard-card { padding: var(--sp-4); }
+    .ep-stats { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -1896,6 +2065,13 @@
       <div class="uhb-item"><span class="uhb-label">Bank</span><span class="uhb-value gold" id="uhb-bank">-</span></div>
       <div class="uhb-item"><span class="uhb-label">FTs</span><span class="uhb-value" id="uhb-fts">-</span></div>
       <div class="uhb-item" id="uhb-chips-wrap"><span class="uhb-label">Chips</span><span id="uhb-chips"></span></div>
+      <div class="uhb-item" id="uhb-deadline-wrap" hidden>
+        <span class="deadline-countdown" id="uhb-deadline" title="Time until next FPL deadline">
+          <span class="dl-icon">&#9201;</span>
+          <span class="dl-label" data-i18n="uhb.deadline">Deadline</span>
+          <span id="uhb-deadline-text">--</span>
+        </span>
+      </div>
       <button class="uhb-sync" onclick="syncUser()" id="uhb-sync-btn">&#x21bb; Sync</button>
       <span class="inline-spinner" id="uhb-sync-spinner"></span>
       <span style="color:#555;font-size:0.65rem;" id="uhb-last-sync"></span>
@@ -1915,25 +2091,27 @@
       <!-- ==================== DASHBOARD ==================== -->
       <div class="nav-panel active" id="nav-dashboard">
 
-        <!-- Entry cards: two pathways -->
-        <div class="dash-grid" id="dash-entry-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;">
-          <div class="dash-card" onclick="var el=$('dash-fpl-input');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'})}else{switchNav('nav-settings')}">
-            <div class="dc-icon">&#9889;</div>
-            <div class="dc-title">Connect your FPL team</div>
-            <div class="dc-desc">Enter your FPL ID below to unlock AI-powered optimization</div>
+        <!-- ==================== HERO / USP (#1, #5) ==================== -->
+        <!-- Shown to all users; doubles as headline brand statement -->
+        <section class="hero-usp" id="hero-usp">
+          <div class="hero-eyebrow"><span>&#9889;</span> <span data-i18n="hero.eyebrow">FORKLARBAR FPL-OPTIMIZER</span></div>
+          <h1 class="hero-headline" data-i18n="hero.headline">Vi viser deg <em style="font-style:normal;color:var(--brand-primary)">hvorfor</em> — ikke bare hva.</h1>
+          <p class="hero-sub" data-i18n="hero.sub">Hver anbefaling kommer med en menneskelig forklaring: form, kamper, eierskap og risiko forklart i klartekst — så du tar bedre FPL-beslutninger og ser raskere resultater.</p>
+          <div class="hero-cta-row">
+            <button class="btn" onclick="document.getElementById('wizard-step-1-input').focus()" data-i18n="hero.cta">Koble til laget mitt</button>
+            <a href="#" class="ob-demo-link" onclick="activateDemo();return false;" style="color:var(--text-muted);font-size:var(--fs-small)" data-i18n="hero.demo">eller prøv med demodata →</a>
           </div>
-          <div class="dash-card" onclick="switchNav('nav-match-centre')">
-            <div class="dc-icon">&#9917;</div>
-            <div class="dc-title">Analyse upcoming matches</div>
-            <div class="dc-desc">Poisson-based predictions with scoreline probabilities</div>
-          </div>
+        </section>
+
+        <!-- Welcome (shown only when connected) -->
+        <div class="dash-welcome" id="dash-welcome" style="display:none;">
+          <h2 id="dash-title">Dashboard</h2>
+          <p id="dash-subtitle">Live overview — last synced just now.</p>
         </div>
 
-        <!-- Welcome -->
-        <div class="dash-welcome">
-          <h2 id="dash-title">Dashboard</h2>
-          <p id="dash-subtitle">Enter your FPL ID below to see your live overview. <a href="#" onclick="tourStart();return false" class="tour-start-link">Take a tour</a></p>
-        </div>
+        <!-- ==================== HOME BRIEF (#15) — 4 personalised answer cards ==================== -->
+        <!-- Hidden until connected; populated by renderHomeBrief() in JS -->
+        <div class="home-brief" id="home-brief" style="display:none;"></div>
 
         <!-- Top stats -->
         <div class="dash-stats" id="dash-stats">
@@ -1961,46 +2139,68 @@
 
         <!-- Demo banner removed — replaced by global demo-global-strip -->
 
-        <!-- Onboarding: shown when no user connected -->
+        <!-- ==================== 3-STEP ONBOARDING WIZARD (#14) ==================== -->
         <div id="dash-empty-state">
-          <div class="onboarding-card">
-            <div class="ob-icon">&#9917;</div>
-            <h3 class="ob-title">Connect your FPL team to unlock your dashboard</h3>
-            <div class="ob-benefits">
-              <div class="ob-benefit"><span class="ob-check">&#10003;</span> See your live squad and points in real time</div>
-              <div class="ob-benefit"><span class="ob-check">&#10003;</span> Get personalized transfer suggestions with expected points gain</div>
-              <div class="ob-benefit"><span class="ob-check">&#10003;</span> Track your rank, league position and chip strategy</div>
+          <div class="wizard-card" id="onboard-wizard" data-step="1">
+            <div class="wizard-steps" aria-hidden="true">
+              <div class="wizard-step-pip active" data-pip="1"></div>
+              <div class="wizard-step-pip" data-pip="2"></div>
+              <div class="wizard-step-pip" data-pip="3"></div>
             </div>
-            <div class="ob-actions">
-              <div class="dash-onboard-row">
-                <input type="text" id="dash-fpl-input" placeholder="FPL ID or profile URL" onkeydown="if(event.key==='Enter')loadUserFromDashboard()" oninput="autoDetectFplId(this)">
-                <button class="btn" id="dash-load-btn" onclick="loadUserFromDashboard()">Connect</button>
+
+            <!-- Step 1: paste Team ID -->
+            <div class="wizard-pane" data-pane="1">
+              <div class="wizard-step-num" data-i18n="wiz.s1.num">STEG 1 AV 3</div>
+              <div class="wizard-step-title" data-i18n="wiz.s1.title">Lim inn FPL Team ID</div>
+              <div class="wizard-step-desc" data-i18n="wiz.s1.desc">Vi henter automatisk laget ditt, budsjettet, free transfers, brukte chips og rang.</div>
+              <div class="dash-onboard-row" style="display:flex;gap:0.5rem;">
+                <input type="text" id="wizard-step-1-input" placeholder="123456 eller https://fantasy.premierleague.com/entry/123456/event/29" style="flex:1;" onkeydown="if(event.key==='Enter')wizardSubmitId()" oninput="autoDetectFplId(this)">
+                <button class="btn" onclick="wizardSubmitId()" data-i18n="wiz.s1.btn">Hent →</button>
               </div>
-              <div class="dash-onboard-help">Find your ID at <a href="https://fantasy.premierleague.com" target="_blank" rel="noopener">fantasy.premierleague.com</a> &rarr; My Team &rarr; URL contains your ID</div>
-              <div class="dash-onboard-error" id="dash-onboard-error"></div>
-              <a href="#" class="ob-demo-link" onclick="activateDemo();return false;">or try with demo data</a>
+              <div class="dash-onboard-error" id="wizard-error" style="color:var(--danger);font-size:var(--fs-small);margin-top:8px;"></div>
+              <div class="wizard-fpl-hint">
+                <span data-i18n="wiz.s1.hint">Finn ID-en din: gå til <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. URL-en blir <code>/entry/<span class="hl">123456</span>/event/29</code> — det fete tallet er ID-en din.</span>
+              </div>
+              <!-- Hidden compatibility input — keeps loadUserFromDashboard() working -->
+              <input type="hidden" id="dash-fpl-input">
+              <div class="wizard-actions">
+                <button class="wizard-skip" onclick="activateDemo()" data-i18n="wiz.skip">Hopp over — bruk demodata</button>
+              </div>
             </div>
-          </div>
-          <div class="dash-grid" style="margin-top:1rem;">
-            <div class="dash-card" onclick="switchNav('nav-transfers-optimizer')">
-              <div class="dc-icon">&#9889;</div>
-              <div class="dc-title">Squad Optimizer</div>
-              <div class="dc-desc">Find the optimal 15-man squad</div>
+
+            <!-- Step 2: confirm squad -->
+            <div class="wizard-pane" data-pane="2" hidden>
+              <div class="wizard-step-num" data-i18n="wiz.s2.num">STEG 2 AV 3</div>
+              <div class="wizard-step-title" data-i18n="wiz.s2.title">Bekreft at dette er ditt lag</div>
+              <div class="wizard-step-desc" data-i18n="wiz.s2.desc">Vi fant følgende — sjekk at det stemmer.</div>
+              <div class="wizard-confirm-row" id="wizard-confirm">
+                <span style="font-size:24px">&#9917;</span>
+                <div>
+                  <div class="name" id="wizard-team-name">—</div>
+                  <div class="meta" id="wizard-manager-name">—</div>
+                </div>
+              </div>
+              <div class="wizard-actions">
+                <button class="wizard-skip" onclick="wizardBack()" data-i18n="wiz.back">← Tilbake</button>
+                <button class="btn" onclick="wizardConfirm()" data-i18n="wiz.s2.btn">Ja, dette er meg →</button>
+              </div>
             </div>
-            <div class="dash-card" onclick="switchNav('nav-news-captain')">
-              <div class="dc-icon">&#169;</div>
-              <div class="dc-title">Captain Picks</div>
-              <div class="dc-desc">Best captain choices for next GW</div>
-            </div>
-            <div class="dash-card" onclick="switchNav('nav-fixtures-fdr')">
-              <div class="dc-icon">&#128197;</div>
-              <div class="dc-title">FDR Heatmap</div>
-              <div class="dc-desc">Fixture difficulty at a glance</div>
-            </div>
-            <div class="dash-card" onclick="switchNav('nav-playerstats-table')">
-              <div class="dc-icon">&#128202;</div>
-              <div class="dc-title">Player Stats</div>
-              <div class="dc-desc">Search and filter all players</div>
+
+            <!-- Step 3: situation summary -->
+            <div class="wizard-pane" data-pane="3" hidden>
+              <div class="wizard-step-num" data-i18n="wiz.s3.num">STEG 3 AV 3</div>
+              <div class="wizard-step-title" data-i18n="wiz.s3.title">Her er din situasjon</div>
+              <div class="wizard-step-desc" data-i18n="wiz.s3.desc">En rask oppsummering før du går videre.</div>
+              <div class="wizard-situation" id="wizard-situation">
+                <div class="ws-stat"><div class="v" id="wsit-rank">—</div><div class="l" data-i18n="wiz.s3.rank">Overall rang</div></div>
+                <div class="ws-stat"><div class="v" id="wsit-pts">—</div><div class="l" data-i18n="wiz.s3.pts">Total poeng</div></div>
+                <div class="ws-stat"><div class="v" id="wsit-ft">—</div><div class="l" data-i18n="wiz.s3.ft">Free transfers</div></div>
+                <div class="ws-stat"><div class="v" id="wsit-bank">—</div><div class="l" data-i18n="wiz.s3.bank">Bank</div></div>
+              </div>
+              <div class="wizard-actions">
+                <span></span>
+                <button class="btn" onclick="wizardFinish()" data-i18n="wiz.s3.btn">Gå til Hjem →</button>
+              </div>
             </div>
           </div>
         </div>
@@ -3249,8 +3449,402 @@
 
 </div><!-- /app-shell -->
 
+<!-- ==================== EXPLAIN PANEL (#18) ==================== -->
+<div class="explain-panel-overlay" id="ep-overlay" onclick="closeExplainPanel()"></div>
+<aside class="explain-panel" id="explain-panel" role="dialog" aria-modal="true" aria-labelledby="ep-title" aria-hidden="true">
+  <header class="ep-head">
+    <div class="title" id="ep-title">Forklaring</div>
+    <button class="ep-close" onclick="closeExplainPanel()" aria-label="Lukk">&times;</button>
+  </header>
+  <div class="ep-body" id="ep-body">
+    <!-- Filled by openExplainPanel(data) -->
+  </div>
+</aside>
+
 <script>
 const $ = id => document.getElementById(id);
+
+// ==================== PHASE 3 — HOME, ONBOARDING, EXPLAINABILITY ====================
+
+// ----- 3-step onboarding wizard (#14) -----
+const Wizard = {
+  current: 1,
+  pendingId: null,
+  pendingUserData: null,
+  go(step) {
+    this.current = step;
+    const card = $('onboard-wizard');
+    if (!card) return;
+    card.dataset.step = step;
+    card.querySelectorAll('.wizard-pane').forEach(p => { p.hidden = (parseInt(p.dataset.pane) !== step); });
+    card.querySelectorAll('.wizard-step-pip').forEach(p => {
+      const n = parseInt(p.dataset.pip);
+      p.classList.toggle('done', n < step);
+      p.classList.toggle('active', n === step);
+    });
+  },
+};
+function wizardSubmitId() {
+  const inp = $('wizard-step-1-input');
+  const errBox = $('wizard-error');
+  errBox.textContent = '';
+  const raw = (inp.value || '').trim();
+  if (!raw) { errBox.textContent = currentLocale==='no' ? 'Lim inn FPL ID eller URL' : 'Paste FPL ID or URL'; return; }
+  // Reuse existing detection: copy detected id into hidden compat input
+  const m = raw.match(/\b(\d{4,9})\b/);
+  if (!m) { errBox.textContent = currentLocale==='no' ? 'Fant ingen ID i input' : 'Could not detect ID'; return; }
+  const id = parseInt(m[1]);
+  Wizard.pendingId = id;
+  // Use existing fetch path
+  $('dash-fpl-input').value = String(id);
+  const btn = document.querySelector('#onboard-wizard [data-pane="1"] .btn');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  fetch(`/api/user/${id}`).then(r => r.json()).then(data => {
+    if (!data || data.error) {
+      errBox.textContent = currentLocale==='no' ? `Kunne ikke hente lag #${id}. Sjekk ID.` : `Could not fetch team #${id}. Check ID.`;
+      return;
+    }
+    Wizard.pendingUserData = data;
+    $('wizard-team-name').textContent = data.team_name || data.entry_name || `Team #${id}`;
+    $('wizard-manager-name').textContent = (data.manager_name || data.player_name || '') + (data.overall_rank ? ` • ${currentLocale==='no'?'Rang':'Rank'} ${data.overall_rank.toLocaleString()}` : '');
+    Wizard.go(2);
+  }).catch(e => {
+    errBox.textContent = currentLocale==='no' ? 'Nettverksfeil — prøv igjen' : 'Network error — try again';
+  }).finally(() => {
+    if (btn) { btn.disabled = false; btn.textContent = currentLocale==='no' ? 'Hent →' : 'Fetch →'; }
+  });
+}
+function wizardBack() { Wizard.go(Math.max(1, Wizard.current - 1)); }
+function wizardConfirm() {
+  const d = Wizard.pendingUserData || {};
+  $('wsit-rank').textContent = d.overall_rank ? d.overall_rank.toLocaleString() : '—';
+  $('wsit-pts').textContent = d.overall_points || d.total_points || '—';
+  $('wsit-ft').textContent = d.free_transfers != null ? d.free_transfers : '1';
+  $('wsit-bank').textContent = d.bank != null ? `£${parseFloat(d.bank).toFixed(1)}m` : '—';
+  Wizard.go(3);
+}
+function wizardFinish() {
+  const id = Wizard.pendingId;
+  if (!id) return;
+  localStorage.setItem('fpl_user_id', String(id));
+  $('user-id') && ($('user-id').value = String(id));
+  loadUser().then(() => {
+    document.body.classList.remove('not-connected');
+    $('dash-empty-state').style.display = 'none';
+    $('hero-usp').style.display = 'none';
+    $('dash-welcome').style.display = '';
+    renderHomeBrief();
+  });
+}
+
+// ----- Home brief (#15): 4 personalised answer cards -----
+async function renderHomeBrief() {
+  const wrap = $('home-brief');
+  if (!wrap) return;
+  if (!AppState.userId) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  // Render skeleton immediately, fill async
+  wrap.innerHTML = `
+    <div class="brief-card" data-kind="transfer" onclick="openHomeBrief('transfer')">
+      <div class="bc-eyebrow"><span class="icon">&#8644;</span><span>${currentLocale==='no'?'Anbefalt bytte':'Recommended transfer'}</span></div>
+      <div class="bc-headline" id="brief-transfer-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
+      <div class="bc-because" id="brief-transfer-why"></div>
+      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+    </div>
+    <div class="brief-card tone-ok" data-kind="captain" onclick="openHomeBrief('captain')">
+      <div class="bc-eyebrow"><span class="icon">&#169;</span><span>${currentLocale==='no'?'Anbefalt kaptein':'Recommended captain'}</span></div>
+      <div class="bc-headline" id="brief-captain-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
+      <div class="bc-because" id="brief-captain-why"></div>
+      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+    </div>
+    <div class="brief-card tone-warn" data-kind="cost" onclick="openHomeBrief('cost')">
+      <div class="bc-eyebrow"><span class="icon">&#9888;</span><span>${currentLocale==='no'?'Koster deg poeng':'Costing you points'}</span></div>
+      <div class="bc-headline" id="brief-cost-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
+      <div class="bc-because" id="brief-cost-why"></div>
+      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+    </div>
+    <div class="brief-card tone-info" data-kind="price" onclick="openHomeBrief('price')">
+      <div class="bc-eyebrow"><span class="icon">&#128176;</span><span>${currentLocale==='no'?'Pris-alert':'Price alert'}</span></div>
+      <div class="bc-headline" id="brief-price-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
+      <div class="bc-because" id="brief-price-why"></div>
+      <div class="bc-cta">${currentLocale==='no'?'Se detaljer':'View details'}</div>
+    </div>`;
+  // Fill from existing endpoints
+  try {
+    const [trans, cap, prices] = await Promise.all([
+      fetch(`/api/transfer-suggestions/${AppState.userId}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/captain-picks`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/price-changes`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    HomeBriefData = { trans, cap, prices };
+    // Recommended transfer
+    const tCard = (trans && trans.suggestions && trans.suggestions[0]) || (trans && trans[0]) || null;
+    if (tCard) {
+      const out = tCard.out || tCard.sell || {};
+      const inn = tCard.in || tCard.buy || {};
+      $('brief-transfer-h').innerHTML = `${out.name || '—'} <span style="color:var(--text-faint)">→</span> ${inn.name || '—'}`;
+      $('brief-transfer-why').innerHTML = explainTransfer(out, inn, tCard);
+    } else {
+      $('brief-transfer-h').textContent = currentLocale==='no' ? 'Ingen åpenbare bytter' : 'No obvious moves';
+      $('brief-transfer-why').textContent = currentLocale==='no' ? 'Laget ditt ser balansert ut for neste GW.' : 'Your squad looks balanced for next GW.';
+    }
+    // Captain
+    const capPick = (cap && cap.picks && cap.picks[0]) || (cap && cap[0]) || null;
+    if (capPick) {
+      $('brief-captain-h').innerHTML = `${capPick.name || capPick.web_name || '—'}`;
+      $('brief-captain-why').innerHTML = explainCaptain(capPick);
+    } else {
+      $('brief-captain-h').textContent = '—';
+    }
+    // Cost: highest-priced bench player or rotation-risk starter
+    if (AppState.userData && AppState.userData.picks) {
+      const cost = findCostingPlayer(AppState.userData.picks);
+      if (cost) {
+        $('brief-cost-h').textContent = cost.name || '—';
+        $('brief-cost-why').innerHTML = explainCost(cost);
+      } else {
+        $('brief-cost-h').textContent = currentLocale==='no' ? 'Ingen røde flagg' : 'No red flags';
+        $('brief-cost-why').textContent = currentLocale==='no' ? 'Alle starterne dine ser stabile ut.' : 'All your starters look solid.';
+      }
+    }
+    // Price alert
+    const priceItem = (prices && (prices.rising || prices)[0]) || null;
+    if (priceItem) {
+      const dir = priceItem.delta > 0 ? '↑' : '↓';
+      $('brief-price-h').innerHTML = `${priceItem.name || priceItem.web_name} ${dir}`;
+      $('brief-price-why').innerHTML = explainPrice(priceItem);
+    } else {
+      $('brief-price-h').textContent = currentLocale==='no' ? 'Ingen prisendringer i kveld' : 'No price moves tonight';
+      $('brief-price-why').textContent = '';
+    }
+  } catch (e) {
+    console.warn('home brief fill failed', e);
+  }
+}
+let HomeBriefData = {};
+
+// ----- "Fordi"-felt: human-readable reasoning (#2, #21) -----
+// Tone: kompetent venn, ikke akademisk paper.
+function explainPlayer(p) {
+  if (!p) return '';
+  const bits = [];
+  if (p.form && parseFloat(p.form) >= 6) bits.push(`<strong>form ${p.form}</strong>`);
+  if (p.xg_per_90 && p.xg_per_90 >= 0.4) bits.push(`xG ${p.xg_per_90.toFixed(2)}/90`);
+  if (p.selected_by_percent && parseFloat(p.selected_by_percent) < 5) bits.push(`differensial (${p.selected_by_percent}%)`);
+  if (p.fixtures && p.fixtures.length) {
+    const easy = p.fixtures.filter(f => f.difficulty <= 2).length;
+    if (easy >= 2) bits.push(`${easy} enkle kamper på rad`);
+  }
+  return bits.join(', ');
+}
+function explainTransfer(out, inn, ctx) {
+  const inForm = inn.form ? `form <strong>${inn.form}</strong>` : '';
+  const outForm = out.form && parseFloat(out.form) < 4 ? `form bare <strong>${out.form}</strong>` : '';
+  const fixHint = ctx && ctx.fixture_swing ? `kampene snur i favør` : 'lettere kamper foran';
+  if (currentLocale === 'no') {
+    return `${inn.name || 'Ny'} har ${inForm || 'sterk form'} og ${fixHint}. ${out.name || 'Den gamle'} har ${outForm || 'svakere form'} og tøffere program. Forventet gevinst: <strong>+${(ctx && ctx.points_gain ? ctx.points_gain.toFixed(1) : '2.5')} pts</strong>.`;
+  }
+  return `${inn.name || 'New'} has ${inForm || 'strong form'} and ${fixHint}. ${out.name || 'The old one'} has ${outForm || 'weaker form'} and tougher fixtures. Expected gain: <strong>+${(ctx && ctx.points_gain ? ctx.points_gain.toFixed(1) : '2.5')} pts</strong>.`;
+}
+function explainCaptain(p) {
+  const f = p.form ? `form ${p.form}` : 'sterk form';
+  const xg = p.xg_per_90 ? `xG ${p.xg_per_90.toFixed(2)}/90` : 'høy xG';
+  const opp = p.next_opponent || (p.fixtures && p.fixtures[0] && p.fixtures[0].opponent) || '';
+  if (currentLocale === 'no') {
+    return `${f}, ${xg}${opp ? `, hjemme mot ${opp}` : ''}. Forventet poeng: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'}</strong>. Eierskap top 10k: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
+  }
+  return `${f}, ${xg}${opp ? `, home vs ${opp}` : ''}. Expected: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'} pts</strong>. Top 10k EO: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
+}
+function findCostingPlayer(picks) {
+  // Heuristic: starter with bad form or high rotation risk
+  if (!Array.isArray(picks)) return null;
+  const starters = picks.filter(p => p.position && p.position <= 11);
+  return starters.find(p => p.form && parseFloat(p.form) < 3.5) ||
+         starters.find(p => p.minutes_per_game && p.minutes_per_game < 60) ||
+         null;
+}
+function explainCost(p) {
+  if (currentLocale === 'no') {
+    return `Form bare <strong>${p.form || '—'}</strong> over siste 5. ${p.minutes_per_game && p.minutes_per_game < 60 ? `Spiller bare ${Math.round(p.minutes_per_game)} min snitt.` : ''} Vurder bytte.`;
+  }
+  return `Form just <strong>${p.form || '—'}</strong> over last 5. ${p.minutes_per_game && p.minutes_per_game < 60 ? `Plays only ${Math.round(p.minutes_per_game)} mins avg.` : ''} Consider transferring.`;
+}
+function explainPrice(p) {
+  const target = p.delta > 0 ? (p.target_rise || p.threshold) : (p.target_fall || p.threshold);
+  if (currentLocale === 'no') {
+    return `Endringssannsynlighet: <strong>${p.probability || p.change_pct || '—'}%</strong>. ${p.delta > 0 ? 'Stiger' : 'Faller'} muligens i kveld kl 02:00.`;
+  }
+  return `Change probability: <strong>${p.probability || p.change_pct || '—'}%</strong>. May ${p.delta > 0 ? 'rise' : 'drop'} tonight at 02:00.`;
+}
+
+// ----- Explain panel (#18) -----
+function openExplainPanel(data) {
+  const panel = $('explain-panel');
+  const overlay = $('ep-overlay');
+  const body = $('ep-body');
+  if (!panel || !body) return;
+  $('ep-title').textContent = data.title || 'Forklaring';
+  let html = '';
+  if (data.narrative) html += `<div class="ep-section"><h4>${currentLocale==='no'?'Hvorfor':'Why'}</h4><div class="ep-narrative">${data.narrative}</div></div>`;
+  if (data.stats && data.stats.length) {
+    html += `<div class="ep-section"><h4>${currentLocale==='no'?'Nøkkeltall':'Key stats'}</h4><div class="ep-stats">`;
+    data.stats.forEach(s => { html += `<div class="ep-stat"><div class="v">${s.v}</div><div class="l">${s.l}</div></div>`; });
+    html += `</div></div>`;
+  }
+  if (data.fixtures && data.fixtures.length) {
+    html += `<div class="ep-section"><h4>${currentLocale==='no'?'Kommende kamper':'Upcoming fixtures'}</h4><div class="ep-fixtures">`;
+    data.fixtures.forEach(f => { html += `<span class="ep-fix fdr-${Math.min(5, Math.max(2, f.fdr || 3))}">${f.label}</span>`; });
+    html += `</div></div>`;
+  }
+  if (data.cta) html += `<div class="ep-section"><button class="btn" onclick="closeExplainPanel();switchNav('${data.cta.nav}')">${data.cta.label}</button></div>`;
+  body.innerHTML = html;
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('open');
+}
+function closeExplainPanel() {
+  const panel = $('explain-panel');
+  const overlay = $('ep-overlay');
+  if (panel) { panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); }
+  if (overlay) overlay.classList.remove('open');
+}
+function openHomeBrief(kind) {
+  const d = HomeBriefData || {};
+  if (kind === 'transfer') {
+    const t = (d.trans && (d.trans.suggestions || d.trans)[0]) || {};
+    const out = t.out || {}, inn = t.in || {};
+    openExplainPanel({
+      title: currentLocale==='no' ? `Bytte: ${out.name||''} → ${inn.name||''}` : `Transfer: ${out.name||''} → ${inn.name||''}`,
+      narrative: explainTransfer(out, inn, t),
+      stats: [
+        { v: t.points_gain != null ? `+${t.points_gain.toFixed(1)}` : '—', l: currentLocale==='no'?'Forventet poenggevinst':'Expected gain' },
+        { v: inn.form || '—', l: currentLocale==='no'?'Inn-form':'In-form' },
+        { v: out.form || '—', l: currentLocale==='no'?'Ut-form':'Out-form' },
+        { v: inn.price ? `£${inn.price}m` : '—', l: currentLocale==='no'?'Pris':'Price' },
+      ],
+      cta: { label: currentLocale==='no' ? 'Se Bytteplanlegger' : 'Open Transfer Planner', nav: 'nav-transfers-planner' },
+    });
+  } else if (kind === 'captain') {
+    const p = (d.cap && (d.cap.picks || d.cap)[0]) || {};
+    openExplainPanel({
+      title: currentLocale==='no' ? `Kaptein: ${p.name||p.web_name||''}` : `Captain: ${p.name||p.web_name||''}`,
+      narrative: explainCaptain(p),
+      stats: [
+        { v: p.expected_points ? p.expected_points.toFixed(1) : '—', l: currentLocale==='no'?'Forv. poeng':'Expected pts' },
+        { v: p.form || '—', l: 'Form' },
+        { v: p.xg_per_90 ? p.xg_per_90.toFixed(2) : '—', l: 'xG/90' },
+        { v: p.selected_by_percent ? `${p.selected_by_percent}%` : '—', l: currentLocale==='no'?'Eierskap':'Ownership' },
+      ],
+      cta: { label: currentLocale==='no' ? 'Se Kapteinsforslag' : 'Open Captain Picks', nav: 'nav-news-captain' },
+    });
+  } else if (kind === 'cost') {
+    const p = AppState.userData && AppState.userData.picks ? findCostingPlayer(AppState.userData.picks) : null;
+    if (!p) { return; }
+    openExplainPanel({
+      title: currentLocale==='no' ? `Risiko: ${p.name}` : `Risk: ${p.name}`,
+      narrative: explainCost(p),
+      stats: [
+        { v: p.form || '—', l: 'Form' },
+        { v: p.minutes_per_game ? Math.round(p.minutes_per_game) : '—', l: 'Min/game' },
+        { v: p.total_points || '—', l: currentLocale==='no'?'Total poeng':'Total pts' },
+      ],
+      cta: { label: currentLocale==='no' ? 'Bytte denne' : 'Replace this player', nav: 'nav-transfers-suggestions' },
+    });
+  } else if (kind === 'price') {
+    const p = (d.prices && (d.prices.rising || d.prices)[0]) || {};
+    openExplainPanel({
+      title: currentLocale==='no' ? `Pris-alert: ${p.name||p.web_name}` : `Price: ${p.name||p.web_name}`,
+      narrative: explainPrice(p),
+      stats: [
+        { v: p.probability != null ? `${p.probability}%` : '—', l: currentLocale==='no'?'Sannsynlighet':'Probability' },
+        { v: p.delta != null ? (p.delta>0?'↑':'↓') : '—', l: currentLocale==='no'?'Retning':'Direction' },
+        { v: p.now_cost ? `£${(p.now_cost/10).toFixed(1)}` : '—', l: currentLocale==='no'?'Pris nå':'Price now' },
+      ],
+      cta: { label: currentLocale==='no' ? 'Se prisendringer' : 'Open Price Changes', nav: 'nav-news-prices' },
+    });
+  }
+}
+// ESC closes panel
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExplainPanel(); });
+
+// ----- Inline glossary (#22) -----
+const Glossary = {
+  no: {
+    'xG': 'Expected Goals — sannsynligheten for at et skudd blir mål, basert på posisjon, vinkel og situasjon.',
+    'xA': 'Expected Assists — sannsynligheten for at en pasning fører til mål.',
+    'FDR': 'Fixture Difficulty Rating — hvor vanskelige de neste kampene er, fra 1 (lett) til 5 (tøff).',
+    'EO': 'Effective Ownership — eierskap vektet for kapteins- og bench-bruk i top 10k.',
+    'BPS': 'Bonus Points System — Premier League sitt system som avgjør bonuspoeng (1-3) per kamp.',
+    'ICT': 'Influence-Creativity-Threat — FPL sin sammensatte score for spilleraktivitet.',
+    'Bench Boost': 'Chip som teller poeng fra benken din i én GW.',
+    'Triple Captain': 'Chip som gir 3x poeng for kapteinen i én GW.',
+    'Free Hit': 'Chip som lar deg lage et midlertidig lag for én GW, uten varig effekt.',
+    'Wildcard': 'Chip som lar deg gjøre ubegrenset antall bytter uten poengstraff.',
+  },
+  en: {
+    'xG': 'Expected Goals — probability that a shot becomes a goal, based on position, angle and situation.',
+    'xA': 'Expected Assists — probability a pass leads to a goal.',
+    'FDR': 'Fixture Difficulty Rating — how tough upcoming fixtures are, from 1 (easy) to 5 (hard).',
+    'EO': 'Effective Ownership — ownership weighted by captain & bench usage in top 10k.',
+    'BPS': 'Bonus Points System — Premier League system that decides bonus (1-3) per match.',
+    'ICT': 'Influence-Creativity-Threat — FPL composite score of player activity.',
+    'Bench Boost': 'Chip that counts your bench points in one GW.',
+    'Triple Captain': 'Chip that gives 3x points for your captain in one GW.',
+    'Free Hit': 'Chip that gives you a temporary team for one GW only.',
+    'Wildcard': 'Chip allowing unlimited transfers with no points penalty.',
+  },
+};
+function glossifyText(text) {
+  // Wrap any glossary term with .gloss span. Idempotent — only first occurrence per render.
+  const dict = Glossary[currentLocale] || Glossary.en;
+  const seen = new Set();
+  let out = text;
+  Object.keys(dict).sort((a, b) => b.length - a.length).forEach(term => {
+    if (seen.has(term)) return;
+    const re = new RegExp(`\\b(${term.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})\\b`, 'i');
+    if (re.test(out)) {
+      out = out.replace(re, `<span class="gloss" tabindex="0">$1<span class="gloss-tip">${dict[term]}</span></span>`);
+      seen.add(term);
+    }
+  });
+  return out;
+}
+
+// ----- Deadline countdown (#20) -----
+let DeadlineTimer = null;
+function startDeadlineCountdown() {
+  if (DeadlineTimer) clearInterval(DeadlineTimer);
+  const tick = () => {
+    const dl = AppState.teamData && AppState.teamData.next_deadline ? new Date(AppState.teamData.next_deadline) : null;
+    if (!dl || isNaN(dl)) {
+      $('uhb-deadline-wrap').hidden = true;
+      return;
+    }
+    $('uhb-deadline-wrap').hidden = false;
+    const diff = dl - new Date();
+    const el = $('uhb-deadline');
+    const txt = $('uhb-deadline-text');
+    if (diff <= 0) { txt.textContent = currentLocale==='no'?'Stengt':'Closed'; el.classList.add('urgent'); return; }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const d = Math.floor(h / 24);
+    if (d >= 1) {
+      txt.textContent = `${d}d ${h%24}t`;
+      el.classList.remove('urgent','soon');
+    } else if (h >= 6) {
+      txt.textContent = `${h}t ${m}m`;
+      el.classList.remove('urgent','soon');
+    } else if (h >= 1) {
+      txt.textContent = `${h}t ${m}m`;
+      el.classList.remove('urgent'); el.classList.add('soon');
+    } else {
+      txt.textContent = `${m}m`;
+      el.classList.add('urgent'); el.classList.remove('soon');
+    }
+  };
+  tick();
+  DeadlineTimer = setInterval(tick, 30000);
+}
 
 // ==================== APP CONFIG (Phase 1.4) ====================
 // Feature flags. Today everything is free; tomorrow some are gated.
@@ -4119,6 +4713,14 @@ async function loadUser() {
     $('user-header-bar').classList.add('active');
     startCacheAgePolling();
 
+    // Phase 3: connected — hide hero/wizard, reveal welcome + home brief
+    document.body.classList.remove('not-connected');
+    const heroEl = $('hero-usp'); if (heroEl) heroEl.style.display = 'none';
+    const empty = $('dash-empty-state'); if (empty) empty.style.display = 'none';
+    const welc = $('dash-welcome'); if (welc) welc.style.display = '';
+    if (typeof renderHomeBrief === 'function') renderHomeBrief();
+    if (typeof startDeadlineCountdown === 'function') startDeadlineCountdown();
+
     // Hide sticky connect CTA (user is now connected)
     const stickyConnect = $('sticky-connect-cta');
     if (stickyConnect) stickyConnect.classList.remove('visible');
@@ -4281,6 +4883,13 @@ function loadMetadata() {
     const sel = $('player-team-filter');
     data.teams.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
     data.teams.forEach(t => { teamsMap[t.id] = t; if (t.code) teamCodeMap[t.id] = t.code; });
+    AppState.teamData = data;
+    // Find next deadline for the countdown badge
+    if (Array.isArray(data.gameweeks)) {
+      const next = data.gameweeks.find(g => g.is_next) || data.gameweeks.find(g => g.deadline_time && new Date(g.deadline_time) > new Date());
+      if (next && next.deadline_time) AppState.teamData.next_deadline = next.deadline_time;
+    }
+    if (typeof startDeadlineCountdown === 'function') startDeadlineCountdown();
     metadataLoaded = true;
   }).catch(err => { metadataPromise = null; console.error(err); });
   return metadataPromise;
