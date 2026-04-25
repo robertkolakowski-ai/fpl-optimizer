@@ -917,6 +917,22 @@
   /* ==================== MATCH ANALYSIS MODULE ==================== */
   .sidebar-section-label { padding: 0.6rem 1.2rem 0.3rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #556677; user-select: none; }
 
+  /* ==================== MODE SWITCHER (Plan / Live / Review) ==================== */
+  .mode-switcher { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; padding: 0.8rem 1rem 0.5rem; }
+  .mode-tab { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.55rem 0.3rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #8899AA; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .mode-tab:hover { background: rgba(255,255,255,0.08); color: #CCDDEE; }
+  .mode-tab.active { background: rgba(77,166,255,0.18); border-color: rgba(77,166,255,0.5); color: #4da6ff; }
+  .mode-tab .mode-icon { font-size: 1rem; line-height: 1; }
+  .mode-tab .mode-label { font-size: 0.7rem; letter-spacing: 0.02em; }
+  .mode-group[hidden] { display: none !important; }
+  .si-badge.premium { margin-left: auto; font-size: 0.55rem; padding: 0.1rem 0.35rem; border-radius: 4px; background: linear-gradient(135deg,#FFB800,#FF8800); color: #1a1a1a; font-weight: 700; letter-spacing: 0.05em; }
+
+  /* ==================== LOCALE TOGGLE ==================== */
+  .locale-toggle { display: inline-flex; gap: 1px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 2px; margin-left: 0.4rem; flex-shrink: 0; }
+  .locale-btn { font-family: inherit; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; padding: 0.25rem 0.5rem; background: transparent; border: 0; color: #8899AA; cursor: pointer; border-radius: 4px; min-width: 28px; }
+  .locale-btn:hover { color: #CCDDEE; }
+  .locale-btn.active { background: rgba(77,166,255,0.2); color: #4da6ff; }
+
   .match-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
   .match-card { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1rem 1.2rem; cursor: pointer; transition: all 0.25s; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
   .match-card:hover { border-color: #00E676; background: #1e3148; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,230,118,0.08); }
@@ -1425,95 +1441,158 @@
     </div>
 
     <div class="sidebar-nav">
-      <div class="sidebar-section-label">QUICK ACCESS</div>
-      <div class="sidebar-item active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
+      <!-- Mode switcher: Plan / Live / Review -->
+      <div class="mode-switcher" id="mode-switcher">
+        <button class="mode-tab active" data-mode="plan" onclick="setMode('plan')" title="Before deadline">
+          <span class="mode-icon">&#9881;</span><span class="mode-label" data-i18n="mode.plan">Plan</span>
+        </button>
+        <button class="mode-tab" data-mode="live" onclick="setMode('live')" title="During gameweek">
+          <span class="mode-icon">&#9889;</span><span class="mode-label" data-i18n="mode.live">Live</span>
+        </button>
+        <button class="mode-tab" data-mode="review" onclick="setMode('review')" title="After gameweek">
+          <span class="mode-icon">&#9745;</span><span class="mode-label" data-i18n="mode.review">Review</span>
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item active" data-nav="nav-dashboard" data-mode="all" onclick="switchNav('nav-dashboard')">
         <span class="si-icon">&#9733;</span>
-        <span class="si-label">Dashboard</span>
-      </div>
-      <div class="sidebar-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">
-        <span class="si-icon">&#9889;</span>
-        <span class="si-label">Live GW</span>
-      </div>
-      <div class="sidebar-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
-        <span class="si-icon">&#169;</span>
-        <span class="si-label">Captain Picks</span>
-      </div>
-      <div class="sidebar-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
-        <span class="si-icon">&#8644;</span>
-        <span class="si-label">Transfer Planner</span>
+        <span class="si-label" data-i18n="nav.home">Home</span>
       </div>
 
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section-label">MY TEAM</div>
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-myteam', this)">
-        <span class="si-icon">&#9917;</span>
-        <span class="si-label">My Team</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-myteam">
-        <div class="sidebar-sub-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">My Team</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">Transfer Suggestions</div>
-        <div class="sidebar-sub-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">League Standings</div>
-        <div class="sidebar-sub-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">Rival Comparison</div>
-        <div class="sidebar-sub-item" data-nav="nav-season-history" onclick="switchNav('nav-season-history')">Season History</div>
-        <div class="sidebar-sub-item" data-nav="nav-league-diff" onclick="switchNav('nav-league-diff')">League Differentials</div>
+      <!-- ==================== PLAN MODE ==================== -->
+      <div class="mode-group" data-mode="plan">
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label" data-i18n="plan.core">CORE</div>
+        <div class="sidebar-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">
+          <span class="si-icon">&#9889;</span>
+          <span class="si-label" data-i18n="plan.optimizer">Squad Optimizer</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
+          <span class="si-icon">&#8644;</span>
+          <span class="si-label" data-i18n="plan.transfers">Transfer Planner</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
+          <span class="si-icon">&#169;</span>
+          <span class="si-label" data-i18n="plan.captain">Captain Picks</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">
+          <span class="si-icon">&#128197;</span>
+          <span class="si-label" data-i18n="plan.multigw">Multi-GW Planner</span>
+          <span class="si-badge premium" data-feature="multi_gw" hidden>PRO</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">
+          <span class="si-icon">&#127937;</span>
+          <span class="si-label" data-i18n="plan.chips">Chip Strategy</span>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label" data-i18n="plan.players">PLAYERS</div>
+        <div class="sidebar-item" onclick="toggleSidebarSub('sub-players', this)">
+          <span class="si-icon">&#128202;</span>
+          <span class="si-label" data-i18n="plan.research">Player Research</span>
+          <span class="si-arrow">&#9654;</span>
+        </div>
+        <div class="sidebar-sub" id="sub-players">
+          <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
+          <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare Players</div>
+          <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
+          <div class="sidebar-sub-item" data-nav="nav-set-pieces" onclick="switchNav('nav-set-pieces')">Set Pieces</div>
+          <div class="sidebar-sub-item" data-nav="nav-lineup-predictor" onclick="switchNav('nav-lineup-predictor')">Lineup Predictor</div>
+          <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
+          <div class="sidebar-sub-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')">Rotation Risk</div>
+          <div class="sidebar-sub-item" data-nav="nav-news-ownership" onclick="switchNav('nav-news-ownership')">Ownership & EO</div>
+          <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
+        </div>
+
+        <div class="sidebar-item" onclick="toggleSidebarSub('sub-fixtures', this)">
+          <span class="si-icon">&#128197;</span>
+          <span class="si-label" data-i18n="plan.fixtures">Fixtures</span>
+          <span class="si-arrow">&#9654;</span>
+        </div>
+        <div class="sidebar-sub" id="sub-fixtures">
+          <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
+          <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Fixture Schedule</div>
+          <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
+          <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
+        </div>
+
+        <div class="sidebar-item" onclick="toggleSidebarSub('sub-match', this)">
+          <span class="si-icon">&#9917;</span>
+          <span class="si-label" data-i18n="plan.match">Match Analysis</span>
+          <span class="si-arrow">&#9654;</span>
+        </div>
+        <div class="sidebar-sub" id="sub-match">
+          <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
+          <div class="sidebar-sub-item" data-nav="nav-bet-builder" onclick="switchNav('nav-bet-builder')">Bet Builder</div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label" data-i18n="plan.advanced">ADVANCED</div>
+        <div class="sidebar-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">
+          <span class="si-icon">&#9881;</span>
+          <span class="si-label" data-i18n="plan.suggest">Transfer Suggestions</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">
+          <span class="si-icon">&#177;</span>
+          <span class="si-label" data-i18n="plan.gain">Gain vs Hit</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')">
+          <span class="si-icon">&#127942;</span>
+          <span class="si-label" data-i18n="plan.ranksim">Rank Simulator</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-league-diff" onclick="switchNav('nav-league-diff')">
+          <span class="si-icon">&#128300;</span>
+          <span class="si-label" data-i18n="plan.leaguediff">League Differentials</span>
+          <span class="si-badge premium" data-feature="mini_league_spy" hidden>PRO</span>
+        </div>
       </div>
 
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section-label">ANALYSIS</div>
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-analysis', this)">
-        <span class="si-icon">&#128202;</span>
-        <span class="si-label">Player &amp; Fixtures</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-analysis">
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
-        <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare Players</div>
-        <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
-        <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Fixture Schedule</div>
-        <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
-        <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
-        <div class="sidebar-sub-item" data-nav="nav-set-pieces" onclick="switchNav('nav-set-pieces')">Set Pieces</div>
-        <div class="sidebar-sub-item" data-nav="nav-lineup-predictor" onclick="switchNav('nav-lineup-predictor')">Lineup Predictor</div>
-      </div>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section-label">PLANNING</div>
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-planning', this)">
-        <span class="si-icon">&#128161;</span>
-        <span class="si-label">Strategy Tools</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-planning">
-        <div class="sidebar-sub-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">Squad Optimizer</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">Multi-GW Planner</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">Chip Strategy</div>
-        <div class="sidebar-sub-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">Gain vs Hit</div>
-        <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
-        <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
-        <div class="sidebar-sub-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')">Rotation Risk</div>
-        <div class="sidebar-sub-item" data-nav="nav-news-ownership" onclick="switchNav('nav-news-ownership')">Ownership & EO</div>
-        <div class="sidebar-sub-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')">Rank Simulator</div>
+      <!-- ==================== LIVE MODE ==================== -->
+      <div class="mode-group" data-mode="live" hidden>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label" data-i18n="live.gameweek">GAMEWEEK</div>
+        <div class="sidebar-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">
+          <span class="si-icon">&#9889;</span>
+          <span class="si-label" data-i18n="live.livegw">Live GW</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">
+          <span class="si-icon">&#9917;</span>
+          <span class="si-label" data-i18n="live.myteam">My Team</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">
+          <span class="si-icon">&#128293;</span>
+          <span class="si-label" data-i18n="live.match">Match Centre</span>
+        </div>
       </div>
 
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section-label">MATCH ANALYSIS</div>
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-match-analysis', this)">
-        <span class="si-icon">&#9917;</span>
-        <span class="si-label">Match Centre</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-match-analysis">
-        <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
-        <div class="sidebar-sub-item" data-nav="nav-bet-builder" onclick="switchNav('nav-bet-builder')">Bet Builder</div>
-        <div class="sidebar-sub-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">Prediction Tracker</div>
+      <!-- ==================== REVIEW MODE ==================== -->
+      <div class="mode-group" data-mode="review" hidden>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label" data-i18n="review.season">SEASON</div>
+        <div class="sidebar-item" data-nav="nav-season-history" onclick="switchNav('nav-season-history')">
+          <span class="si-icon">&#128200;</span>
+          <span class="si-label" data-i18n="review.history">Season History</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">
+          <span class="si-icon">&#127942;</span>
+          <span class="si-label" data-i18n="review.standings">League Standings</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">
+          <span class="si-icon">&#9876;</span>
+          <span class="si-label" data-i18n="review.rivals">Rival Comparison</span>
+        </div>
+        <div class="sidebar-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">
+          <span class="si-icon">&#127919;</span>
+          <span class="si-label" data-i18n="review.predictions">Prediction Tracker</span>
+        </div>
       </div>
 
+      <!-- ==================== ALWAYS VISIBLE ==================== -->
       <div class="sidebar-divider"></div>
       <div class="sidebar-item" onclick="toggleSidebarSub('sub-draft', this)">
         <span class="si-icon">&#128221;</span>
-        <span class="si-label">Draft / Waivers</span>
+        <span class="si-label" data-i18n="nav.draft">Draft / Waivers</span>
         <span class="si-arrow">&#9654;</span>
       </div>
       <div class="sidebar-sub" id="sub-draft">
@@ -1525,11 +1604,11 @@
       <div class="sidebar-divider"></div>
       <div class="sidebar-item" onclick="tourStart()">
         <span class="si-icon">?</span>
-        <span class="si-label">Guide</span>
+        <span class="si-label" data-i18n="nav.guide">Guide</span>
       </div>
       <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
         <span class="si-icon">&#9881;</span>
-        <span class="si-label">Settings</span>
+        <span class="si-label" data-i18n="nav.settings">Settings</span>
       </div>
     </div>
   </nav>
@@ -1568,6 +1647,10 @@
       <span class="inline-spinner" id="uhb-sync-spinner"></span>
       <span style="color:#555;font-size:0.65rem;" id="uhb-last-sync"></span>
       <span class="uhb-cache-age" id="uhb-cache-age" title="Backend data freshness"></span>
+      <div class="locale-toggle" role="group" aria-label="Language">
+        <button type="button" class="locale-btn" data-locale="no" onclick="setLocale('no')">NO</button>
+        <button type="button" class="locale-btn" data-locale="en" onclick="setLocale('en')">EN</button>
+      </div>
     </div>
     <div class="demo-global-strip hidden" id="demo-global-strip">
       <span class="demo-badge">DEMO DATA</span>
@@ -2916,6 +2999,84 @@
 <script>
 const $ = id => document.getElementById(id);
 
+// ==================== APP CONFIG (Phase 1.4) ====================
+// Feature flags. Today everything is free; tomorrow some are gated.
+// Premium gate logic isPremiumUser() is hardcoded true for now — replace
+// with real entitlement check when billing is wired up.
+const AppConfig = {
+  premiumFeatures: {
+    multi_gw:       { tier: 'pro', label: 'Multi-GW Planner' },
+    mini_league_spy:{ tier: 'pro', label: 'Mini-league Spionasje' },
+    ai_chat:        { tier: 'pro', label: 'AI Coach' },
+  },
+  defaultLocale: 'no',
+  supportedLocales: ['no', 'en'],
+};
+function isPremiumUser() { return true; } // TODO: wire to real billing
+function hasFeature(key) {
+  const f = AppConfig.premiumFeatures[key];
+  if (!f) return true; // non-premium feature
+  return isPremiumUser();
+}
+
+// ==================== I18N (Phase 1.3) ====================
+const I18N = {
+  no: {
+    'mode.plan':'Planlegg', 'mode.live':'Live', 'mode.review':'Oppsummer',
+    'nav.home':'Hjem', 'nav.draft':'Draft / Waivers', 'nav.guide':'Guide', 'nav.settings':'Innstillinger',
+    'plan.core':'KJERNE','plan.optimizer':'Lag-optimalisering','plan.transfers':'Bytteplanlegger',
+    'plan.captain':'Kapteinsforslag','plan.multigw':'Multi-GW planlegger','plan.chips':'Chip-strategi',
+    'plan.players':'SPILLERE','plan.research':'Spillerresearch','plan.fixtures':'Kamper',
+    'plan.match':'Kampanalyse','plan.advanced':'AVANSERT','plan.suggest':'Bytteforslag',
+    'plan.gain':'Gevinst vs straff','plan.ranksim':'Rang-simulator','plan.leaguediff':'Liga-differensialer',
+    'live.gameweek':'GAMEWEEK','live.livegw':'Live GW','live.myteam':'Mitt lag','live.match':'Match Centre',
+    'review.season':'SESONG','review.history':'Sesonghistorikk','review.standings':'Liga-tabell',
+    'review.rivals':'Rival-sammenligning','review.predictions':'Modell-evaluering',
+  },
+  en: {
+    'mode.plan':'Plan', 'mode.live':'Live', 'mode.review':'Review',
+    'nav.home':'Home', 'nav.draft':'Draft / Waivers', 'nav.guide':'Guide', 'nav.settings':'Settings',
+    'plan.core':'CORE','plan.optimizer':'Squad Optimizer','plan.transfers':'Transfer Planner',
+    'plan.captain':'Captain Picks','plan.multigw':'Multi-GW Planner','plan.chips':'Chip Strategy',
+    'plan.players':'PLAYERS','plan.research':'Player Research','plan.fixtures':'Fixtures',
+    'plan.match':'Match Analysis','plan.advanced':'ADVANCED','plan.suggest':'Transfer Suggestions',
+    'plan.gain':'Gain vs Hit','plan.ranksim':'Rank Simulator','plan.leaguediff':'League Differentials',
+    'live.gameweek':'GAMEWEEK','live.livegw':'Live GW','live.myteam':'My Team','live.match':'Match Centre',
+    'review.season':'SEASON','review.history':'Season History','review.standings':'League Standings',
+    'review.rivals':'Rival Comparison','review.predictions':'Prediction Tracker',
+  },
+};
+let currentLocale = localStorage.getItem('fpl_locale') || AppConfig.defaultLocale;
+function t(key) { return (I18N[currentLocale] && I18N[currentLocale][key]) || (I18N.en[key]) || key; }
+function applyTranslations(root) {
+  (root || document).querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+}
+function setLocale(loc) {
+  if (!AppConfig.supportedLocales.includes(loc)) return;
+  currentLocale = loc;
+  localStorage.setItem('fpl_locale', loc);
+  document.documentElement.lang = loc;
+  applyTranslations();
+  document.querySelectorAll('.locale-btn').forEach(b => b.classList.toggle('active', b.dataset.locale === loc));
+}
+// Apply translations on initial load (after DOM is ready below this script — script lives at end of body)
+document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.lang = currentLocale;
+  applyTranslations();
+  document.querySelectorAll('.locale-btn').forEach(b => b.classList.toggle('active', b.dataset.locale === currentLocale));
+});
+// Premium badges: show only when feature is gated for current user
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.si-badge.premium[data-feature]').forEach(b => {
+    const f = b.dataset.feature;
+    b.hidden = hasFeature(f); // hide badge if user has access
+  });
+});
+
 // ==================== CENTRALIZED APP STATE ====================
 const AppState = {
   userId: null,
@@ -3102,9 +3263,45 @@ function initDashAccordions() {
   });
 }
 
+// ==================== MODE SWITCHER (Plan / Live / Review) ====================
+// Map every nav-id to its primary mode so switchNav can sync the active mode tab.
+const MODE_OF_NAV = {
+  // PLAN
+  'nav-transfers-optimizer':'plan','nav-transfers-planner':'plan','nav-news-captain':'plan',
+  'nav-transfers-multigw':'plan','nav-transfers-chips':'plan','nav-transfers-suggestions':'plan',
+  'nav-transfers-gain':'plan','nav-news-prices':'plan','nav-news-differentials':'plan',
+  'nav-news-rotation':'plan','nav-news-ownership':'plan','nav-news-ranksim':'plan',
+  'nav-playerstats-table':'plan','nav-playerstats-opta':'plan','nav-playerstats-compare':'plan',
+  'nav-fixtures-fdr':'plan','nav-fixtures-schedule':'plan','nav-fixtures-list':'plan',
+  'nav-fixtures-swing':'plan','nav-set-pieces':'plan','nav-lineup-predictor':'plan',
+  'nav-bet-builder':'plan','nav-league-diff':'plan',
+  // LIVE
+  'nav-team-live':'live','nav-team-myteam':'live','nav-match-centre':'live',
+  // REVIEW
+  'nav-season-history':'review','nav-leagues-standings':'review','nav-leagues-rival':'review',
+  'nav-prediction-tracker':'review',
+};
+function setMode(mode) {
+  if (!['plan','live','review'].includes(mode)) mode = 'plan';
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.querySelectorAll('.mode-group').forEach(g => { g.hidden = (g.dataset.mode !== mode); });
+  localStorage.setItem('fpl_mode', mode);
+}
+function syncModeToNav(panelId) {
+  const m = MODE_OF_NAV[panelId];
+  if (m) setMode(m);
+}
+// Restore mode on load
+(function restoreMode(){
+  const saved = localStorage.getItem('fpl_mode') || 'plan';
+  setMode(saved);
+})();
+
 function switchNav(panelId) {
   // Persist last panel
   savePref('fpl_last_panel', panelId);
+  // Keep mode tab in sync with the destination
+  syncModeToNav(panelId);
 
   // Stop live polling when leaving live panel
   if (panelId !== 'nav-team-live') stopLivePolling();
@@ -3519,8 +3716,11 @@ renderRecentUsers();
       }
     }, 100);
   } else {
-    // No saved user — auto-activate demo mode and show mobile connect CTA
-    setTimeout(() => activateDemo(), 300);
+    // No saved user — show onboarding gate. Do NOT auto-activate demo.
+    // User must explicitly paste Team ID or click "try demo" on the dashboard.
+    document.body.classList.add('not-connected');
+    // Force dashboard panel so onboarding card is visible
+    setTimeout(() => switchNav('nav-dashboard'), 50);
     if (window.innerWidth <= 768) {
       const stickyConnect = $('sticky-connect-cta');
       if (stickyConnect) stickyConnect.classList.add('visible');
