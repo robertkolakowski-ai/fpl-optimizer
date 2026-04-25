@@ -83,12 +83,6 @@
     --sidebar-w: 248px;
     --topbar-h: 56px;
     --bottomnav-h: 64px;          /* mobile bottom nav */
-
-    /* Legacy aliases (so existing rules referencing these stop visually breaking) */
-    --legacy-bg-dark:   var(--bg-page);
-    --legacy-panel-dark:var(--bg-canvas);
-    --legacy-text-light:var(--text-strong);
-    --legacy-text-mid:  var(--text-muted);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -653,22 +647,11 @@
   .dash-card .dc-desc { color: var(--text-muted); font-size: 0.78rem; }
 
   /* Onboarding card */
-  .onboarding-card { background: rgba(27,45,69,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0,230,118,0.2); text-align: center; max-width: 520px; margin: 0 auto 0.5rem; }
-  .ob-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
-  .ob-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; color: var(--text-strong); }
-  .ob-benefits { text-align: left; margin: 0 auto 1.5rem; display: inline-block; }
-  .ob-benefit { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; font-size: 0.88rem; color: var(--text-default); }
-  .ob-check { color: var(--brand-primary); font-weight: 700; font-size: 1rem; flex-shrink: 0; }
-  .ob-actions { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
-  .ob-demo-link { color: var(--text-muted); font-size: 0.82rem; text-decoration: underline; }
-  .ob-demo-link:hover { color: var(--info); }
-  .dash-onboard-row { display: flex; gap: 0.5rem; align-items: center; width: 100%; max-width: 360px; margin: 0 auto 0.5rem; }
-  .dash-onboard-row input { flex: 1; background: var(--bg-canvas); border: 1px solid rgba(255,255,255,0.15); color: var(--text-strong); border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.95rem; }
-  .dash-onboard-row input:focus { outline: none; border-color: var(--brand-primary); }
-  .dash-onboard-row input::placeholder { color: var(--text-faint); }
-  .dash-onboard-help { color: var(--text-subtle); font-size: 0.75rem; margin-bottom: 0.6rem; }
-  .dash-onboard-help a { color: var(--info); }
-  .dash-onboard-error { color: var(--danger); font-size: 0.8rem; min-height: 1.2em; margin-bottom: 0.3rem; }
+  /* Surviving onboarding helpers (used by the wizard + hero CTA) */
+  .ob-demo-link { color: var(--text-muted); font-size: var(--fs-small); text-decoration: underline; }
+  .ob-demo-link:hover { color: var(--brand-primary); }
+  .dash-onboard-row { display: flex; gap: 0.5rem; align-items: center; }
+  .dash-onboard-error { color: var(--danger); font-size: var(--fs-small); min-height: 1.2em; }
 
   /* Player cards for mobile My Team (Item 6) */
   .player-card-list { display: none; flex-direction: column; gap: 0.4rem; }
@@ -1497,18 +1480,17 @@
   .export-bar { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; justify-content: flex-end; }
 
   /* ==================================================================
-     PHASE 2 — LIGHT-THEME OVERRIDE LAYER
-     Reskins component surfaces still wired to the old dark palette.
-     Phase 4 polish will refactor each component to use tokens directly,
-     at which point this whole block can be deleted.
+     LIGHT-THEME BASELINE
+     Sets neutral default surfaces for legacy unrefactored components.
+     Phase 4 components define their own surfaces; selectors below only
+     target named legacy classes (no catch-all attribute selectors).
      ================================================================== */
 
-  /* Cards & panels */
-  .dash-card, .dash-stat, .stat-card, .panel, .nav-panel, .card,
+  /* Legacy cards — explicit list, no catch-all */
+  .dash-card, .dash-stat, .stat-card, .panel, .nav-panel,
   .pm-card, .lp-card, .sh-stat, .sh-chart-wrap, .sp-card, .ld-player-row,
   .cs-card, .pred-card, .match-card, .live-card, .bet-leg, .draft-card,
-  .league-row, .recent-user-item, .onboarding-card,
-  [class$="-card"], [class*=" card-"] {
+  .league-row, .recent-user-item {
     background: var(--bg-canvas);
     border: 1px solid var(--border-subtle);
     border-radius: var(--r-md);
@@ -1516,6 +1498,8 @@
     box-shadow: var(--shadow-1);
   }
   .dash-card:hover, .stat-card:hover, .league-row:hover, .recent-user-item:hover { box-shadow: var(--shadow-2); border-color: var(--border-default); }
+  /* nav-panel is a content container, not a card — no padding/borders */
+  .nav-panel { background: transparent; border: 0; box-shadow: none; }
 
   /* User header bar */
   .user-header-bar { background: var(--bg-canvas); border-bottom: 1px solid var(--border-subtle); color: var(--text-default); }
@@ -1609,9 +1593,6 @@
   /* Loaders */
   .loader { color: var(--text-muted); }
   .spinner { border-color: var(--border-subtle); border-top-color: var(--brand-primary); }
-
-  /* Generic dark surfaces still left over — catch-all */
-  [style*="var(--bg-canvas)"], [style*="var(--bg-subtle)"] { /* inline styles win, but flag visually for future cleanup */ }
 
   /* Type-floor: ensure no raw text below 13px in body content */
   body, p, li, td, th, label, button, input, select, textarea, .dc-desc, .panel-desc, .card-desc {
@@ -1720,30 +1701,8 @@
   .wizard-situation .ws-stat .v { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
   .wizard-situation .ws-stat .l { font-size: var(--fs-label); color: var(--text-muted); margin-top: 2px; }
 
-  /* ---------- Home brief: 4 answer cards (#15) ---------- */
-  /* home-brief is now a plain stacking container — child sections (team-news, hjem-main-grid, chip-timeline, model-footer) define their own internal grids */
+  /* Home brief container — children stack; each section owns its grid (Phase 4b) */
   .home-brief { display: flex; flex-direction: column; gap: var(--sp-4); margin-bottom: var(--sp-6); }
-  .brief-card {
-    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
-    border-radius: var(--r-md); padding: var(--sp-4);
-    cursor: pointer; transition: all 0.18s;
-    display: flex; flex-direction: column; gap: var(--sp-2);
-    box-shadow: var(--shadow-1);
-    position: relative;
-  }
-  .brief-card:hover { border-color: var(--brand-primary); box-shadow: var(--shadow-2); transform: translateY(-1px); }
-  .brief-card .bc-eyebrow { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .brief-card .bc-eyebrow .icon { font-size: 14px; }
-  .brief-card .bc-headline { font-family: var(--font-display); font-size: 18px; color: var(--text-strong); font-weight: 700; line-height: 1.25; }
-  .brief-card .bc-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.45; }
-  .brief-card .bc-because strong { color: var(--text-default); font-weight: 600; }
-  .brief-card .bc-cta { margin-top: auto; font-size: var(--fs-label); font-weight: 600; color: var(--brand-primary); display: inline-flex; align-items: center; gap: var(--sp-1); }
-  .brief-card .bc-cta::after { content: '→'; transition: transform 0.15s; }
-  .brief-card:hover .bc-cta::after { transform: translateX(2px); }
-  .brief-card.tone-warn { border-color: color-mix(in oklab, var(--warn) 25%, var(--border-subtle)); }
-  .brief-card.tone-warn .bc-eyebrow { color: var(--warn); }
-  .brief-card.tone-info .bc-eyebrow { color: var(--info); }
-  .brief-card.tone-ok .bc-eyebrow { color: var(--ok); }
 
   /* ---------- Explanation side-panel (#18) ---------- */
   .explain-panel {
@@ -11605,7 +11564,7 @@ const TOUR_STEPS = [
     onEnter: () => switchNav('nav-dashboard')
   },
   {
-    target: '.onboarding-card', position: 'top',
+    target: '.wizard-card', position: 'top',
     title: 'Connect Your Team',
     text: 'Enter your FPL ID or paste your profile URL here. Find it at fantasy.premierleague.com under Points or My Team \u2014 the number in the URL is your ID. Or try demo data first!'
   },
