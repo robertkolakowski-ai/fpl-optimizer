@@ -6,54 +6,55 @@
 <title>FPL Optimizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ==================== DESIGN TOKENS (Phase 2) ==================== */
-  /* Light, high-contrast, typography-driven. Brand: deep emerald + lime accent. */
+  /* ==================== DESIGN TOKENS (Phase 4a) ==================== */
+  /* Concept brief identity: Amber primary, Ink text, Paper canvas.
+     Display = Fraunces (serif), UI = Inter Tight, Numbers = JetBrains Mono. */
   :root {
-    /* Surfaces */
-    --bg-page:        #FAFBFC;          /* page background */
+    /* Surfaces — warm Paper background, white card, ink-tinted depths */
+    --bg-page:        #F6F2EB;          /* Paper — warm, non-blinding reading surface */
     --bg-canvas:      #FFFFFF;          /* cards, panels */
-    --bg-subtle:      #F1F5F9;          /* subtle fills, hover */
-    --bg-muted:       #E2E8F0;          /* dividers, muted blocks */
-    --bg-inverse:     #0F172A;          /* dark surfaces (e.g., highlights) */
+    --bg-subtle:      #EFEAE0;          /* hover, subtle fills */
+    --bg-muted:       #E4DDD0;          /* dividers, muted blocks */
+    --bg-inverse:     #0E1116;          /* Ink — dark surfaces, tooltips */
 
     /* Borders */
-    --border-subtle:  #E2E8F0;
-    --border-default: #CBD5E1;
-    --border-strong:  #94A3B8;
+    --border-subtle:  #E4DDD0;
+    --border-default: #CCC2B0;
+    --border-strong:  #948775;
 
     /* Text */
-    --text-strong:    #0F172A;          /* primary text, big numbers */
-    --text-default:   #1E293B;          /* body */
-    --text-muted:     #475569;          /* secondary */
-    --text-subtle:    #64748B;          /* tertiary, helper */
-    --text-faint:     #94A3B8;          /* labels, hints */
-    --text-on-brand:  #FFFFFF;          /* on brand-coloured fills */
+    --text-strong:    #0E1116;          /* Ink — primary text, big numbers */
+    --text-default:   #1A1F26;          /* body */
+    --text-muted:     #4A5158;          /* secondary */
+    --text-subtle:    #6B7079;          /* tertiary, helper */
+    --text-faint:     #989DA4;          /* labels, hints */
+    --text-on-brand:  #0E1116;          /* on amber: ink, not white — better contrast */
 
-    /* Brand — deep emerald primary + lime accent (distinct from PL purple, FPL grass-green association) */
-    --brand-primary:      #16A34A;      /* primary CTA, active state */
-    --brand-primary-fg:   #FFFFFF;      /* text on primary */
-    --brand-primary-hover:#15803D;
-    --brand-primary-tint: #DCFCE7;      /* very light brand wash */
-    --brand-accent:       #84CC16;      /* lime — highlights, sparks */
-    --brand-accent-tint:  #ECFCCB;
+    /* Brand — Amber primary, no purple, no PL blue, distinct */
+    --brand-primary:      #E5A23B;      /* Amber — primary CTA, captain marker, "fordi" accent */
+    --brand-primary-fg:   #0E1116;      /* Ink reads on amber far better than white */
+    --brand-primary-hover:#C8861F;
+    --brand-primary-tint: #FBEFD3;      /* very light amber wash */
+    --brand-accent:       #D87C28;      /* deeper amber for hover/contrast */
+    --brand-accent-tint:  #F6E2C2;
 
     /* Semantic */
-    --ok:       #16A34A;  --ok-tint:    #DCFCE7;
-    --warn:     #D97706;  --warn-tint:  #FEF3C7;
-    --danger:   #DC2626;  --danger-tint:#FEE2E2;
-    --info:     #2563EB;  --info-tint:  #DBEAFE;
+    --ok:       #2F7D4E;  --ok-tint:    #DDEEDF;
+    --warn:     #B5651D;  --warn-tint:  --brand-accent-tint;
+    --danger:   #B23A3A;  --danger-tint:#F5DBDB;
+    --info:     #2C5E8A;  --info-tint:  #D7E5F1;
 
     /* Position colours (FPL) — kept stable across themes */
-    --pos-gk:  #FFB800;
-    --pos-def: #2563EB;
-    --pos-mid: #16A34A;
-    --pos-fwd: #DC2626;
+    --pos-gk:  #C8861F;
+    --pos-def: #2C5E8A;
+    --pos-mid: #2F7D4E;
+    --pos-fwd: #B23A3A;
 
-    /* Typography scale (#9: Display 48-64, Title 24-32, Body 15-16, Mono for nums; no text <13px) */
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Typography — brief identity */
+    --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --font-body:    'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono:    'JetBrains Mono', ui-monospace, monospace;
     --fs-display-lg: 64px;
     --fs-display:    48px;
@@ -102,11 +103,17 @@
   }
 
   /* ==================== BRAND TYPOGRAPHY ==================== */
-  h1, h2, h3, .sidebar-brand h1, .section-title, .dash-section-title, .dc-title, .dash-stat .ds-label,
-  .gw-header { font-family: var(--font-display); color: var(--text-strong); letter-spacing: -0.01em; }
-  h1 { font-size: var(--fs-h1); }
-  h2 { font-size: var(--fs-h2); }
-  h3 { font-size: var(--fs-h3); }
+  /* Fraunces (serif) for display — set opsz axis based on size for proper feel */
+  h1, h2, h3, .sidebar-brand h1, .section-title, .dash-section-title, .dc-title, .gw-header,
+  .hero-headline, .wizard-step-title, .bc-headline, .ep-head .title {
+    font-family: var(--font-display); color: var(--text-strong); letter-spacing: -0.005em;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+  h1 { font-size: var(--fs-h1); font-variation-settings: 'opsz' 32; font-weight: 600; }
+  h2 { font-size: var(--fs-h2); font-variation-settings: 'opsz' 24; font-weight: 600; }
+  h3 { font-size: var(--fs-h3); font-variation-settings: 'opsz' 20; font-weight: 600; }
+  .hero-headline { font-variation-settings: 'opsz' 64; font-weight: 600; }
+  .dash-stat .ds-label { font-family: var(--font-body); font-weight: 500; color: var(--text-muted); }
   .stat-card .value, .ds-value, .lp-pts, .price-value, td .monospace,
   .stat-card .value.blue, .pt-value, .captain-2x { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
   td { font-variant-numeric: tabular-nums; }
@@ -138,7 +145,8 @@
   .sidebar-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 1rem; color: var(--text-muted); font-size: var(--fs-small); font-weight: 500; cursor: pointer; transition: background 0.15s, color 0.15s; border-left: 3px solid transparent; user-select: none; }
   .sidebar-item:hover { color: var(--text-strong); background: var(--bg-subtle); }
   .sidebar-item.active { color: var(--brand-primary); border-left-color: var(--brand-primary); background: var(--brand-primary-tint); font-weight: 600; }
-  .sidebar-item .si-icon { font-size: 1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+  .sidebar-item .si-icon { font-size: 1rem; width: 1.4rem; text-align: center; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .sidebar-item .si-icon svg { width: 18px; height: 18px; stroke: currentColor; }
   .sidebar-item .si-label { flex: 1; }
   .sidebar-item .si-arrow { font-size: var(--fs-label); transition: transform 0.2s; color: var(--text-faint); }
   .sidebar-item .si-arrow.open { transform: rotate(90deg); }
@@ -1862,175 +1870,71 @@
       <div class="subtitle">Fantasy Premier League analytics</div>
     </div>
 
+    <!-- 5+2 navigation per concept brief: Hjem · Plan · Kaptein · Liga · Arkiv (+ Spiller, Innstillinger).
+         All deeper pages remain accessible via deep-link or Settings → Show legacy tools — they're
+         being progressively rolled into the five primary surfaces in subsequent phases. -->
     <div class="sidebar-nav">
-      <!-- Mode switcher: Plan / Live / Review -->
-      <div class="mode-switcher" id="mode-switcher">
-        <button class="mode-tab active" data-mode="plan" onclick="setMode('plan')" title="Before deadline">
-          <span class="mode-icon">&#9881;</span><span class="mode-label" data-i18n="mode.plan">Plan</span>
-        </button>
-        <button class="mode-tab" data-mode="live" onclick="setMode('live')" title="During gameweek">
-          <span class="mode-icon">&#9889;</span><span class="mode-label" data-i18n="mode.live">Live</span>
-        </button>
-        <button class="mode-tab" data-mode="review" onclick="setMode('review')" title="After gameweek">
-          <span class="mode-icon">&#9745;</span><span class="mode-label" data-i18n="mode.review">Review</span>
-        </button>
+      <div class="sidebar-item active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <span class="si-label" data-i18n="nav.home">Hjem</span>
+      </div>
+      <div class="sidebar-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="10"/></svg></span>
+        <span class="si-label" data-i18n="nav.plan">Plan</span>
+      </div>
+      <div class="sidebar-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 18l-2 4 5-3 5 3-2-4"/></svg></span>
+        <span class="si-label" data-i18n="nav.captain">Kaptein</span>
+      </div>
+      <div class="sidebar-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h4v4M20 4l-7 7M4 20h4v-4M4 20l7-7"/></svg></span>
+        <span class="si-label" data-i18n="nav.league">Liga</span>
+      </div>
+      <div class="sidebar-item" data-nav="nav-season-history" onclick="switchNav('nav-season-history')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg></span>
+        <span class="si-label" data-i18n="nav.archive">Arkiv</span>
       </div>
 
       <div class="sidebar-divider"></div>
-      <div class="sidebar-item active" data-nav="nav-dashboard" data-mode="all" onclick="switchNav('nav-dashboard')">
-        <span class="si-icon">&#9733;</span>
-        <span class="si-label" data-i18n="nav.home">Home</span>
-      </div>
 
-      <!-- ==================== PLAN MODE ==================== -->
-      <div class="mode-group" data-mode="plan">
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label" data-i18n="plan.core">CORE</div>
-        <div class="sidebar-item" data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">
-          <span class="si-icon">&#9889;</span>
-          <span class="si-label" data-i18n="plan.optimizer">Squad Optimizer</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
-          <span class="si-icon">&#8644;</span>
-          <span class="si-label" data-i18n="plan.transfers">Transfer Planner</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
-          <span class="si-icon">&#169;</span>
-          <span class="si-label" data-i18n="plan.captain">Captain Picks</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')">
-          <span class="si-icon">&#128197;</span>
-          <span class="si-label" data-i18n="plan.multigw">Multi-GW Planner</span>
-          <span class="si-badge premium" data-feature="multi_gw" hidden>PRO</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')">
-          <span class="si-icon">&#127937;</span>
-          <span class="si-label" data-i18n="plan.chips">Chip Strategy</span>
-        </div>
-
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label" data-i18n="plan.players">PLAYERS</div>
-        <div class="sidebar-item" onclick="toggleSidebarSub('sub-players', this)">
-          <span class="si-icon">&#128202;</span>
-          <span class="si-label" data-i18n="plan.research">Player Research</span>
-          <span class="si-arrow">&#9654;</span>
-        </div>
-        <div class="sidebar-sub" id="sub-players">
-          <div class="sidebar-sub-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">Player Search</div>
-          <div class="sidebar-sub-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')">Compare Players</div>
-          <div class="sidebar-sub-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')">Opta Stats & BPS</div>
-          <div class="sidebar-sub-item" data-nav="nav-set-pieces" onclick="switchNav('nav-set-pieces')">Set Pieces</div>
-          <div class="sidebar-sub-item" data-nav="nav-lineup-predictor" onclick="switchNav('nav-lineup-predictor')">Lineup Predictor</div>
-          <div class="sidebar-sub-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')">Differentials</div>
-          <div class="sidebar-sub-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')">Rotation Risk</div>
-          <div class="sidebar-sub-item" data-nav="nav-news-ownership" onclick="switchNav('nav-news-ownership')">Ownership & EO</div>
-          <div class="sidebar-sub-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')">Price Changes</div>
-        </div>
-
-        <div class="sidebar-item" onclick="toggleSidebarSub('sub-fixtures', this)">
-          <span class="si-icon">&#128197;</span>
-          <span class="si-label" data-i18n="plan.fixtures">Fixtures</span>
-          <span class="si-arrow">&#9654;</span>
-        </div>
-        <div class="sidebar-sub" id="sub-fixtures">
-          <div class="sidebar-sub-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">FDR Heatmap</div>
-          <div class="sidebar-sub-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')">Fixture Schedule</div>
-          <div class="sidebar-sub-item" data-nav="nav-fixtures-list" onclick="switchNav('nav-fixtures-list')">Fixture List</div>
-          <div class="sidebar-sub-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')">Swing & Rotation</div>
-        </div>
-
-        <div class="sidebar-item" onclick="toggleSidebarSub('sub-match', this)">
-          <span class="si-icon">&#9917;</span>
-          <span class="si-label" data-i18n="plan.match">Match Analysis</span>
-          <span class="si-arrow">&#9654;</span>
-        </div>
-        <div class="sidebar-sub" id="sub-match">
-          <div class="sidebar-sub-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">Match Centre</div>
-          <div class="sidebar-sub-item" data-nav="nav-bet-builder" onclick="switchNav('nav-bet-builder')">Bet Builder</div>
-        </div>
-
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label" data-i18n="plan.advanced">ADVANCED</div>
-        <div class="sidebar-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')">
-          <span class="si-icon">&#9881;</span>
-          <span class="si-label" data-i18n="plan.suggest">Transfer Suggestions</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')">
-          <span class="si-icon">&#177;</span>
-          <span class="si-label" data-i18n="plan.gain">Gain vs Hit</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')">
-          <span class="si-icon">&#127942;</span>
-          <span class="si-label" data-i18n="plan.ranksim">Rank Simulator</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-league-diff" onclick="switchNav('nav-league-diff')">
-          <span class="si-icon">&#128300;</span>
-          <span class="si-label" data-i18n="plan.leaguediff">League Differentials</span>
-          <span class="si-badge premium" data-feature="mini_league_spy" hidden>PRO</span>
-        </div>
-      </div>
-
-      <!-- ==================== LIVE MODE ==================== -->
-      <div class="mode-group" data-mode="live" hidden>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label" data-i18n="live.gameweek">GAMEWEEK</div>
-        <div class="sidebar-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')">
-          <span class="si-icon">&#9889;</span>
-          <span class="si-label" data-i18n="live.livegw">Live GW</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')">
-          <span class="si-icon">&#9917;</span>
-          <span class="si-label" data-i18n="live.myteam">My Team</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-match-centre" onclick="switchNav('nav-match-centre')">
-          <span class="si-icon">&#128293;</span>
-          <span class="si-label" data-i18n="live.match">Match Centre</span>
-        </div>
-      </div>
-
-      <!-- ==================== REVIEW MODE ==================== -->
-      <div class="mode-group" data-mode="review" hidden>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label" data-i18n="review.season">SEASON</div>
-        <div class="sidebar-item" data-nav="nav-season-history" onclick="switchNav('nav-season-history')">
-          <span class="si-icon">&#128200;</span>
-          <span class="si-label" data-i18n="review.history">Season History</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">
-          <span class="si-icon">&#127942;</span>
-          <span class="si-label" data-i18n="review.standings">League Standings</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')">
-          <span class="si-icon">&#9876;</span>
-          <span class="si-label" data-i18n="review.rivals">Rival Comparison</span>
-        </div>
-        <div class="sidebar-item" data-nav="nav-prediction-tracker" onclick="switchNav('nav-prediction-tracker')">
-          <span class="si-icon">&#127919;</span>
-          <span class="si-label" data-i18n="review.predictions">Prediction Tracker</span>
-        </div>
-      </div>
-
-      <!-- ==================== ALWAYS VISIBLE ==================== -->
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-item" onclick="toggleSidebarSub('sub-draft', this)">
-        <span class="si-icon">&#128221;</span>
-        <span class="si-label" data-i18n="nav.draft">Draft / Waivers</span>
-        <span class="si-arrow">&#9654;</span>
-      </div>
-      <div class="sidebar-sub" id="sub-draft">
-        <div class="sidebar-sub-item" data-nav="nav-draft-rankings" onclick="switchNav('nav-draft-rankings')">Draft Rankings</div>
-        <div class="sidebar-sub-item" data-nav="nav-draft-waiver" onclick="switchNav('nav-draft-waiver')">Waiver Wire</div>
-        <div class="sidebar-sub-item" data-nav="nav-draft-roster" onclick="switchNav('nav-draft-roster')">My Roster</div>
-      </div>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-item" onclick="tourStart()">
-        <span class="si-icon">?</span>
-        <span class="si-label" data-i18n="nav.guide">Guide</span>
+      <div class="sidebar-item" data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <span class="si-label" data-i18n="nav.player">Spiller</span>
       </div>
       <div class="sidebar-item" data-nav="nav-settings" onclick="switchNav('nav-settings')">
-        <span class="si-icon">&#9881;</span>
-        <span class="si-label" data-i18n="nav.settings">Settings</span>
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        <span class="si-label" data-i18n="nav.settings">Innstillinger</span>
+      </div>
+      <div class="sidebar-item" onclick="tourStart()">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <span class="si-label" data-i18n="nav.guide">Guide</span>
+      </div>
+
+      <!-- LEGACY TOOLS — gated by AppConfig.enabledFeatures.legacy_nav (off by default) -->
+      <div class="sidebar-legacy" id="legacy-nav" hidden>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label">LEGACY</div>
+        <div class="sidebar-item" data-nav="nav-team-live" onclick="switchNav('nav-team-live')"><span class="si-label">Live GW</span></div>
+        <div class="sidebar-item" data-nav="nav-team-myteam" onclick="switchNav('nav-team-myteam')"><span class="si-label">My Team</span></div>
+        <div class="sidebar-item" data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')"><span class="si-label">Transfer Planner</span></div>
+        <div class="sidebar-item" data-nav="nav-transfers-multigw" onclick="switchNav('nav-transfers-multigw')"><span class="si-label">Multi-GW</span></div>
+        <div class="sidebar-item" data-nav="nav-transfers-chips" onclick="switchNav('nav-transfers-chips')"><span class="si-label">Chip Strategy</span></div>
+        <div class="sidebar-item" data-nav="nav-transfers-suggestions" onclick="switchNav('nav-transfers-suggestions')"><span class="si-label">Transfer Suggestions</span></div>
+        <div class="sidebar-item" data-nav="nav-transfers-gain" onclick="switchNav('nav-transfers-gain')"><span class="si-label">Gain vs Hit</span></div>
+        <div class="sidebar-item" data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')"><span class="si-label">FDR</span></div>
+        <div class="sidebar-item" data-nav="nav-fixtures-schedule" onclick="switchNav('nav-fixtures-schedule')"><span class="si-label">Fixtures</span></div>
+        <div class="sidebar-item" data-nav="nav-fixtures-swing" onclick="switchNav('nav-fixtures-swing')"><span class="si-label">Swing</span></div>
+        <div class="sidebar-item" data-nav="nav-set-pieces" onclick="switchNav('nav-set-pieces')"><span class="si-label">Set Pieces</span></div>
+        <div class="sidebar-item" data-nav="nav-lineup-predictor" onclick="switchNav('nav-lineup-predictor')"><span class="si-label">Lineup Predictor</span></div>
+        <div class="sidebar-item" data-nav="nav-news-prices" onclick="switchNav('nav-news-prices')"><span class="si-label">Price Changes</span></div>
+        <div class="sidebar-item" data-nav="nav-news-differentials" onclick="switchNav('nav-news-differentials')"><span class="si-label">Differentials</span></div>
+        <div class="sidebar-item" data-nav="nav-news-rotation" onclick="switchNav('nav-news-rotation')"><span class="si-label">Rotation Risk</span></div>
+        <div class="sidebar-item" data-nav="nav-news-ownership" onclick="switchNav('nav-news-ownership')"><span class="si-label">Ownership/EO</span></div>
+        <div class="sidebar-item" data-nav="nav-news-ranksim" onclick="switchNav('nav-news-ranksim')"><span class="si-label">Rank Simulator</span></div>
+        <div class="sidebar-item" data-nav="nav-leagues-rival" onclick="switchNav('nav-leagues-rival')"><span class="si-label">Rivals</span></div>
+        <div class="sidebar-item" data-nav="nav-league-diff" onclick="switchNav('nav-league-diff')"><span class="si-label">League Diff</span></div>
+        <div class="sidebar-item" data-nav="nav-playerstats-compare" onclick="switchNav('nav-playerstats-compare')"><span class="si-label">Compare</span></div>
+        <div class="sidebar-item" data-nav="nav-playerstats-opta" onclick="switchNav('nav-playerstats-opta')"><span class="si-label">Opta/BPS</span></div>
       </div>
     </div>
   </nav>
@@ -3234,7 +3138,34 @@
 
       <!-- ==================== SETTINGS ==================== -->
       <div class="nav-panel" id="nav-settings">
-        <h2 style="color:#00E676;margin-bottom:1rem;font-size:1.2rem;">Settings</h2>
+        <h2 style="margin-bottom:1rem;font-size:1.2rem;">Innstillinger</h2>
+
+        <!-- Advanced toggles (Phase 4a) -->
+        <div class="user-bar" style="margin-bottom:1rem;">
+          <div class="user-bar-header"><span class="title" data-i18n="settings.advanced">Avansert</span></div>
+          <div style="padding:0.5rem 0;display:flex;flex-direction:column;gap:0.6rem;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-legacy-nav" onchange="setFeatureEnabled('legacy_nav', this.checked)">
+              <span><strong>Vis legacy verktøy i sidebar</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Gjenåpner gamle sider (Multi-GW, Chips, Fixtures, Differentials, etc.) som er rullet inn i Plan/Liga/Arkiv. Aktiveres for power users.</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-bet-builder" onchange="setFeatureEnabled('bet_builder', this.checked)">
+              <span><strong>Aktiver Bet Builder</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Skjult som standard — appen er ikke en betting-app.</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-match-centre" onchange="setFeatureEnabled('match_centre', this.checked)">
+              <span><strong>Aktiver Match Centre (standalone)</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Kommende kamper vises kontekstuelt i Plan og Hjem.</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-prediction-tracker" onchange="setFeatureEnabled('prediction_tracker', this.checked)">
+              <span><strong>Aktiver Prediction Tracker</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Refrasert som "Hadde modellen rett?" og rullet inn i Arkiv.</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-draft" onchange="setFeatureEnabled('draft', this.checked)">
+              <span><strong>Aktiver Draft / Waivers / Roster</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Hørte til et separat produkt — fjernet fra hovedflate.</span></span>
+            </label>
+          </div>
+        </div>
 
         <!-- FPL Account -->
         <div class="user-bar">
@@ -3846,51 +3777,96 @@ function startDeadlineCountdown() {
   DeadlineTimer = setInterval(tick, 30000);
 }
 
-// ==================== APP CONFIG (Phase 1.4) ====================
-// Feature flags. Today everything is free; tomorrow some are gated.
-// Premium gate logic isPremiumUser() is hardcoded true for now — replace
-// with real entitlement check when billing is wired up.
+// ==================== APP CONFIG (Phase 1.4 + 4a) ====================
+// Feature flags. Hidden surfaces stay in code (reversibility) but disappear from nav.
 const AppConfig = {
   premiumFeatures: {
     multi_gw:       { tier: 'pro', label: 'Multi-GW Planner' },
     mini_league_spy:{ tier: 'pro', label: 'Mini-league Spionasje' },
     ai_chat:        { tier: 'pro', label: 'AI Coach' },
   },
+  // Surfaces removed by concept brief Del 10 — code preserved, hidden from primary nav.
+  // Toggle via Settings → "Show legacy tools" to expose the legacy section in sidebar.
+  enabledFeatures: {
+    bet_builder:        false,
+    match_centre:       false,
+    prediction_tracker: false,
+    draft:              false,
+    legacy_nav:         false,   // master switch for the LEGACY sidebar group
+  },
   defaultLocale: 'no',
   supportedLocales: ['no', 'en'],
 };
-function isPremiumUser() { return true; } // TODO: wire to real billing
+function isPremiumUser() { return true; }
 function hasFeature(key) {
   const f = AppConfig.premiumFeatures[key];
-  if (!f) return true; // non-premium feature
+  if (!f) return true;
   return isPremiumUser();
 }
+function isFeatureEnabled(key) {
+  // Persisted user override beats default
+  const stored = localStorage.getItem('fpl_feature_' + key);
+  if (stored === '1') return true;
+  if (stored === '0') return false;
+  return AppConfig.enabledFeatures[key] !== false;
+}
+function setFeatureEnabled(key, on) {
+  localStorage.setItem('fpl_feature_' + key, on ? '1' : '0');
+  applyFeatureFlags();
+}
+function applyFeatureFlags() {
+  const showLegacy = isFeatureEnabled('legacy_nav');
+  const legacyEl = document.getElementById('legacy-nav');
+  if (legacyEl) legacyEl.hidden = !showLegacy;
+  // Top-level deprecated nav targets get blocked entirely if disabled
+  // (deep-link still works, but sidebar items, if any, are removed at render time)
+  const deprecated = {
+    'nav-bet-builder': 'bet_builder',
+    'nav-match-centre': 'match_centre',
+    'nav-prediction-tracker': 'prediction_tracker',
+    'nav-draft-rankings': 'draft',
+    'nav-draft-waiver': 'draft',
+    'nav-draft-roster': 'draft',
+  };
+  Object.entries(deprecated).forEach(([navId, feat]) => {
+    if (!isFeatureEnabled(feat)) {
+      document.querySelectorAll(`[data-nav="${navId}"]`).forEach(el => {
+        if (!el.closest('#legacy-nav')) el.style.display = 'none';
+      });
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  applyFeatureFlags();
+  // Sync settings toggles to current state
+  const map = { 'toggle-legacy-nav':'legacy_nav', 'toggle-bet-builder':'bet_builder',
+                'toggle-match-centre':'match_centre', 'toggle-prediction-tracker':'prediction_tracker',
+                'toggle-draft':'draft' };
+  Object.entries(map).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = isFeatureEnabled(key);
+  });
+});
+
+// Legacy: setMode() and MODE_OF_NAV are kept as no-ops so any stray calls don't error.
+function setMode() {}
+function syncModeToNav() {}
 
 // ==================== I18N (Phase 1.3) ====================
 const I18N = {
   no: {
-    'mode.plan':'Planlegg', 'mode.live':'Live', 'mode.review':'Oppsummer',
-    'nav.home':'Hjem', 'nav.draft':'Draft / Waivers', 'nav.guide':'Guide', 'nav.settings':'Innstillinger',
-    'plan.core':'KJERNE','plan.optimizer':'Lag-optimalisering','plan.transfers':'Bytteplanlegger',
-    'plan.captain':'Kapteinsforslag','plan.multigw':'Multi-GW planlegger','plan.chips':'Chip-strategi',
-    'plan.players':'SPILLERE','plan.research':'Spillerresearch','plan.fixtures':'Kamper',
-    'plan.match':'Kampanalyse','plan.advanced':'AVANSERT','plan.suggest':'Bytteforslag',
-    'plan.gain':'Gevinst vs straff','plan.ranksim':'Rang-simulator','plan.leaguediff':'Liga-differensialer',
-    'live.gameweek':'GAMEWEEK','live.livegw':'Live GW','live.myteam':'Mitt lag','live.match':'Match Centre',
-    'review.season':'SESONG','review.history':'Sesonghistorikk','review.standings':'Liga-tabell',
-    'review.rivals':'Rival-sammenligning','review.predictions':'Modell-evaluering',
+    'nav.home':'Hjem','nav.plan':'Plan','nav.captain':'Kaptein','nav.league':'Liga','nav.archive':'Arkiv',
+    'nav.player':'Spiller','nav.settings':'Innstillinger','nav.guide':'Guide',
+    'uhb.deadline':'Deadline',
+    'hero.eyebrow':'FORKLARBAR FPL-RÅDGIVER',
+    'hero.cta':'Koble til laget mitt','hero.demo':'eller prøv med demodata →',
   },
   en: {
-    'mode.plan':'Plan', 'mode.live':'Live', 'mode.review':'Review',
-    'nav.home':'Home', 'nav.draft':'Draft / Waivers', 'nav.guide':'Guide', 'nav.settings':'Settings',
-    'plan.core':'CORE','plan.optimizer':'Squad Optimizer','plan.transfers':'Transfer Planner',
-    'plan.captain':'Captain Picks','plan.multigw':'Multi-GW Planner','plan.chips':'Chip Strategy',
-    'plan.players':'PLAYERS','plan.research':'Player Research','plan.fixtures':'Fixtures',
-    'plan.match':'Match Analysis','plan.advanced':'ADVANCED','plan.suggest':'Transfer Suggestions',
-    'plan.gain':'Gain vs Hit','plan.ranksim':'Rank Simulator','plan.leaguediff':'League Differentials',
-    'live.gameweek':'GAMEWEEK','live.livegw':'Live GW','live.myteam':'My Team','live.match':'Match Centre',
-    'review.season':'SEASON','review.history':'Season History','review.standings':'League Standings',
-    'review.rivals':'Rival Comparison','review.predictions':'Prediction Tracker',
+    'nav.home':'Home','nav.plan':'Plan','nav.captain':'Captain','nav.league':'League','nav.archive':'Archive',
+    'nav.player':'Player','nav.settings':'Settings','nav.guide':'Guide',
+    'uhb.deadline':'Deadline',
+    'hero.eyebrow':'EXPLAINABLE FPL ADVISOR',
+    'hero.cta':'Connect my team','hero.demo':'or try with demo data →',
   },
 };
 let currentLocale = localStorage.getItem('fpl_locale') || AppConfig.defaultLocale;
@@ -4110,45 +4086,9 @@ function initDashAccordions() {
   });
 }
 
-// ==================== MODE SWITCHER (Plan / Live / Review) ====================
-// Map every nav-id to its primary mode so switchNav can sync the active mode tab.
-const MODE_OF_NAV = {
-  // PLAN
-  'nav-transfers-optimizer':'plan','nav-transfers-planner':'plan','nav-news-captain':'plan',
-  'nav-transfers-multigw':'plan','nav-transfers-chips':'plan','nav-transfers-suggestions':'plan',
-  'nav-transfers-gain':'plan','nav-news-prices':'plan','nav-news-differentials':'plan',
-  'nav-news-rotation':'plan','nav-news-ownership':'plan','nav-news-ranksim':'plan',
-  'nav-playerstats-table':'plan','nav-playerstats-opta':'plan','nav-playerstats-compare':'plan',
-  'nav-fixtures-fdr':'plan','nav-fixtures-schedule':'plan','nav-fixtures-list':'plan',
-  'nav-fixtures-swing':'plan','nav-set-pieces':'plan','nav-lineup-predictor':'plan',
-  'nav-bet-builder':'plan','nav-league-diff':'plan',
-  // LIVE
-  'nav-team-live':'live','nav-team-myteam':'live','nav-match-centre':'live',
-  // REVIEW
-  'nav-season-history':'review','nav-leagues-standings':'review','nav-leagues-rival':'review',
-  'nav-prediction-tracker':'review',
-};
-function setMode(mode) {
-  if (!['plan','live','review'].includes(mode)) mode = 'plan';
-  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-  document.querySelectorAll('.mode-group').forEach(g => { g.hidden = (g.dataset.mode !== mode); });
-  localStorage.setItem('fpl_mode', mode);
-}
-function syncModeToNav(panelId) {
-  const m = MODE_OF_NAV[panelId];
-  if (m) setMode(m);
-}
-// Restore mode on load
-(function restoreMode(){
-  const saved = localStorage.getItem('fpl_mode') || 'plan';
-  setMode(saved);
-})();
-
 function switchNav(panelId) {
   // Persist last panel
   savePref('fpl_last_panel', panelId);
-  // Keep mode tab in sync with the destination
-  syncModeToNav(panelId);
 
   // Stop live polling when leaving live panel
   if (panelId !== 'nav-team-live') stopLivePolling();
