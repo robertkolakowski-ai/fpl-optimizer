@@ -290,6 +290,7 @@
   .user-header-bar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,230,118,0.2), rgba(77,166,255,0.2), transparent); }
   .user-header-bar.active { display: flex; }
   .user-header-bar .uhb-item { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+  .user-header-bar .uhb-item[hidden] { display: none; }
   .user-header-bar .uhb-label { color: var(--text-subtle); font-size: 0.65rem; text-transform: uppercase; }
   .user-header-bar .uhb-value { color: var(--text-strong); font-weight: 600; }
   .user-header-bar .uhb-value.green { color: var(--brand-primary); }
@@ -344,9 +345,20 @@
 
   /* Tables */
   table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-  th { background: var(--bg-subtle); color: var(--brand-primary); font-family: 'Space Grotesk', sans-serif; text-align: left; padding: 0.55rem 0.6rem; font-size: 0.72rem; text-transform: uppercase; position: sticky; top: 0; border-bottom: 2px solid rgba(255,255,255,0.08); }
-  td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-variant-numeric: tabular-nums; transition: background 0.15s; }
-  tr:nth-child(even) { background: rgba(27,45,69,0.3); }
+  th { background: var(--bg-subtle); color: var(--text-muted); font-family: 'Space Grotesk', sans-serif; text-align: left; padding: 0.55rem 0.6rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; position: sticky; top: 0; border-bottom: 1px solid var(--border-default); }
+  td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border-subtle); font-size: 0.85rem; font-variant-numeric: tabular-nums; transition: background 0.15s; }
+  tbody tr:nth-child(even) td { background: color-mix(in oklab, var(--bg-subtle) 35%, transparent); }
+  tbody tr:hover td { background: color-mix(in oklab, var(--brand-primary) 8%, transparent); }
+  tbody td a { color: var(--text-strong); text-decoration: none; font-weight: 500; }
+  tbody td a:hover { color: var(--brand-primary); }
+  tbody td .pos { font-weight: 600; }
+  tbody td .pos.pos-1 { color: var(--pos-gk); }
+  tbody td .pos.pos-2 { color: var(--pos-def); }
+  tbody td .pos.pos-3 { color: var(--pos-mid); }
+  tbody td .pos.pos-4 { color: var(--pos-fwd); }
+  /* Highlighted top-pick row in legacy captain table */
+  tbody tr.top-pick { background: var(--brand-primary-tint) !important; }
+  tbody tr.top-pick td { color: var(--text-strong); font-weight: 600; }
   tr:hover { background: rgba(0,230,118,0.04); }
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   th.sortable { cursor: pointer; user-select: none; }
@@ -1820,14 +1832,7 @@
   .ep-fix.fdr-5 { background: var(--danger-tint); color: var(--danger); }
 
   /* ---------- Inline glossary (#22) ---------- */
-  .gloss { position: relative; display: inline-flex; align-items: center; gap: 3px; cursor: help; border-bottom: 1px dotted var(--text-faint); }
-  .gloss::after {
-    content: '?'; display: inline-grid; place-items: center;
-    width: 14px; height: 14px; border-radius: 50%;
-    background: var(--bg-muted); color: var(--text-muted);
-    font-size: 10px; font-weight: 700; font-family: var(--font-body);
-    margin-left: 2px;
-  }
+  .gloss { position: relative; display: inline; cursor: help; border-bottom: 1px dotted var(--text-faint); }
   .gloss-tip {
     position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
     background: var(--bg-inverse); color: #FFFFFF; padding: 8px 12px;
@@ -1920,8 +1925,10 @@
   .hjem-captain-card .hcc-meta { color: var(--text-muted); font-size: var(--fs-small); }
   .hjem-captain-card .hcc-projection { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; }
   .hjem-captain-card .hcc-pts {
-    font-family: var(--font-mono); font-size: clamp(40px, 5vw, 56px); font-weight: 700;
+    font-family: var(--font-display); font-variation-settings: 'opsz' 48;
+    font-size: clamp(40px, 5vw, 56px); font-weight: 700;
     color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
   .hjem-captain-card .hcc-delta { font-family: var(--font-mono); font-size: var(--fs-body-lg); font-weight: 600; color: var(--ok); font-variant-numeric: tabular-nums; }
   .hjem-captain-card .hcc-delta.neg { color: var(--danger); }
@@ -2135,8 +2142,14 @@
   .plan-suggest .ps-swap { font-family: var(--font-display); font-variation-settings: 'opsz' 20; font-size: 18px; font-weight: 600; color: var(--text-strong); display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
   .plan-suggest .ps-swap .arr { color: var(--brand-primary); font-family: var(--font-body); }
   .plan-suggest .ps-swap .ps-price { font-family: var(--font-mono); font-size: var(--fs-small); font-weight: 600; color: var(--text-faint); margin-left: 4px; }
-  .plan-suggest .ps-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; }
-  .plan-suggest .ps-because strong { color: var(--text-default); font-weight: 600; }
+  .plan-suggest .ps-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; font-style: italic; padding-top: var(--sp-2); border-top: 1px dashed var(--border-subtle); margin: 0; }
+  .plan-suggest .ps-because strong { color: var(--text-default); font-weight: 600; font-style: normal; }
+  .plan-suggest .ps-rationale { background: var(--bg-subtle); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); }
+  .plan-suggest .ps-rationale-label { font-size: 11px; font-weight: 700; color: var(--brand-accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .plan-suggest .ps-benefits { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+  .plan-suggest .ps-benefits li { font-size: var(--fs-small); color: var(--text-default); line-height: 1.4; padding-left: 14px; position: relative; }
+  .plan-suggest .ps-benefits li::before { content: '▸'; position: absolute; left: 0; color: var(--brand-primary); font-weight: 700; }
+  .plan-suggest .ps-benefits li strong { color: var(--text-strong); font-weight: 600; }
   .plan-suggest .ps-actions { display: flex; gap: var(--sp-2); margin-top: auto; }
   .plan-suggest .ps-actions .btn { padding: 6px 12px; font-size: var(--fs-small); flex: 1; }
   .plan-suggest .ps-actions .btn-secondary { background: var(--bg-canvas); color: var(--text-default); border: 1px solid var(--border-default); }
@@ -3133,6 +3146,7 @@
 
           <section class="plan-fdr" id="plan-fdr" hidden>
             <h3 class="plan-section-title plan-section-title--sub" data-i18n="plan.fdr.title">Fixture-vansker · neste 5 GW</h3>
+            <p class="plan-fdr-legend" data-i18n="plan.fdr.legend" style="font-size:var(--fs-small);color:var(--text-muted);margin:0 0 var(--sp-2);">STORE bokstaver = hjemmekamp · små bokstaver = bortekamp</p>
             <div class="plan-fdr-grid" id="plan-fdr-grid"></div>
           </section>
 
@@ -4986,21 +5000,59 @@ function renderSuggestCard(t, idx) {
   const tag = isDifferential
     ? (currentLocale==='no'?'Differensial':'Differential')
     : (currentLocale==='no'?`Forslag ${idx+1}`:`Option ${idx+1}`);
+
+  const outPrice = Number(out.price || 0);
+  const innPrice = Number(inn.price || 0);
+  const costDelta = innPrice - outPrice;
+  const hit = t.hit_cost || (idx > 0 ? 4 : 0);
+  const netGain = gain - hit;
+
+  const outForm = out.form != null ? Number(out.form).toFixed(1) : null;
+  const innForm = inn.form != null ? Number(inn.form).toFixed(1) : null;
+  const outFix = out.next_fdr != null ? out.next_fdr : (out.fixture_difficulty != null ? Math.round(out.fixture_difficulty * 5) : null);
+  const innFix = inn.next_fdr != null ? inn.next_fdr : (inn.fixture_difficulty != null ? Math.round(inn.fixture_difficulty * 5) : null);
+
+  const isNo = currentLocale === 'no';
+  const benefits = [];
+  if (gain > 0) benefits.push(`<li><strong>+${gain.toFixed(1)} pts</strong> ${isNo?'høyere forventet utbytte over horisonten':'higher expected return over horizon'}</li>`);
+  if (innForm && outForm && parseFloat(innForm) > parseFloat(outForm)) {
+    benefits.push(`<li>${isNo?'Form':'Form'}: <strong>${outForm} → ${innForm}</strong> (${isNo?`+${(parseFloat(innForm)-parseFloat(outForm)).toFixed(1)} bedre`:`+${(parseFloat(innForm)-parseFloat(outForm)).toFixed(1)} better`})</li>`);
+  }
+  if (innFix && outFix && innFix < outFix) {
+    benefits.push(`<li>${isNo?'Lettere kampprogram':'Easier fixtures'}: FDR <strong>${outFix} → ${innFix}</strong></li>`);
+  }
+  if (Math.abs(costDelta) >= 0.1) {
+    benefits.push(costDelta > 0
+      ? `<li>${isNo?'Koster':'Costs'} <strong>£${costDelta.toFixed(1)}m</strong> ${isNo?'mer — sjekk at banken dekker':'more — confirm bank covers'}</li>`
+      : `<li>${isNo?'Frigjør':'Frees up'} <strong>£${Math.abs(costDelta).toFixed(1)}m</strong> ${isNo?'i banken':'in the bank'}</li>`);
+  }
+  if (isDifferential && inn.selected_by_percent != null) {
+    benefits.push(`<li>${isNo?'Differensial':'Differential'}: ${isNo?'kun':'only'} <strong>${parseFloat(inn.selected_by_percent).toFixed(1)}%</strong> ${isNo?'eierskap — gevinstpotensial mot ligaen':'ownership — upside vs your league'}</li>`);
+  }
+  if (hit > 0) {
+    benefits.push(`<li>${isNo?'Etter':'After'} <strong>−${hit} pt hit</strong>: ${isNo?'netto':'net'} <strong style="color:${netGain>=0?'var(--ok)':'var(--danger)'}">${netGain>=0?'+':''}${netGain.toFixed(1)} pts</strong></li>`);
+  }
+  if (!benefits.length) benefits.push(`<li>${isNo?'Marginal gevinst — vurder å holde FT':'Marginal gain — consider holding FT'}</li>`);
+
   return `
     <article class="${cls}">
       <div class="ps-eyebrow">
         <span>${tag}</span>
-        <span class="ps-gain ${gain<0?'neg':''}">${gain>=0?'+':''}${Number(gain).toFixed(1)} pts</span>
+        <span class="ps-gain ${gain<0?'neg':''}" title="${isNo?'Forventet poenggevinst over horisonten':'Expected points gain over horizon'}">${gain>=0?'+':''}${Number(gain).toFixed(1)} pts</span>
       </div>
       <div class="ps-swap">
-        <span>${out.name || '—'}<span class="ps-price">£${(out.price||0).toFixed(1)}</span></span>
+        <span>${out.name || '—'}<span class="ps-price">£${outPrice.toFixed(1)}</span></span>
         <span class="arr">→</span>
-        <span>${inn.name || '—'}<span class="ps-price">£${(inn.price||0).toFixed(1)}</span></span>
+        <span>${inn.name || '—'}<span class="ps-price">£${innPrice.toFixed(1)}</span></span>
+      </div>
+      <div class="ps-rationale">
+        <div class="ps-rationale-label">${isNo?'Hva endringen gir':'What this change delivers'}</div>
+        <ul class="ps-benefits">${benefits.join('')}</ul>
       </div>
       <p class="ps-because">${glossifyText(explainTransfer(out, inn, t))}</p>
       <div class="ps-actions">
-        <button class="btn" onclick="applyTransferSuggestion(${idx})" data-i18n="plan.suggest.apply">Bruk</button>
-        <button class="btn btn-secondary" onclick="explainTransferOpen(${idx})" data-i18n="plan.suggest.explain">Forklar mer</button>
+        <button class="btn" onclick="applyTransferSuggestion(${idx})" data-i18n="plan.suggest.apply">${isNo?'Bruk':'Apply'}</button>
+        <button class="btn btn-secondary" onclick="explainTransferOpen(${idx})" data-i18n="plan.suggest.explain">${isNo?'Forklar mer':'Explain'}</button>
       </div>
     </article>`;
 }
@@ -5078,16 +5130,16 @@ async function loadCaptainView() {
 }
 
 function rankPicksByRisk(picks, risk) {
-  // Score adjustments: safe favours form/floor, balanced = composite, aggressive = upside (xG, EO inverse)
+  // /api/captain-picks shape: ep_next, captain_ev, form, xG, xA, selected_by_percent, cost, composite_score
   return picks.slice().sort((a, b) => {
     const score = (p) => {
-      const xpts = p.expected_points || p.xpts || p.score || 0;
+      const xpts = p.ep_next || p.expected_points || p.composite_score || 0;
       const form = parseFloat(p.form) || 0;
-      const xg = p.xg_per_90 || p.xg || 0;
+      const xg = p.xG || p.xg || 0;
       const ownership = parseFloat(p.selected_by_percent || p.ownership || 50);
       if (risk === 'safe') return xpts + form * 0.4 + (100 - ownership) * 0.001;
-      if (risk === 'aggressive') return xpts + xg * 5 - ownership * 0.05;
-      return xpts;  // balanced
+      if (risk === 'aggressive') return xpts + xg * 0.5 - ownership * 0.05;
+      return xpts;
     };
     return score(b) - score(a);
   });
@@ -5111,7 +5163,7 @@ function renderCaptainView() {
     // Build 3-5 sentence narrative
     const narrative = currentLocale==='no'
       ? `<p><strong>${top.name}</strong> har ${top.form?`form <strong>${top.form}</strong>`:'sterk form'} og møter ${fixt?`<strong>${fixt}</strong>${fixHome?' (H)':' (B)'}`:'et håndterbart program'}. xG ${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}/90 — det er hjemmestrekket.</p>
-         <p>Eierskap blant <span class="gloss">top 10k<span class="gloss-tip">De øverste 10 000 managerne globalt — referansen for hva "smart pengene" gjør.</span></span> er <strong>${captainEO}%</strong> (lav nok til å skille deg ut${parseFloat(captainEO)<30?', høy nok til ikke å være risikabel':''}).</p>
+         <p>Eierskap blant <span class="gloss">topp 10k<span class="gloss-tip">De øverste 10 000 managerne globalt — referansen for hva "smart pengene" gjør.</span></span> er <strong>${captainEO}%</strong> (lav nok til å skille deg ut${parseFloat(captainEO)<30?', høy nok til ikke å være risikabel':''}).</p>
          <p>${KapteinState.risk==='safe'?'Safe-profilen valgte ham fordi han har høyt floor — selv på en svak dag scorer han 4-5 pts.':KapteinState.risk==='aggressive'?'Aggressive-profilen valgte ham fordi upsiden er størst når han eksploderer.':'Balanced-profilen valgte ham som beste samlede vurdering av forventet poeng, form og fixture.'}</p>`
       : `<p><strong>${top.name}</strong> has ${top.form?`form <strong>${top.form}</strong>`:'strong form'} and faces ${fixt?`<strong>${fixt}</strong>${fixHome?' (H)':' (A)'}`:'a manageable schedule'}. xG ${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}/90 — that's the home stretch.</p>
          <p>Top 10k ownership is <strong>${captainEO}%</strong> (low enough to differentiate${parseFloat(captainEO)<30?', high enough to not be risky':''}).</p>
@@ -5241,8 +5293,8 @@ function renderCaptainCompare() {
   const stats = [
     { key: 'xpts', l: currentLocale==='no'?'xPts':'xPts', v: x => (x.expected_points || x.score || 0).toFixed(1), bigger: true },
     { key: 'form', l: 'Form', v: x => x.form || '—', bigger: true, parse: x => parseFloat(x.form)||0 },
-    { key: 'xg', l: 'xG/90', v: x => x.xg_per_90 ? x.xg_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xg_per_90 || 0 },
-    { key: 'xa', l: 'xA/90', v: x => x.xa_per_90 ? x.xa_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xa_per_90 || 0 },
+    { key: 'xg', l: 'xG/90', tip: currentLocale==='no'?'Expected Goals per 90 min — sjansekvalitet, ikke faktiske mål.':'Expected Goals per 90 min — chance quality, not actual goals.', v: x => x.xg_per_90 ? x.xg_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xg_per_90 || 0 },
+    { key: 'xa', l: 'xA/90', tip: currentLocale==='no'?'Expected Assists per 90 min — kvalitet på målgivende pasninger.':'Expected Assists per 90 min — quality of pass leading to goal.', v: x => x.xa_per_90 ? x.xa_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xa_per_90 || 0 },
     { key: 'price', l: currentLocale==='no'?'Pris':'Price', v: x => `£${Number(x.price || 0).toFixed(1)}m`, bigger: false, parse: x => x.price || 0 },
     { key: 'eo', l: currentLocale==='no'?'Eierskap':'Ownership', v: x => `${x.selected_by_percent || x.ownership || '—'}%`, bigger: false, parse: x => parseFloat(x.selected_by_percent)||0 },
   ];
@@ -5250,13 +5302,13 @@ function renderCaptainCompare() {
     const av = s.parse ? s.parse(a) : parseFloat(s.v(a)) || 0;
     const bv = s.parse ? s.parse(b) : parseFloat(s.v(b)) || 0;
     const winA = s.bigger ? av > bv : av < bv;
-    return `<div class="cmp-stat ${winA?'win':''}"><span class="lab">${s.l}</span><span>${s.v(a)}</span></div>`;
+    return `<div class="cmp-stat ${winA?'win':''}"><span class="lab"${s.tip?` title="${s.tip}" style="cursor:help;border-bottom:1px dotted var(--text-faint);"`:''}>${s.l}</span><span>${s.v(a)}</span></div>`;
   }).join('') + '</div>';
   const sideB = `<div class="cmp-side"><div class="cmp-name">${b.name || ''}</div>` + stats.map(s => {
     const av = s.parse ? s.parse(a) : parseFloat(s.v(a)) || 0;
     const bv = s.parse ? s.parse(b) : parseFloat(s.v(b)) || 0;
     const winB = s.bigger ? bv > av : bv < av;
-    return `<div class="cmp-stat ${winB?'win':''}"><span class="lab">${s.l}</span><span>${s.v(b)}</span></div>`;
+    return `<div class="cmp-stat ${winB?'win':''}"><span class="lab"${s.tip?` title="${s.tip}" style="cursor:help;border-bottom:1px dotted var(--text-faint);"`:''}>${s.l}</span><span>${s.v(b)}</span></div>`;
   }).join('') + '</div>';
   board.innerHTML = sideA + '<div class="cmp-stat-label">vs</div>' + sideB;
 }
@@ -5642,7 +5694,7 @@ function generateWeeklyLesson(hist, ud) {
   const lessons_no = [
     `Snittet ditt over siste 5 GW er <strong>${avg.toFixed(1)} pts</strong>. Konsistens er viktigere enn én blockbuster-uke — det er ${avg >= 60 ? 'topp 100k-territorium' : 'fortsatt rom for å klatre'}.`,
     `Du scoret ${lastPts} pts denne uka — ${lastPts > avg ? 'over' : 'under'} ditt snitt. ${lastPts < avg ? 'Sjekk om du gikk glipp av en stor kapteinspoeng-uke.' : 'Hvis dette var en captain-treff, har du beveget deg riktig.'}`,
-    `Modellen anbefalte <span class="gloss">EO<span class="gloss-tip">Effective Ownership</span></span>-bevisst kapteinsbruk. Når du kapteiner samme som top 10k, taper du minimalt; når du avviker, må du vinne.`,
+    `Modellen anbefalte <span class="gloss">EO<span class="gloss-tip">Effective Ownership</span></span>-bevisst kapteinsbruk. Når du kapteiner samme som topp 10k, taper du minimalt; når du avviker, må du vinne.`,
     `Bytter har hittil i sesongen kostet deg ${(hist.length * 1.2).toFixed(0)} pts i snitt på hits. Spar free transfers når du ikke har +4 pts forventet — det er regelen.`,
     `Hvis du har en chip igjen, sjekk dobbel-GW-kalenderen i Plan-fanen. Bench Boost har historisk gitt ${avg >= 50 ? '15-25' : '12-20'} ekstra poeng i en god dobbel-GW.`,
   ];
@@ -5897,7 +5949,7 @@ function explainCaptain(p) {
   const xg = p.xg_per_90 ? `xG ${p.xg_per_90.toFixed(2)}/90` : 'høy xG';
   const opp = p.next_opponent || (p.fixtures && p.fixtures[0] && p.fixtures[0].opponent) || '';
   if (currentLocale === 'no') {
-    return `${f}, ${xg}${opp ? `, hjemme mot ${opp}` : ''}. Forventet poeng: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'}</strong>. Eierskap top 10k: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
+    return `${f}, ${xg}${opp ? `, hjemme mot ${opp}` : ''}. Forventet poeng: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'}</strong>. Eierskap topp 10k: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
   }
   return `${f}, ${xg}${opp ? `, home vs ${opp}` : ''}. Expected: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'} pts</strong>. Top 10k EO: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
 }
@@ -6015,20 +6067,31 @@ function openHomeBrief(kind) {
     });
   } else if (kind === 'league') {
     const leagues = (d.leagues && (d.leagues.classic || d.leagues)) || [];
-    const lg = leagues.find(l => l.id && l.name && !/overall|global/i.test(l.name)) || leagues[0] || {};
-    const rank = lg.entry_rank || lg.rank;
-    const total = lg.entry_total || lg.total_entries || lg.size;
-    openExplainPanel({
-      title: lg.name || (currentLocale==='no'?'Mini-liga':'Mini-league'),
-      narrative: currentLocale==='no'
-        ? `Du er nummer <strong>${rank||'—'}</strong> av <strong>${total||'—'}</strong>. Catch-up-strategi og rivalradar er under utvikling i Liga-seksjonen — der får du differensial-anbefaling for å hente inn de over deg.`
-        : `You're <strong>${rank||'—'}</strong> of <strong>${total||'—'}</strong>. Catch-up strategy and rival radar are coming in the League section — differential picks to chase down the rivals above you.`,
-      stats: [
-        { v: rank || '—', l: currentLocale==='no'?'Din plass':'Your rank' },
-        { v: total || '—', l: currentLocale==='no'?'Managere':'Managers' },
-      ],
-      cta: { label: currentLocale==='no' ? 'Åpne Liga' : 'Open League', nav: 'nav-leagues-standings' },
-    });
+    const lg = leagues.find(l => l.id && l.name && !/overall|global/i.test(l.name)) || leagues[0] || null;
+    const rank = lg && (lg.entry_rank || lg.rank);
+    const total = lg && (lg.entry_total || lg.total_entries || lg.size);
+    if (!lg || (!rank && !total)) {
+      openExplainPanel({
+        title: currentLocale==='no'?'Mini-liga':'Mini-league',
+        narrative: currentLocale==='no'
+          ? `Du har ikke koblet til en mini-liga ennå. Gå til <strong>Innstillinger</strong> og legg inn liga-ID for å se din plass, største rival og catch-up-anbefalinger.`
+          : `No mini-league connected yet. Go to <strong>Settings</strong> and add a league ID to see your rank, biggest rival, and catch-up suggestions.`,
+        stats: [],
+        cta: { label: currentLocale==='no' ? 'Åpne Innstillinger' : 'Open Settings', nav: 'nav-settings' },
+      });
+    } else {
+      openExplainPanel({
+        title: lg.name || (currentLocale==='no'?'Mini-liga':'Mini-league'),
+        narrative: currentLocale==='no'
+          ? `Du er nummer <strong>${rank||'—'}</strong> av <strong>${total||'—'}</strong>. Catch-up-strategi og rivalradar er under utvikling i Liga-seksjonen — der får du differensial-anbefaling for å hente inn de over deg.`
+          : `You're <strong>${rank||'—'}</strong> of <strong>${total||'—'}</strong>. Catch-up strategy and rival radar are coming in the League section — differential picks to chase down the rivals above you.`,
+        stats: [
+          { v: rank || '—', l: currentLocale==='no'?'Din plass':'Your rank' },
+          { v: total || '—', l: currentLocale==='no'?'Managere':'Managers' },
+        ],
+        cta: { label: currentLocale==='no' ? 'Åpne Liga' : 'Open League', nav: 'nav-leagues-standings' },
+      });
+    }
   } else if (kind === 'price') {
     const p = (d.prices && (d.prices.rising || d.prices)[0]) || {};
     openExplainPanel({
@@ -6052,7 +6115,7 @@ const Glossary = {
     'xG': 'Expected Goals — sannsynligheten for at et skudd blir mål, basert på posisjon, vinkel og situasjon.',
     'xA': 'Expected Assists — sannsynligheten for at en pasning fører til mål.',
     'FDR': 'Fixture Difficulty Rating — hvor vanskelige de neste kampene er, fra 1 (lett) til 5 (tøff).',
-    'EO': 'Effective Ownership — eierskap vektet for kapteins- og bench-bruk i top 10k.',
+    'EO': 'Effective Ownership — eierskap vektet for kapteins- og bench-bruk i topp 10k.',
     'BPS': 'Bonus Points System — Premier League sitt system som avgjør bonuspoeng (1-3) per kamp.',
     'ICT': 'Influence-Creativity-Threat — FPL sin sammensatte score for spilleraktivitet.',
     'Bench Boost': 'Chip som teller poeng fra benken din i én GW.',
@@ -6229,13 +6292,13 @@ const I18N = {
     'plan.tab.thisgw':'Denne GW','plan.tab.next5':'Neste 5 GW','plan.tab.wc':'Wildcard','plan.tab.fh':'Free Hit',
     'plan.live':'Live-projeksjon','plan.yourteam':'Ditt lag','plan.formation':'Formasjon','plan.bench':'Benk',
     'plan.nouser':'Koble til laget ditt for å se pitchen.','plan.connect':'Koble til',
-    'plan.fdr.title':'Fixture-vansker · neste 5 GW','plan.transfers.title':'Foreslåtte transfers',
+    'plan.fdr.title':'Fixture-vansker · neste 5 GW','plan.fdr.legend':'STORE bokstaver = hjemmekamp · små bokstaver = bortekamp','plan.transfers.title':'Foreslåtte transfers',
     'plan.advanced':'Avansert: kjør optimizer fra bunn','plan.suggest.apply':'Bruk','plan.suggest.explain':'Forklar mer',
 
     // Captain
     'captain.eyebrow':'KAPTEINSFORSLAG','captain.title':'Velg kaptein for','captain.sub':'Captain-valg står for ~15% av sesongens totale poengsum. Denne ene beslutningen er den viktigste du tar hver uke.',
     'captain.risk':'Risikoprofil','captain.safe':'Safe','captain.balanced':'Balanced','captain.aggressive':'Aggressive',
-    'captain.loading':'Analyserer kapteinsforslag …','captain.alts':'Top 5 alternativer',
+    'captain.loading':'Analyserer kapteinsforslag …','captain.alts':'Topp 5 alternativer',
     'captain.compare':'Sammenlign to spillere','captain.compare.help':'Velg to spillere — det som er bedre vises i grønt.',
     'captain.advanced':'Avansert: full tabell + EV-graf',
 
@@ -6281,7 +6344,7 @@ const I18N = {
     'plan.tab.thisgw':'This GW','plan.tab.next5':'Next 5 GW','plan.tab.wc':'Wildcard','plan.tab.fh':'Free Hit',
     'plan.live':'Live projection','plan.yourteam':'Your team','plan.formation':'Formation','plan.bench':'Bench',
     'plan.nouser':'Connect your team to see the pitch.','plan.connect':'Connect',
-    'plan.fdr.title':'Fixture difficulty · next 5 GW','plan.transfers.title':'Suggested transfers',
+    'plan.fdr.title':'Fixture difficulty · next 5 GW','plan.fdr.legend':'UPPERCASE = home · lowercase = away','plan.transfers.title':'Suggested transfers',
     'plan.advanced':'Advanced: run optimizer from scratch','plan.suggest.apply':'Use','plan.suggest.explain':'Explain more',
 
     'captain.eyebrow':'CAPTAIN PICKS','captain.title':'Pick captain for','captain.sub':'Captain choice accounts for ~15% of season points. This single decision is the most important one you make each week.',
