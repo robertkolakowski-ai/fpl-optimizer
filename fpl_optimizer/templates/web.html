@@ -5141,8 +5141,24 @@ function renderCaptainView() {
           </span>
           ${second ? `<span>${currentLocale==='no'?'Vise-kaptein':'Vice-captain'}: <strong>${second.name||second.web_name||'—'}</strong></span>` : ''}
         </div>
-        <button class="btn btn-secondary" onclick="openExplainPanel({title:'${(top.name||'').replace(/'/g,'\\\'')}', narrative: \`${narrative.replace(/`/g,'\\\`').replace(/<\/?p>/g,' ').trim()}\`, stats:[{v:'${pts.toFixed(1)}',l:'xPts'},{v:'${top.form||'—'}',l:'Form'},{v:'${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}',l:'xG/90'},{v:'${captainEO}%',l:'EO'}]})">${currentLocale==='no'?'Detaljert forklaring →':'Full explanation →'}</button>
+        <button class="btn btn-secondary" id="captain-detailed-explain-btn">${currentLocale==='no'?'Detaljert forklaring →':'Full explanation →'}</button>
       </div>`;
+    // Wire the explain button via DOM (avoids template-literal leak through HTML attr)
+    setTimeout(() => {
+      const btn = $('captain-detailed-explain-btn');
+      if (btn) {
+        btn.onclick = () => openExplainPanel({
+          title: top.name || '',
+          narrative: narrative,
+          stats: [
+            { v: pts.toFixed(1), l: 'xPts' },
+            { v: top.form || '—', l: 'Form' },
+            { v: top.xg_per_90 ? top.xg_per_90.toFixed(2) : '—', l: 'xG/90' },
+            { v: captainEO + (captainEO==='—'?'':'%'), l: 'EO' },
+          ],
+        });
+      }
+    }, 0);
   }
 
   // Top 5 alternatives
@@ -5941,18 +5957,35 @@ function closeExplainPanel() {
 function openHomeBrief(kind) {
   const d = HomeBriefData || {};
   if (kind === 'transfer') {
-    const t = (d.trans && (d.trans.suggestions || d.trans)[0]) || {};
-    const out = t.out || {}, inn = t.in || {};
+    const t = (d.trans && (d.trans.suggestions || d.trans)[0]) || null;
+    const out = (t && (t.out || t.sell)) || null;
+    const inn = (t && (t.in || t.buy)) || null;
+    // No real transfer to explain — show "hold heller"-rationale instead of empty placeholders
+    if (!t || !out || !inn || !out.name || !inn.name) {
+      openExplainPanel({
+        title: currentLocale==='no' ? 'Hold heller — ingen bytte denne uka' : 'Hold instead — no move this week',
+        narrative: currentLocale==='no'
+          ? 'Modellen finner ingen forslag som forventes å gi <strong>+4 pts eller mer</strong> denne uka. Free transfer spares til en større kampsving — det er nesten alltid bedre enn å ta en svak bytte for byttingens skyld.'
+          : 'The model can\'t find any suggestion that clears <strong>+4 pts</strong> this week. Save your free transfer for a bigger fixture swing — that\'s almost always better than a weak move for movement\'s sake.',
+        stats: [
+          { v: '0', l: currentLocale==='no'?'Bytter denne uka':'Transfers this week' },
+          { v: (AppState.userData && AppState.userData.free_transfers) || '1', l: 'FT' },
+          { v: '+4 pts', l: currentLocale==='no'?'Bar for å bytte':'Bar to transfer' },
+        ],
+        cta: { label: currentLocale==='no' ? 'Vurder selv i Plan' : 'Review yourself in Plan', nav: 'nav-transfers-optimizer' },
+      });
+      return;
+    }
     openExplainPanel({
-      title: currentLocale==='no' ? `Bytte: ${out.name||''} → ${inn.name||''}` : `Transfer: ${out.name||''} → ${inn.name||''}`,
+      title: currentLocale==='no' ? `Bytte: ${out.name} → ${inn.name}` : `Transfer: ${out.name} → ${inn.name}`,
       narrative: explainTransfer(out, inn, t),
       stats: [
-        { v: t.points_gain != null ? `+${t.points_gain.toFixed(1)}` : '—', l: currentLocale==='no'?'Forventet poenggevinst':'Expected gain' },
+        { v: t.points_gain != null ? `+${Number(t.points_gain).toFixed(1)}` : '—', l: currentLocale==='no'?'Forventet poenggevinst':'Expected gain' },
         { v: inn.form || '—', l: currentLocale==='no'?'Inn-form':'In-form' },
         { v: out.form || '—', l: currentLocale==='no'?'Ut-form':'Out-form' },
         { v: inn.price ? `£${inn.price}m` : '—', l: currentLocale==='no'?'Pris':'Price' },
       ],
-      cta: { label: currentLocale==='no' ? 'Se Bytteplanlegger' : 'Open Transfer Planner', nav: 'nav-transfers-planner' },
+      cta: { label: currentLocale==='no' ? 'Se Bytteplanlegger' : 'Open Transfer Planner', nav: 'nav-transfers-optimizer' },
     });
   } else if (kind === 'captain') {
     const p = (d.cap && (d.cap.picks || d.cap)[0]) || {};
