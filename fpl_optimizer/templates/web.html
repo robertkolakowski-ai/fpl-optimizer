@@ -1957,6 +1957,156 @@
     .hjem-captain-card { padding: var(--sp-4); }
     .chip-timeline-card { padding: var(--sp-3); }
   }
+
+  /* ==================================================================
+     PHASE 4c — PLAN-AS-PITCH (concept brief Del 06)
+     ================================================================== */
+
+  .plan-view { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+  /* Plan header: tabs + live projection */
+  .plan-header {
+    display: flex; gap: var(--sp-4); align-items: center; justify-content: space-between;
+    flex-wrap: wrap; padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border-subtle);
+  }
+  .plan-tabs { display: inline-flex; gap: 2px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); padding: 3px; border-radius: var(--r-md); }
+  .plan-tab {
+    background: transparent; border: 0; padding: 8px 14px;
+    font-family: var(--font-display); font-weight: 600; font-size: var(--fs-small);
+    color: var(--text-muted); cursor: pointer; border-radius: var(--r-sm);
+    min-height: 36px;
+  }
+  .plan-tab:hover { color: var(--text-strong); background: var(--bg-subtle); }
+  .plan-tab.active { background: var(--brand-primary); color: var(--text-on-brand); box-shadow: var(--shadow-1); }
+  .plan-projection { display: flex; align-items: baseline; gap: var(--sp-3); }
+  .plan-projection .pp-label { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .plan-projection .pp-value { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; line-height: 1; }
+  .plan-projection .pp-delta { font-family: var(--font-mono); font-size: var(--fs-body); font-weight: 600; color: var(--ok); font-variant-numeric: tabular-nums; }
+  .plan-projection .pp-delta.neg { color: var(--danger); }
+
+  .plan-section-title { font-family: var(--font-display); font-variation-settings: 'opsz' 24; font-size: 22px; font-weight: 600; color: var(--text-strong); margin: 0; }
+  .plan-section-title--sub { font-size: 18px; font-variation-settings: 'opsz' 18; }
+  .plan-formation { color: var(--brand-primary); font-family: var(--font-mono); font-weight: 600; }
+
+  /* Pitch overrides for Plan context */
+  .plan-pitch-wrap { background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--r-lg); padding: var(--sp-3); box-shadow: var(--shadow-1); position: relative; }
+  .plan-pitch {
+    background: linear-gradient(180deg, #1a5c2a 0%, #1e6b31 50%, #1a5c2a 100%);
+    border-radius: var(--r-md); padding: var(--sp-5) var(--sp-3) 0;
+    position: relative; overflow: hidden;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.35);
+    min-height: 360px;
+  }
+  .plan-pitch::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 100%;
+    background-image:
+      linear-gradient(transparent 19%, rgba(255,255,255,0.04) 19.5%, transparent 20%, transparent 39%, rgba(255,255,255,0.04) 39.5%, transparent 40%, transparent 59%, rgba(255,255,255,0.04) 59.5%, transparent 60%, transparent 79%, rgba(255,255,255,0.04) 79.5%, transparent 80%);
+    pointer-events: none;
+  }
+  .plan-pitch::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 90px; height: 90px;
+    border: 2px solid rgba(255,255,255,0.12); border-radius: 50%;
+    transform: translate(-50%,-50%); pointer-events: none;
+  }
+  .plan-row { display: flex; justify-content: center; gap: var(--sp-2); padding: var(--sp-2) 0; flex-wrap: wrap; position: relative; z-index: 1; }
+  .plan-row.bench-row { background: rgba(14,17,22,0.8); margin: var(--sp-3) calc(var(--sp-3) * -1) 0; padding: var(--sp-3) var(--sp-3); border-radius: 0 0 var(--r-md) var(--r-md); border-top: 1px solid rgba(255,255,255,0.08); }
+  .plan-row.bench-row .bench-label { position: absolute; top: 4px; left: var(--sp-3); font-family: var(--font-body); font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* Player tile on the pitch */
+  .pp-tile {
+    background: var(--bg-canvas); border-radius: var(--r-sm);
+    padding: 4px 6px 6px; min-width: 78px; max-width: 96px;
+    text-align: center; cursor: grab; user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    border: 2px solid transparent; transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+  }
+  .pp-tile:active { cursor: grabbing; }
+  .pp-tile.dragging { opacity: 0.4; transform: scale(0.95); }
+  .pp-tile.drop-target { border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-tint); }
+  .pp-tile .pp-pos-stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r-sm) var(--r-sm) 0 0; }
+  .pp-tile.pos-1 .pp-pos-stripe { background: var(--pos-gk); }
+  .pp-tile.pos-2 .pp-pos-stripe { background: var(--pos-def); }
+  .pp-tile.pos-3 .pp-pos-stripe { background: var(--pos-mid); }
+  .pp-tile.pos-4 .pp-pos-stripe { background: var(--pos-fwd); }
+  .pp-tile .pp-name { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-strong); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+  .pp-tile .pp-pts { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--brand-primary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .pp-tile .pp-c, .pp-tile .pp-v {
+    position: absolute; top: -6px; right: -6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 10px;
+    color: var(--text-on-brand); border: 2px solid var(--bg-canvas);
+  }
+  .pp-tile .pp-c { background: var(--brand-primary); }
+  .pp-tile .pp-v { background: var(--text-muted); }
+  .pp-tile .pp-news {
+    position: absolute; top: -6px; left: -6px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--danger); color: var(--text-on-brand);
+    display: grid; place-items: center; font-size: 10px; font-weight: 700;
+    border: 2px solid var(--bg-canvas);
+  }
+  .pp-tile.bench { opacity: 0.85; min-width: 64px; max-width: 80px; }
+  .pp-tile.bench .pp-pts { font-size: 12px; color: var(--text-muted); }
+
+  /* Plan empty state */
+  .plan-empty { padding: var(--sp-8); text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+  .plan-empty p { font-size: var(--fs-body); }
+
+  /* FDR grid */
+  .plan-fdr { background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: var(--sp-4); box-shadow: var(--shadow-1); }
+  .plan-fdr-grid { display: grid; gap: 2px; margin-top: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-label); }
+  .plan-fdr-row { display: grid; grid-template-columns: 160px repeat(5, 1fr); gap: 2px; align-items: center; }
+  .plan-fdr-row .fdr-name { padding: 6px 10px; font-family: var(--font-body); font-weight: 600; color: var(--text-strong); font-size: var(--fs-small); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plan-fdr-row .fdr-name .pos-tag { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); margin-left: 6px; }
+  .plan-fdr-cell { padding: 6px; text-align: center; font-weight: 700; border-radius: 4px; font-variant-numeric: tabular-nums; min-height: 32px; display: grid; place-items: center; }
+  .plan-fdr-cell.fdr-2 { background: var(--ok-tint); color: var(--ok); }
+  .plan-fdr-cell.fdr-3 { background: var(--bg-muted); color: var(--text-muted); }
+  .plan-fdr-cell.fdr-4 { background: var(--warn-tint); color: var(--warn); }
+  .plan-fdr-cell.fdr-5 { background: var(--danger-tint); color: var(--danger); }
+  .plan-fdr-cell.fdr-1 { background: var(--ok-tint); color: var(--ok); font-weight: 800; }
+  .plan-fdr-cell.away { text-transform: lowercase; opacity: 0.85; }
+
+  /* Transfer suggestions panel */
+  .plan-transfers-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2); }
+  .plan-ft-pill { padding: 4px 10px; border-radius: 999px; background: var(--brand-primary-tint); color: var(--brand-primary-hover); font-family: var(--font-mono); font-weight: 700; font-size: var(--fs-label); font-variant-numeric: tabular-nums; }
+  .plan-transfers-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-3); }
+  .plan-suggest {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4);
+    display: flex; flex-direction: column; gap: var(--sp-2);
+    box-shadow: var(--shadow-1);
+  }
+  .plan-suggest.differential { border-color: var(--brand-accent); }
+  .plan-suggest.hold-instead { background: var(--bg-subtle); border-style: dashed; border-color: var(--border-default); }
+  .plan-suggest .ps-eyebrow { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .plan-suggest .ps-gain { font-family: var(--font-mono); font-weight: 700; color: var(--ok); font-variant-numeric: tabular-nums; }
+  .plan-suggest .ps-gain.neg { color: var(--danger); }
+  .plan-suggest .ps-swap { font-family: var(--font-display); font-variation-settings: 'opsz' 20; font-size: 18px; font-weight: 600; color: var(--text-strong); display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+  .plan-suggest .ps-swap .arr { color: var(--brand-primary); font-family: var(--font-body); }
+  .plan-suggest .ps-swap .ps-price { font-family: var(--font-mono); font-size: var(--fs-small); font-weight: 600; color: var(--text-faint); margin-left: 4px; }
+  .plan-suggest .ps-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; }
+  .plan-suggest .ps-because strong { color: var(--text-default); font-weight: 600; }
+  .plan-suggest .ps-actions { display: flex; gap: var(--sp-2); margin-top: auto; }
+  .plan-suggest .ps-actions .btn { padding: 6px 12px; font-size: var(--fs-small); flex: 1; }
+  .plan-suggest .ps-actions .btn-secondary { background: var(--bg-canvas); color: var(--text-default); border: 1px solid var(--border-default); }
+
+  /* Advanced section collapsible */
+  .advanced-section { margin-top: var(--sp-6); border-top: 1px dashed var(--border-default); padding-top: var(--sp-4); }
+  .advanced-section > summary { cursor: pointer; font-family: var(--font-display); font-size: var(--fs-body); font-weight: 600; color: var(--text-muted); padding: var(--sp-2) 0; user-select: none; list-style: none; display: flex; align-items: center; gap: var(--sp-2); }
+  .advanced-section > summary::before { content: '▸'; transition: transform 0.15s; color: var(--text-faint); font-size: 12px; }
+  .advanced-section[open] > summary::before { transform: rotate(90deg); }
+  .advanced-section > summary:hover { color: var(--text-strong); }
+
+  @media (max-width: 700px) {
+    .plan-fdr-row { grid-template-columns: 110px repeat(5, 1fr); }
+    .plan-pitch { padding: var(--sp-3) var(--sp-2) 0; }
+    .pp-tile { min-width: 64px; max-width: 80px; padding: 3px 4px 4px; }
+    .pp-tile .pp-name { font-size: 10px; }
+    .plan-projection .pp-value { font-size: 26px; }
+    .plan-tab { padding: 6px 10px; font-size: var(--fs-label); }
+  }
 </style>
 </head>
 <body>
@@ -2512,7 +2662,63 @@
 
       <!-- ==================== TRANSFERS: OPTIMIZER ==================== -->
       <div class="nav-panel" id="nav-transfers-optimizer">
-        <div class="settings">
+
+        <!-- ==================== PHASE 4c: PLAN-AS-PITCH ==================== -->
+        <section class="plan-view" id="plan-view">
+          <div class="plan-header">
+            <div class="plan-tabs" role="tablist" aria-label="Planning mode">
+              <button type="button" class="plan-tab active" data-mode="this-gw" onclick="setPlanMode('this-gw')" data-i18n="plan.tab.thisgw">Denne GW</button>
+              <button type="button" class="plan-tab" data-mode="next-5" onclick="setPlanMode('next-5')" data-i18n="plan.tab.next5">Neste 5 GW</button>
+              <button type="button" class="plan-tab" data-mode="wildcard" onclick="setPlanMode('wildcard')" data-i18n="plan.tab.wc">Wildcard</button>
+              <button type="button" class="plan-tab" data-mode="freehit" onclick="setPlanMode('freehit')" data-i18n="plan.tab.fh">Free Hit</button>
+            </div>
+            <div class="plan-projection">
+              <span class="pp-label" data-i18n="plan.live">Live-projeksjon</span>
+              <span class="pp-value" id="plan-proj-pts">—</span>
+              <span class="pp-delta" id="plan-proj-delta"></span>
+            </div>
+          </div>
+
+          <h2 class="plan-section-title">
+            <span data-i18n="plan.yourteam">Ditt lag</span> · <span data-i18n="plan.formation">Formasjon</span>
+            <span id="plan-formation" class="plan-formation">—</span>
+          </h2>
+
+          <div class="plan-pitch-wrap" id="plan-pitch-wrap">
+            <div class="loader" id="plan-loader" hidden><div class="spinner"></div><div class="loader-text">Henter laget …</div></div>
+            <div class="pitch plan-pitch" id="plan-pitch" hidden>
+              <div class="pitch-row plan-row" data-pos="1" id="prow-gk"></div>
+              <div class="pitch-row plan-row" data-pos="2" id="prow-def"></div>
+              <div class="pitch-row plan-row" data-pos="3" id="prow-mid"></div>
+              <div class="pitch-row plan-row" data-pos="4" id="prow-fwd"></div>
+              <div class="pitch-row bench-row plan-row" data-pos="bench" id="prow-bench">
+                <span class="bench-label" data-i18n="plan.bench">Benk</span>
+              </div>
+            </div>
+            <div class="plan-empty" id="plan-empty">
+              <p data-i18n="plan.nouser">Koble til laget ditt for å se pitchen.</p>
+              <button class="btn" onclick="switchNav('nav-dashboard')" data-i18n="plan.connect">Koble til</button>
+            </div>
+          </div>
+
+          <section class="plan-fdr" id="plan-fdr" hidden>
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="plan.fdr.title">Fixture-vansker · neste 5 GW</h3>
+            <div class="plan-fdr-grid" id="plan-fdr-grid"></div>
+          </section>
+
+          <section class="plan-transfers" id="plan-transfers" hidden>
+            <div class="plan-transfers-head">
+              <h3 class="plan-section-title plan-section-title--sub" data-i18n="plan.transfers.title">Foreslåtte transfers</h3>
+              <span class="plan-ft-pill" id="plan-ft">—</span>
+            </div>
+            <div class="plan-transfers-list" id="plan-transfers-list"></div>
+          </section>
+        </section>
+
+        <!-- Existing optimizer settings — moved into a collapsible advanced section -->
+        <details class="advanced-section" id="plan-advanced">
+          <summary><span data-i18n="plan.advanced">Avansert: kjør optimizer fra bunn</span></summary>
+        <div class="settings" style="margin-top:var(--sp-3);">
           <div class="section-title">Optimizer Settings</div>
           <div class="settings-grid">
             <div class="field">
@@ -2605,6 +2811,7 @@
             <div id="top-players-container"></div>
           </div>
         </div>
+        </details><!-- /plan-advanced -->
       </div>
 
       <!-- ==================== TRANSFERS: MULTI-GW PLANNER ==================== -->
@@ -3862,6 +4069,330 @@ function openMondayReport() {
   // Phase 4f: full Mandagsrapport will live in Arkiv. For now, deep-link there.
   switchNav('nav-season-history');
 }
+
+// ==================== PHASE 4c — PLAN-AS-PITCH ====================
+const PlanState = {
+  mode: 'this-gw',         // 'this-gw' | 'next-5' | 'wildcard' | 'freehit'
+  picks: [],               // squad picks normalised
+  baseProjection: null,    // sum of starting XI before mutations
+  currentProjection: null,
+  pendingSwaps: [],        // [{out_id, in_id}] — populated as user drags
+  fixtures: null,
+  transfers: null,
+};
+
+function setPlanMode(mode) {
+  PlanState.mode = mode;
+  document.querySelectorAll('.plan-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  // Phase 4c scope: just visually switch. Wildcard/Free Hit/Multi-GW behaviours come in 4d/4e.
+  if (mode === 'wildcard' || mode === 'freehit') {
+    // Show advanced optimizer auto-open as a starting point
+    const adv = document.getElementById('plan-advanced');
+    if (adv && !adv.open) adv.open = true;
+  }
+}
+
+async function loadPlanPitch() {
+  const wrap = $('plan-pitch-wrap');
+  const empty = $('plan-empty');
+  const pitch = $('plan-pitch');
+  const loader = $('plan-loader');
+  const fdrSection = $('plan-fdr');
+  const trSection = $('plan-transfers');
+  if (!AppState.userId) {
+    empty.style.display = '';
+    pitch.hidden = true;
+    fdrSection.hidden = true;
+    trSection.hidden = true;
+    return;
+  }
+  empty.style.display = 'none';
+  loader.hidden = false;
+  pitch.hidden = true;
+  try {
+    // /api/live/<uid> returns picks with full data
+    const live = await fetch(`/api/live/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+    if (!live || !live.picks) { throw new Error('no picks'); }
+    PlanState.picks = live.picks.map(p => ({
+      element: p.element || p.id,
+      name: p.name || p.web_name,
+      position: p.position,                     // 1=GK 2=DEF 3=MID 4=FWD
+      pitch_pos: p.pitch_position || p.position,// FPL pick position 1-15 (1-11 starting, 12-15 bench)
+      slot: p.slot != null ? p.slot : (p.pick_position || 0),
+      team: p.team || p.team_short || '',
+      team_id: p.team_id || p.team_code,
+      price: p.price || (p.now_cost ? p.now_cost/10 : 0),
+      points: p.expected_points != null ? p.expected_points : (p.score || p.composite_score || p.gw_points || 0),
+      is_captain: !!p.is_captain,
+      is_vice: !!p.is_vice_captain,
+      news: p.news || (p.chance_of_playing != null && p.chance_of_playing < 100),
+      chance: p.chance_of_playing,
+      multiplier: p.multiplier != null ? p.multiplier : 1,
+    }));
+    renderPlanPitch();
+    loadPlanFdr();
+    loadPlanTransfers();
+    pitch.hidden = false;
+    fdrSection.hidden = false;
+    trSection.hidden = false;
+  } catch (e) {
+    console.warn('loadPlanPitch failed', e);
+    empty.style.display = '';
+    empty.querySelector('p').textContent = currentLocale==='no' ? 'Kunne ikke hente laget. Prøv Sync.' : 'Could not load team. Try Sync.';
+  } finally {
+    loader.hidden = true;
+  }
+}
+
+function renderPlanPitch() {
+  const picks = PlanState.picks;
+  // Determine starting XI (slot 1-11) vs bench (12-15)
+  const starting = picks.filter(p => p.slot >= 1 && p.slot <= 11);
+  const bench = picks.filter(p => p.slot >= 12 && p.slot <= 15).sort((a,b) => a.slot - b.slot);
+
+  // Group starters by position
+  const byPos = { 1: [], 2: [], 3: [], 4: [] };
+  starting.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
+  // Sort within position by slot to keep order stable
+  Object.values(byPos).forEach(arr => arr.sort((a, b) => a.slot - b.slot));
+
+  // Formation: DEF-MID-FWD
+  const formation = `${byPos[2].length}-${byPos[3].length}-${byPos[4].length}`;
+  $('plan-formation').textContent = formation;
+
+  $('prow-gk').innerHTML = byPos[1].map(p => tileHtml(p, false)).join('');
+  $('prow-def').innerHTML = byPos[2].map(p => tileHtml(p, false)).join('');
+  $('prow-mid').innerHTML = byPos[3].map(p => tileHtml(p, false)).join('');
+  $('prow-fwd').innerHTML = byPos[4].map(p => tileHtml(p, false)).join('');
+  // Bench: keep label, append tiles
+  const benchEl = $('prow-bench');
+  benchEl.innerHTML = `<span class="bench-label">${currentLocale==='no' ? 'Benk' : 'Bench'}</span>` + bench.map(p => tileHtml(p, true)).join('');
+
+  PlanState.baseProjection = computeProjection(picks);
+  updateProjectionUI(PlanState.baseProjection, 0);
+
+  attachDragHandlers();
+}
+
+function tileHtml(p, isBench) {
+  const cls = `pp-tile pos-${p.position}${isBench?' bench':''}`;
+  const cap = p.is_captain ? '<span class="pp-c" title="Captain">C</span>' : (p.is_vice ? '<span class="pp-v" title="Vice">V</span>' : '');
+  const news = p.news ? `<span class="pp-news" title="${p.news === true ? 'Doubt' : (p.news+'').replace(/"/g,'&quot;')}">!</span>` : '';
+  return `
+    <div class="${cls}" draggable="true" data-id="${p.element}" data-pos="${p.position}" data-bench="${isBench?1:0}" onclick="openPlayerExplain(${p.element})">
+      <span class="pp-pos-stripe"></span>
+      ${cap}${news}
+      <div class="pp-name">${p.name || ''}</div>
+      <div class="pp-pts">${(p.points || 0).toFixed(1)}</div>
+    </div>`;
+}
+
+function computeProjection(picks) {
+  // Sum of starting XI (slot 1-11), with captain *2 (or *3 if TC active)
+  let total = 0;
+  picks.forEach(p => {
+    if (p.slot >= 1 && p.slot <= 11) {
+      const mult = p.is_captain ? 2 : 1;
+      total += (p.points || 0) * mult;
+    }
+  });
+  return total;
+}
+
+function updateProjectionUI(value, delta) {
+  $('plan-proj-pts').textContent = value != null ? value.toFixed(1) : '—';
+  const dEl = $('plan-proj-delta');
+  if (Math.abs(delta) > 0.05) {
+    dEl.textContent = `${delta > 0 ? '+' : ''}${delta.toFixed(1)} ${currentLocale==='no'?'etter endringer':'after edits'}`;
+    dEl.classList.toggle('neg', delta < 0);
+  } else {
+    dEl.textContent = '';
+  }
+}
+
+// Drag-and-drop within a position row (swap two players' slots)
+function attachDragHandlers() {
+  let draggedId = null;
+  document.querySelectorAll('#plan-pitch .pp-tile').forEach(tile => {
+    tile.addEventListener('dragstart', (e) => {
+      draggedId = parseInt(tile.dataset.id);
+      tile.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(draggedId));
+    });
+    tile.addEventListener('dragend', () => {
+      tile.classList.remove('dragging');
+      document.querySelectorAll('#plan-pitch .pp-tile').forEach(t => t.classList.remove('drop-target'));
+    });
+    tile.addEventListener('dragover', (e) => {
+      // Only allow drop on same position OR between starting/bench within same position
+      const dragged = PlanState.picks.find(p => p.element === draggedId);
+      const target = PlanState.picks.find(p => p.element === parseInt(tile.dataset.id));
+      if (dragged && target && dragged.position === target.position) {
+        e.preventDefault();
+        tile.classList.add('drop-target');
+      }
+    });
+    tile.addEventListener('dragleave', () => tile.classList.remove('drop-target'));
+    tile.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const targetId = parseInt(tile.dataset.id);
+      tile.classList.remove('drop-target');
+      if (draggedId && targetId && draggedId !== targetId) {
+        swapSlots(draggedId, targetId);
+      }
+    });
+  });
+}
+
+function swapSlots(idA, idB) {
+  const a = PlanState.picks.find(p => p.element === idA);
+  const b = PlanState.picks.find(p => p.element === idB);
+  if (!a || !b || a.position !== b.position) return;
+  const tmp = a.slot; a.slot = b.slot; b.slot = tmp;
+  // Re-render and recompute
+  PlanState.currentProjection = computeProjection(PlanState.picks);
+  const delta = PlanState.currentProjection - PlanState.baseProjection;
+  renderPlanPitch();          // re-render places tiles in new slots
+  // After re-render, drag handlers reattached; but our state changed so projection updates
+  updateProjectionUI(PlanState.currentProjection, delta);
+}
+
+async function loadPlanFdr() {
+  // Use first 5 GW fixture difficulty for each starting + key bench player
+  try {
+    const fixtures = AppState.fixturesCache || await fetch('/api/fdr').then(r => r.ok ? r.json() : null);
+    if (fixtures) AppState.fixturesCache = fixtures;
+    PlanState.fixtures = fixtures;
+    const grid = $('plan-fdr-grid');
+    if (!grid) return;
+    // Map team -> next 5 fixtures (assume API returns array per team or keyed by team)
+    const teamFix = (fixtures && fixtures.teams) || (fixtures || {});
+    const starters = PlanState.picks.filter(p => p.slot >= 1 && p.slot <= 11);
+    const rows = starters.slice(0, 8).map(p => {
+      const team = p.team || '';
+      const fix = teamFix[team] || teamFix[p.team_id] || [];
+      const cells = (fix.fixtures || fix || []).slice(0, 5).map(f => {
+        const fdr = (f.difficulty || f.fdr || 3);
+        const opp = (f.opponent_short || f.opponent || '').slice(0,3);
+        const home = f.is_home;
+        return `<span class="plan-fdr-cell fdr-${fdr} ${home?'':'away'}">${home ? opp.toUpperCase() : opp.toLowerCase()}</span>`;
+      });
+      // Pad to 5 cells
+      while (cells.length < 5) cells.push('<span class="plan-fdr-cell fdr-3">—</span>');
+      const posLabel = ['', 'GK', 'DEF', 'MID', 'FWD'][p.position] || '';
+      return `<div class="plan-fdr-row"><div class="fdr-name">${p.name} <span class="pos-tag">${posLabel} · ${team}</span></div>${cells.join('')}</div>`;
+    }).join('');
+    grid.innerHTML = rows || `<div style="padding:var(--sp-3);color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen fixture-data tilgjengelig.':'No fixture data available.'}</div>`;
+  } catch (e) { console.warn('loadPlanFdr failed', e); }
+}
+
+async function loadPlanTransfers() {
+  const list = $('plan-transfers-list');
+  const ftPill = $('plan-ft');
+  if (!list) return;
+  const ft = (AppState.userData && AppState.userData.free_transfers) || 1;
+  ftPill.textContent = `${ft} FT`;
+  list.innerHTML = `<div style="padding:var(--sp-3);color:var(--text-muted);">${currentLocale==='no'?'Henter forslag …':'Loading suggestions …'}</div>`;
+  try {
+    const data = await fetch(`/api/transfer-suggestions/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+    PlanState.transfers = data;
+    const items = (data && (data.suggestions || data)) || [];
+    if (!items.length) {
+      list.innerHTML = renderHoldInsteadCard(ft);
+      return;
+    }
+    const cards = items.slice(0, 3).map((t, i) => renderSuggestCard(t, i));
+    // Always append a "hold heller" card if best gain < 4 pts
+    const bestGain = items[0] && (items[0].points_gain || items[0].gain || 0);
+    if (bestGain < 4) cards.push(renderHoldInsteadCard(ft, true));
+    list.innerHTML = cards.join('');
+  } catch (e) {
+    list.innerHTML = `<div style="padding:var(--sp-3);color:var(--text-muted);">${currentLocale==='no'?'Kunne ikke hente forslag.':'Could not load suggestions.'}</div>`;
+  }
+}
+
+function renderSuggestCard(t, idx) {
+  const out = t.out || t.sell || {};
+  const inn = t.in || t.buy || {};
+  const gain = t.points_gain || t.gain || 0;
+  const isDifferential = inn.selected_by_percent != null && parseFloat(inn.selected_by_percent) < 5;
+  const cls = isDifferential ? 'plan-suggest differential' : 'plan-suggest';
+  const tag = isDifferential
+    ? (currentLocale==='no'?'Differensial':'Differential')
+    : (currentLocale==='no'?`Forslag ${idx+1}`:`Option ${idx+1}`);
+  return `
+    <article class="${cls}">
+      <div class="ps-eyebrow">
+        <span>${tag}</span>
+        <span class="ps-gain ${gain<0?'neg':''}">${gain>=0?'+':''}${Number(gain).toFixed(1)} pts</span>
+      </div>
+      <div class="ps-swap">
+        <span>${out.name || '—'}<span class="ps-price">£${(out.price||0).toFixed(1)}</span></span>
+        <span class="arr">→</span>
+        <span>${inn.name || '—'}<span class="ps-price">£${(inn.price||0).toFixed(1)}</span></span>
+      </div>
+      <p class="ps-because">${glossifyText(explainTransfer(out, inn, t))}</p>
+      <div class="ps-actions">
+        <button class="btn" onclick="applyTransferSuggestion(${idx})" data-i18n="plan.suggest.apply">Bruk</button>
+        <button class="btn btn-secondary" onclick="explainTransferOpen(${idx})" data-i18n="plan.suggest.explain">Forklar mer</button>
+      </div>
+    </article>`;
+}
+
+function renderHoldInsteadCard(ft, asExtra) {
+  const title = currentLocale==='no' ? 'Hold heller' : 'Hold instead';
+  const body = currentLocale==='no'
+    ? `Modellen anbefaler å ikke bruke FT'en denne uka hvis du ikke får +4 pts forventet. Du har ${ft} FT å spare til en større kampsving.`
+    : `Model recommends saving your FT this week unless you can clear +4 pts expected gain. You have ${ft} FT to roll into a bigger fixture swing.`;
+  return `
+    <article class="plan-suggest hold-instead">
+      <div class="ps-eyebrow"><span>${title}</span><span class="ps-gain">0 pts</span></div>
+      <div class="ps-swap" style="font-size:var(--fs-body);">${currentLocale==='no'?'Spar bytte til neste uke':'Save your transfer'}</div>
+      <p class="ps-because">${body}</p>
+    </article>`;
+}
+
+function applyTransferSuggestion(idx) {
+  // Phase 4c: stub. Phase 4d will wire to actual squad mutation + projection update.
+  const items = (PlanState.transfers && (PlanState.transfers.suggestions || PlanState.transfers)) || [];
+  const t = items[idx];
+  if (!t) return;
+  alert(currentLocale==='no' ? 'Bytte registrert lokalt — full implementering kommer i neste fase.' : 'Transfer applied locally — full sync coming next phase.');
+}
+function explainTransferOpen(idx) {
+  const items = (PlanState.transfers && (PlanState.transfers.suggestions || PlanState.transfers)) || [];
+  const t = items[idx];
+  if (!t) return;
+  HomeBriefData.trans = { suggestions: [t] };
+  openHomeBrief('transfer');
+}
+function openPlayerExplain(playerId) {
+  // Phase 4c: open a basic explain panel. Phase 4d will hand off to the dedicated Spiller modal.
+  const p = PlanState.picks.find(x => x.element === playerId);
+  if (!p) return;
+  openExplainPanel({
+    title: p.name,
+    narrative: glossifyText(currentLocale==='no'
+      ? `${p.name} (${p.team}) — projeksjon ${p.points.toFixed(1)} pts denne GW. ${p.is_captain?'Du har ham som <strong>kaptein</strong>.':''} ${p.news?'<strong>Status-flagg</strong>: sjekk team news før deadline.':''}`
+      : `${p.name} (${p.team}) — projected ${p.points.toFixed(1)} pts this GW. ${p.is_captain?'You have him as <strong>captain</strong>.':''} ${p.news?'<strong>News flag</strong> — check before deadline.':''}`),
+    stats: [
+      { v: p.points.toFixed(1), l: currentLocale==='no'?'Forv. poeng':'Expected pts' },
+      { v: `£${p.price.toFixed(1)}`, l: currentLocale==='no'?'Pris':'Price' },
+      { v: p.team, l: currentLocale==='no'?'Lag':'Team' },
+      { v: p.chance != null ? `${p.chance}%` : '100%', l: currentLocale==='no'?'Spille-sannsynlighet':'Playing chance' },
+    ],
+  });
+}
+
+// Auto-load when user navigates to Plan
+const _origSwitchNav = switchNav;
+switchNav = function(panelId) {
+  _origSwitchNav(panelId);
+  if (panelId === 'nav-transfers-optimizer' && AppState.userId && !PlanState.picks.length) {
+    setTimeout(loadPlanPitch, 100);
+  }
+};
 
 // ----- "Fordi"-felt: human-readable reasoning (#2, #21) -----
 // Tone: kompetent venn, ikke akademisk paper.
