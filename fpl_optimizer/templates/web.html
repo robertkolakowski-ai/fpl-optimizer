@@ -4729,11 +4729,19 @@ function setPlanMode(mode) {
   PlanState.mode = mode;
   document.querySelectorAll('.plan-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
   if (mode === 'next-5') {
-    // Multi-GW lever in legacy nav-transfers-multigw — open it via legacy toggle if available, else hint.
+    // Multi-GW lever in legacy nav-transfers-multigw — open it via legacy toggle if available, else show inline notice.
     if (isFeatureEnabled('legacy_nav')) { switchNav('nav-transfers-multigw'); return; }
-    alert(currentLocale==='no'
-      ? 'Multi-GW er foreløpig under "Vis legacy verktøy" i Innstillinger.'
-      : 'Multi-GW currently lives behind "Show legacy tools" in Settings.');
+    const isNo = currentLocale === 'no';
+    const wrap = document.getElementById('plan-pitch-wrap');
+    if (wrap) {
+      wrap.innerHTML = `
+        <div class="plan-empty-notice" style="padding:var(--sp-5);text-align:center;background:var(--bg-canvas);border:1px dashed var(--border-default);border-radius:var(--r-md);">
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-strong);margin-bottom:6px;">${isNo?'Neste 5 GW kommer snart':'Next 5 GW coming soon'}</div>
+          <p style="font-size:var(--fs-small);color:var(--text-muted);max-width:480px;margin:0 auto var(--sp-3);line-height:1.5;">${isNo?'Multi-GW-planleggeren er foreløpig tilgjengelig som legacy-verktøy. Aktiver den i Innstillinger for å bruke den nå.':'The Multi-GW planner currently lives as a legacy tool. Enable it in Settings to use it now.'}</p>
+          <button class="btn" onclick="switchNav('nav-settings')">${isNo?'Åpne Innstillinger':'Open Settings'}</button>
+          <button class="btn btn-secondary" onclick="setPlanMode('denne-gw')" style="margin-left:var(--sp-2);">${isNo?'Tilbake':'Back'}</button>
+        </div>`;
+    }
     return;
   }
   if (mode === 'wildcard' || mode === 'freehit') {
