@@ -2135,6 +2135,8 @@
     box-shadow: var(--shadow-1);
   }
   .plan-suggest.differential { border-color: var(--brand-accent); }
+  .plan-suggest.marginal { border-color: var(--border-default); opacity: 0.85; }
+  .plan-suggest.marginal .ps-eyebrow { color: var(--text-faint); }
   .plan-suggest.hold-instead { background: var(--bg-subtle); border-style: dashed; border-color: var(--border-default); }
   .plan-suggest .ps-eyebrow { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .plan-suggest .ps-gain { font-family: var(--font-mono); font-weight: 700; color: var(--ok); font-variant-numeric: tabular-nums; }
@@ -4989,25 +4991,27 @@ async function loadPlanTransfers() {
       list.innerHTML = renderHoldInsteadCard(ft);
       return;
     }
-    const cards = items.slice(0, 3).map((t, i) => renderSuggestCard(t, i));
-    // Always append a "hold heller" card if best gain < 4 pts
     const bestGain = items[0] && (items[0].points_gain || items[0].gain || 0);
-    if (bestGain < 4) cards.push(renderHoldInsteadCard(ft, true));
+    // Always show top considered swap (even if marginal) so user sees the rationale.
+    const cards = items.slice(0, 3).map((t, i) => renderSuggestCard(t, i, bestGain < 4 && i === 0));
+    if (bestGain < 4) cards.push(renderHoldInsteadCard(ft, true, items[0]));
     list.innerHTML = cards.join('');
   } catch (e) {
     list.innerHTML = `<div style="padding:var(--sp-3);color:var(--text-muted);">${currentLocale==='no'?'Kunne ikke hente forslag.':'Could not load suggestions.'}</div>`;
   }
 }
 
-function renderSuggestCard(t, idx) {
+function renderSuggestCard(t, idx, marginal) {
   const out = t.out || t.sell || {};
   const inn = t.in || t.buy || {};
   const gain = t.points_gain || t.gain || 0;
   const isDifferential = inn.selected_by_percent != null && parseFloat(inn.selected_by_percent) < 5;
-  const cls = isDifferential ? 'plan-suggest differential' : 'plan-suggest';
-  const tag = isDifferential
-    ? (currentLocale==='no'?'Differensial':'Differential')
-    : (currentLocale==='no'?`Forslag ${idx+1}`:`Option ${idx+1}`);
+  const cls = marginal ? 'plan-suggest marginal' : (isDifferential ? 'plan-suggest differential' : 'plan-suggest');
+  const tag = marginal
+    ? (currentLocale==='no'?'Vurdert · marginal':'Considered · marginal')
+    : (isDifferential
+      ? (currentLocale==='no'?'Differensial':'Differential')
+      : (currentLocale==='no'?`Forslag ${idx+1}`:`Option ${idx+1}`));
 
   const outPrice = Number(out.price || 0);
   const innPrice = Number(inn.price || 0);
@@ -5065,16 +5069,36 @@ function renderSuggestCard(t, idx) {
     </article>`;
 }
 
-function renderHoldInsteadCard(ft, asExtra) {
-  const title = currentLocale==='no' ? 'Hold heller' : 'Hold instead';
-  const body = currentLocale==='no'
-    ? `Modellen anbefaler å ikke bruke FT'en denne uka hvis du ikke får +4 pts forventet. Du har ${ft} FT å spare til en større kampsving.`
-    : `Model recommends saving your FT this week unless you can clear +4 pts expected gain. You have ${ft} FT to roll into a bigger fixture swing.`;
+function renderHoldInsteadCard(ft, asExtra, rejectedTop) {
+  const isNo = currentLocale === 'no';
+  const title = isNo ? 'Anbefaling: Hold' : 'Recommendation: Hold';
+  const body = isNo
+    ? `Modellen anbefaler å ikke bruke FT'en denne uka hvis ingen byttet gir <strong>+4 pts</strong> forventet (terskel for å forsvare et −4 hit neste uke om du må). Du har <strong>${ft} FT</strong> å spare til en større kampsving.`
+    : `Model recommends saving your FT this week unless a swap clears <strong>+4 pts</strong> expected gain (threshold to justify a −4 hit later). You have <strong>${ft} FT</strong> to roll.`;
+
+  let rejected = '';
+  if (rejectedTop) {
+    const out = rejectedTop.out || rejectedTop.sell || {};
+    const inn = rejectedTop.in || rejectedTop.buy || {};
+    const gain = rejectedTop.points_gain || rejectedTop.gain || 0;
+    rejected = `
+      <div class="ps-rationale" style="background:var(--bg-canvas);border:1px solid var(--border-subtle);">
+        <div class="ps-rationale-label">${isNo?'Beste alternativ — under terskel':'Best alternative — below threshold'}</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text-muted);margin:4px 0;">
+          ${out.name||'—'} → ${inn.name||'—'} <span style="font-family:var(--font-mono);color:var(--text-faint);font-size:12px;">${gain>=0?'+':''}${gain.toFixed(1)} pts</span>
+        </div>
+        <p style="font-size:var(--fs-small);color:var(--text-muted);margin:0;line-height:1.4;">${isNo
+          ? `Gevinst på <strong>${gain.toFixed(1)} pts</strong> dekker ikke kostnaden av å brenne FT'en. Vent til ${(out.next_fdr||3) > 3 ? 'kampene blir lettere':'en større kursendring i form/fixtures'}.`
+          : `Gain of <strong>${gain.toFixed(1)} pts</strong> doesn't justify burning the FT. Wait for ${(out.next_fdr||3) > 3 ? 'easier fixtures':'a bigger swing in form/fixtures'}.`}</p>
+      </div>`;
+  }
+
   return `
     <article class="plan-suggest hold-instead">
       <div class="ps-eyebrow"><span>${title}</span><span class="ps-gain">0 pts</span></div>
-      <div class="ps-swap" style="font-size:var(--fs-body);">${currentLocale==='no'?'Spar bytte til neste uke':'Save your transfer'}</div>
-      <p class="ps-because">${body}</p>
+      <div class="ps-swap" style="font-size:var(--fs-body);color:var(--text-strong);">${isNo?'Spar bytte til neste uke':'Save your transfer'}</div>
+      <p class="ps-because" style="font-style:normal;border-top:0;padding-top:0;">${body}</p>
+      ${rejected}
     </article>`;
 }
 
@@ -12356,6 +12380,7 @@ document.addEventListener('keydown', e => {
 
 <!-- ==================== BOTTOM NAVIGATION (MOBILE) ==================== -->
 <!-- Sticky Connect CTA (mobile only, visible when no user connected) -->
+<style>.sticky-connect-cta { display: none; } .sticky-optimize { display: none; }</style>
 <div class="sticky-connect-cta" id="sticky-connect-cta">
   <span>Connect your FPL team for personalized insights</span>
   <button class="btn btn-sm" onclick="switchNav('nav-settings');setTimeout(()=>$('user-id').focus(),100);">Connect</button>
