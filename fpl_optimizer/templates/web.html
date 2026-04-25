@@ -2199,6 +2199,113 @@
   .cmp-stat.win { background: var(--ok-tint); color: var(--ok); font-weight: 700; }
   .cmp-stat .lab { color: var(--text-muted); font-family: var(--font-body); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
   .cmp-stat-label { display: grid; place-items: center; padding: 0 var(--sp-2); font-family: var(--font-body); font-weight: 600; color: var(--text-faint); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* ==================================================================
+     PHASE 4e — LIGA CATCH-UP (concept brief Del 04.5)
+     ================================================================== */
+
+  .liga-view { display: flex; flex-direction: column; gap: var(--sp-4); }
+  .liga-eyebrow { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .liga-title { font-family: var(--font-display); font-variation-settings: 'opsz' 32; font-size: 32px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em; margin-top: 4px; }
+  .liga-sub { color: var(--text-muted); font-size: var(--fs-body); margin-top: var(--sp-2); max-width: 60ch; line-height: 1.5; }
+
+  /* League selector */
+  .liga-leagues-bar { display: flex; gap: var(--sp-2); flex-wrap: wrap; padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border-subtle); }
+  .liga-league-chip {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: 6px 12px;
+    font-family: var(--font-body); font-size: var(--fs-small); font-weight: 600;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s; min-height: 36px;
+  }
+  .liga-league-chip:hover { color: var(--text-strong); border-color: var(--border-default); }
+  .liga-league-chip.active { background: var(--brand-primary); border-color: var(--brand-primary); color: var(--text-on-brand); box-shadow: var(--shadow-1); }
+  .liga-league-chip .lc-rank { font-family: var(--font-mono); margin-left: 6px; opacity: 0.8; font-variant-numeric: tabular-nums; }
+
+  .liga-empty { padding: var(--sp-8); text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+
+  /* Liga grid */
+  .liga-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+  .liga-grid > .liga-chart-card { grid-column: 1 / -1; }
+  .liga-grid > .liga-catchup-card { grid-column: 1 / -1; }
+  @media (max-width: 900px) { .liga-grid { grid-template-columns: 1fr; } }
+
+  /* Position card */
+  .liga-position-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg); padding: var(--sp-5);
+    box-shadow: var(--shadow-1);
+    display: flex; flex-direction: column; gap: var(--sp-4);
+    position: relative; overflow: hidden;
+  }
+  .liga-position-card::before {
+    content: ''; position: absolute; right: -50px; top: -50px;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, var(--brand-primary-tint) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lpc-rank-block { position: relative; z-index: 1; }
+  .lpc-rank-label { font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .lpc-rank-value { font-family: var(--font-mono); font-size: 64px; font-weight: 700; color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums; }
+  .lpc-rank-of { font-family: var(--font-body); font-size: var(--fs-small); color: var(--text-muted); margin-top: 4px; }
+  .lpc-threat, .lpc-strategy { padding-top: var(--sp-3); border-top: 1px solid var(--border-subtle); position: relative; z-index: 1; }
+  .lpc-threat-label, .lpc-strategy-label { font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .lpc-threat-name { font-family: var(--font-display); font-variation-settings: 'opsz' 24; font-size: 20px; font-weight: 600; color: var(--text-strong); }
+  .lpc-threat-delta { font-family: var(--font-mono); font-size: var(--fs-body); font-weight: 600; color: var(--danger); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .lpc-threat-delta.ahead { color: var(--ok); }
+  .lpc-strategy-text { font-size: var(--fs-body); color: var(--text-default); line-height: 1.5; }
+
+  /* Top rivals list */
+  .liga-table-card, .liga-chart-card, .liga-catchup-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4); box-shadow: var(--shadow-1);
+  }
+  .ltc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); }
+  .ltc-gw-pill { padding: 3px 10px; border-radius: 999px; background: var(--bg-subtle); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); }
+  .liga-rivals-list { display: flex; flex-direction: column; gap: var(--sp-1); }
+  .liga-rival-row {
+    display: grid; grid-template-columns: 24px 1fr auto auto; gap: var(--sp-2);
+    align-items: center; padding: 8px 10px; border-radius: var(--r-sm);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .liga-rival-row:hover { background: var(--bg-subtle); }
+  .liga-rival-row.is-you { background: var(--brand-primary-tint); border: 1px solid color-mix(in oklab, var(--brand-primary) 30%, transparent); font-weight: 600; }
+  .liga-rival-row .lrr-rank { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 700; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .liga-rival-row .lrr-name { color: var(--text-strong); font-weight: 500; font-size: var(--fs-small); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .liga-rival-row .lrr-name .lrr-team { color: var(--text-muted); font-weight: 400; font-style: italic; margin-left: 4px; }
+  .liga-rival-row .lrr-pts { font-family: var(--font-mono); font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .liga-rival-row .lrr-delta { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 600; min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+  .liga-rival-row .lrr-delta.neg { color: var(--danger); }
+  .liga-rival-row .lrr-delta.pos { color: var(--ok); }
+  .liga-rival-row .lrr-delta.zero { color: var(--text-faint); }
+
+  /* Line chart */
+  .liga-chart-wrap { margin-top: var(--sp-3); }
+  #liga-line-chart { width: 100%; height: 220px; display: block; }
+  #liga-line-chart .axis { stroke: var(--border-default); stroke-width: 1; }
+  #liga-line-chart .axis-text { font-family: var(--font-mono); font-size: 10px; fill: var(--text-faint); font-variant-numeric: tabular-nums; }
+  #liga-line-chart .you-line { stroke: var(--brand-primary); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  #liga-line-chart .rival-line { stroke: var(--text-muted); stroke-width: 1.5; fill: none; opacity: 0.55; stroke-dasharray: 4 4; stroke-linecap: round; stroke-linejoin: round; }
+  #liga-line-chart .zero-line { stroke: var(--border-default); stroke-width: 1; stroke-dasharray: 2 4; }
+  .liga-chart-legend { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-2); font-size: var(--fs-label); color: var(--text-muted); }
+  .liga-chart-legend .lcl-item { display: inline-flex; align-items: center; gap: 6px; }
+  .liga-chart-legend .lcl-swatch { width: 14px; height: 3px; border-radius: 2px; }
+
+  /* Catch-up picks */
+  .liga-catchup-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); }
+  .catchup-card {
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+    padding: var(--sp-3); cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .catchup-card:hover { background: var(--bg-canvas); border-color: var(--brand-primary); transform: translateY(-1px); box-shadow: var(--shadow-1); }
+  .catchup-card .cc-name { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text-strong); }
+  .catchup-card .cc-meta { font-size: var(--fs-label); color: var(--text-muted); }
+  .catchup-card .cc-stats { display: flex; gap: var(--sp-2); align-items: baseline; margin-top: 4px; flex-wrap: wrap; }
+  .catchup-card .cc-stat { font-family: var(--font-mono); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+  .catchup-card .cc-stat .v { font-weight: 700; color: var(--text-strong); }
+  .catchup-card .cc-stat .l { color: var(--text-muted); margin-left: 3px; font-size: 11px; }
+  .catchup-card .cc-rationale { font-size: 11px; color: var(--text-muted); margin-top: var(--sp-1); line-height: 1.4; }
+  .catchup-card .cc-rationale strong { color: var(--text-default); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -3126,23 +3233,84 @@
 
       <!-- ==================== LEAGUES: STANDINGS ==================== -->
       <div class="nav-panel" id="nav-leagues-standings">
-        <div class="section">
-          <div class="section-title blue">League Standings</div>
-          <div id="leagues-no-user" style="color:#8899AA;font-size:0.85rem;">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false" style="color:#4da6ff">Settings</a> to see your leagues.</div>
-          <div class="leagues-section" id="leagues-section">
-            <div class="sec-title">Your Leagues</div>
-            <div class="league-list" id="league-list"></div>
+
+        <!-- ==================== PHASE 4e: LIGA CATCH-UP ==================== -->
+        <section class="liga-view">
+          <header class="liga-head">
+            <div class="liga-eyebrow" data-i18n="liga.eyebrow">MINI-LIGA</div>
+            <h2 class="liga-title" id="liga-title">—</h2>
+            <p class="liga-sub" data-i18n="liga.sub">Bryt mini-ligaen. Konkurranse om kollegene er viktigere enn global rang — her får du differensial-strategi for å hente inn rivalene over deg.</p>
+          </header>
+
+          <div class="liga-leagues-bar" id="liga-leagues-bar"></div>
+
+          <div class="liga-empty" id="liga-empty" hidden>
+            <p data-i18n="liga.empty">Koble til laget ditt for å se mini-ligaen.</p>
+            <button class="btn" onclick="switchNav('nav-dashboard')" data-i18n="liga.connect">Koble til</button>
           </div>
-          <div class="league-standings" id="league-standings">
-            <div class="league-title"><span id="league-title-text"></span> <span class="inline-spinner" id="league-spinner"></span></div>
-            <div class="table-wrap">
-              <table id="league-table" class="hidden">
-                <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="right">GW</th><th class="right">Total</th><th></th></tr></thead>
-                <tbody id="league-body"></tbody>
-              </table>
+
+          <div class="liga-grid" id="liga-grid" hidden>
+            <article class="liga-position-card" id="liga-position-card">
+              <div class="lpc-rank-block">
+                <div class="lpc-rank-label" data-i18n="liga.yourplace">Din plass</div>
+                <div class="lpc-rank-value" id="lpc-rank">—</div>
+                <div class="lpc-rank-of" id="lpc-rank-of">av —</div>
+              </div>
+              <div class="lpc-threat">
+                <div class="lpc-threat-label" data-i18n="liga.biggest">Største trussel</div>
+                <div class="lpc-threat-name" id="lpc-threat-name">—</div>
+                <div class="lpc-threat-delta" id="lpc-threat-delta">—</div>
+              </div>
+              <div class="lpc-strategy">
+                <div class="lpc-strategy-label" data-i18n="liga.strategy">Strategi</div>
+                <div class="lpc-strategy-text" id="lpc-strategy-text">—</div>
+              </div>
+            </article>
+
+            <article class="liga-table-card">
+              <div class="ltc-head">
+                <h3 class="plan-section-title plan-section-title--sub" data-i18n="liga.top">Topp i ligaen</h3>
+                <span class="ltc-gw-pill" id="ltc-gw-pill">GW —</span>
+              </div>
+              <div class="liga-rivals-list" id="liga-rivals-list"></div>
+            </article>
+
+            <article class="liga-chart-card">
+              <h3 class="plan-section-title plan-section-title--sub" data-i18n="liga.trend">Avstand til rivalene · sesongen</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-small);" data-i18n="liga.trend.help">Hver linje = poengforskjellen mellom deg og en rival per GW. Negativ = rivalen leder.</p>
+              <div class="liga-chart-wrap" id="liga-chart-wrap">
+                <svg id="liga-line-chart" viewBox="0 0 600 220" preserveAspectRatio="none" role="img" aria-label="Difference vs rivals per gameweek"></svg>
+                <div class="liga-chart-legend" id="liga-chart-legend"></div>
+              </div>
+            </article>
+
+            <article class="liga-catchup-card">
+              <h3 class="plan-section-title plan-section-title--sub" data-i18n="liga.catchup">Catch-up-spillere</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-small);" data-i18n="liga.catchup.help">Differensialer du kan plukke for å hente inn de over deg — lav eierskap, høy upside, ikke i rivalenes lag.</p>
+              <div class="liga-catchup-list" id="liga-catchup-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <details class="advanced-section" id="liga-advanced">
+          <summary><span data-i18n="liga.advanced">Avansert: full standings-tabell</span></summary>
+          <div class="section" style="margin-top:var(--sp-3);">
+            <div id="leagues-no-user" style="color:var(--text-muted);font-size:var(--fs-small);">Load your FPL User ID in <a href="#" onclick="switchNav('nav-settings');return false">Settings</a> to see your leagues.</div>
+            <div class="leagues-section" id="leagues-section">
+              <div class="sec-title">Your Leagues</div>
+              <div class="league-list" id="league-list"></div>
+            </div>
+            <div class="league-standings" id="league-standings">
+              <div class="league-title"><span id="league-title-text"></span> <span class="inline-spinner" id="league-spinner"></span></div>
+              <div class="table-wrap">
+                <table id="league-table" class="hidden">
+                  <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="right">GW</th><th class="right">Total</th><th></th></tr></thead>
+                  <tbody id="league-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        </details>
       </div>
 
       <!-- ==================== LEAGUES: RIVAL ==================== -->
@@ -4717,7 +4885,284 @@ function renderCaptainCompare() {
   board.innerHTML = sideA + '<div class="cmp-stat-label">vs</div>' + sideB;
 }
 
-// Auto-load when user navigates to Plan or Kaptein
+// ==================== PHASE 4e — LIGA CATCH-UP ====================
+const LigaState = {
+  leagues: [],
+  activeLeagueId: null,
+  standings: [],   // [{ entry, player_name, entry_name, total, event_total, rank, picks?, history? }]
+  yourEntry: null,
+  trendData: null, // [{ gw, your_pts, rival_pts: {entryId: pts, ...} }]
+};
+
+async function loadLigaView() {
+  const grid = $('liga-grid');
+  const empty = $('liga-empty');
+  const bar = $('liga-leagues-bar');
+  if (!AppState.userId) {
+    empty.hidden = false; grid.hidden = true; bar.innerHTML = ''; return;
+  }
+  empty.hidden = true;
+  try {
+    const data = await fetch(`/api/leagues/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+    if (!data) throw new Error('no leagues');
+    const list = (data.classic || data) || [];
+    LigaState.leagues = Array.isArray(list) ? list.filter(l => l.id && l.name && !/overall|global/i.test(l.name)) : [];
+    if (!LigaState.leagues.length) {
+      bar.innerHTML = `<span style="color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen private mini-ligaer funnet.':'No private mini-leagues found.'}</span>`;
+      grid.hidden = true;
+      return;
+    }
+    // Render league chips
+    bar.innerHTML = LigaState.leagues.map(l => {
+      const rank = l.entry_rank || l.rank || '?';
+      return `<button class="liga-league-chip" data-id="${l.id}" onclick="selectLiga(${l.id})">${l.name}<span class="lc-rank">#${rank}</span></button>`;
+    }).join('');
+    // Pick first league by default (or restored)
+    const lastSelected = parseInt(localStorage.getItem('fpl_liga_active') || '0');
+    const target = LigaState.leagues.find(l => l.id === lastSelected) || LigaState.leagues[0];
+    selectLiga(target.id);
+  } catch (e) {
+    console.warn('loadLigaView failed', e);
+    empty.hidden = false;
+    grid.hidden = true;
+    empty.querySelector('p').textContent = currentLocale==='no' ? 'Kunne ikke hente mini-ligaer.' : 'Could not load leagues.';
+  }
+}
+
+async function selectLiga(leagueId) {
+  LigaState.activeLeagueId = leagueId;
+  localStorage.setItem('fpl_liga_active', String(leagueId));
+  document.querySelectorAll('.liga-league-chip').forEach(c => c.classList.toggle('active', parseInt(c.dataset.id) === leagueId));
+  const lg = LigaState.leagues.find(l => l.id === leagueId);
+  if (lg) $('liga-title').textContent = lg.name;
+
+  $('liga-grid').hidden = false;
+  // Render skeleton
+  $('liga-rivals-list').innerHTML = `<div style="color:var(--text-muted);font-size:var(--fs-small);padding:var(--sp-3);">${currentLocale==='no'?'Henter standings …':'Loading standings …'}</div>`;
+
+  try {
+    const standings = await fetch(`/api/league/${leagueId}/standings`).then(r => r.ok ? r.json() : null);
+    LigaState.standings = (standings && (standings.results || standings.standings || standings)) || [];
+    LigaState.yourEntry = LigaState.standings.find(s => (s.entry || s.id) === AppState.userId) || null;
+    renderLigaPositionCard();
+    renderLigaRivals();
+    renderLigaTrendChart();
+    loadLigaCatchupPicks();
+  } catch (e) {
+    console.warn('selectLiga failed', e);
+  }
+}
+
+function renderLigaPositionCard() {
+  const yours = LigaState.yourEntry;
+  const standings = LigaState.standings;
+  const total = standings.length;
+  if (yours) {
+    $('lpc-rank').textContent = yours.rank || yours.entry_rank || '—';
+    $('lpc-rank-of').textContent = `${currentLocale==='no'?'av':'of'} ${total}`;
+  }
+  // Biggest threat = closest rival above you OR best in league if you're #1
+  const myIdx = standings.findIndex(s => (s.entry || s.id) === AppState.userId);
+  let threat = null;
+  if (myIdx > 0) threat = standings[myIdx - 1];     // person above you
+  else if (myIdx === 0 && standings[1]) threat = standings[1];  // person closest below if you're #1
+  if (threat && yours) {
+    const myPts = yours.total || yours.points || 0;
+    const tPts = threat.total || threat.points || 0;
+    const delta = myPts - tPts;
+    $('lpc-threat-name').textContent = threat.player_name || threat.entry_name || '—';
+    const dEl = $('lpc-threat-delta');
+    dEl.textContent = `${delta >= 0 ? '+' : ''}${delta} pts ${myIdx > 0 ? (currentLocale==='no'?'bak':'behind') : (currentLocale==='no'?'foran':'ahead')}`;
+    dEl.classList.toggle('ahead', delta >= 0 && myIdx === 0);
+    dEl.classList.toggle('neg', delta < 0 || (delta >= 0 && myIdx > 0));
+  }
+  // Strategy text
+  const strat = generateLeagueStrategy(myIdx, total, threat ? Math.abs((yours.total||0) - (threat.total||0)) : 0);
+  $('lpc-strategy-text').innerHTML = strat;
+}
+
+function generateLeagueStrategy(myIdx, total, gap) {
+  if (myIdx === -1) return currentLocale==='no' ? 'Du er ikke i tabellen ennå.' : 'You are not in the table yet.';
+  const top = myIdx === 0;
+  const podium = myIdx <= 2;
+  const upper = myIdx < total / 2;
+  if (top) return currentLocale==='no'
+    ? 'Du leder. Spill <strong>safe</strong> — match rivalenes kapteiner, hold høy-EO premium, unngå unødige differensialer.'
+    : 'You lead. Play <strong>safe</strong> — match rivals\' captains, keep high-EO premiums, avoid unnecessary differentials.';
+  if (podium && gap < 30) return currentLocale==='no'
+    ? `Du er ${gap} pts unna. Plukk <strong>1-2 differensialer</strong> rivalene mangler. Captain-valget er der ligaer vinnes.`
+    : `You are ${gap} pts off. Take <strong>1-2 differentials</strong> rivals don't own. Captain choice is where leagues are won.`;
+  if (upper) return currentLocale==='no'
+    ? 'Du er i øvre halvdel. Vurder <strong>forsiktig aggressiv</strong> — del 70/30 mellom safe og diff-picks.'
+    : 'Upper half. Lean <strong>cautiously aggressive</strong> — 70/30 between safe and differential picks.';
+  return currentLocale==='no'
+    ? `Du er ${gap} pts bak ledende rival. <strong>Aggressiv profil</strong>: kapteiner bør avvike fra rivalene. Du må gamble for å hente inn.`
+    : `${gap} pts behind the leader. <strong>Aggressive profile</strong>: deviate on captains. Gamble is necessary to catch up.`;
+}
+
+function renderLigaRivals() {
+  const list = LigaState.standings.slice(0, 10);
+  const yourIdx = list.findIndex(s => (s.entry || s.id) === AppState.userId);
+  const yourPts = yourIdx >= 0 ? (list[yourIdx].total || list[yourIdx].points || 0) : 0;
+  const html = list.map((s, i) => {
+    const isYou = (s.entry || s.id) === AppState.userId;
+    const pts = s.total || s.points || 0;
+    const delta = isYou ? 0 : pts - yourPts;
+    const dCls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : 'zero');
+    return `
+      <div class="liga-rival-row ${isYou?'is-you':''}" onclick="openRivalCompare(${s.entry || s.id})">
+        <span class="lrr-rank">#${s.rank || i+1}</span>
+        <span class="lrr-name">${s.player_name || '—'}<span class="lrr-team">${s.entry_name || ''}</span></span>
+        <span class="lrr-pts">${pts}</span>
+        <span class="lrr-delta ${dCls}">${isYou?'—':(delta >= 0 ? '+' : '')+delta}</span>
+      </div>`;
+  }).join('');
+  $('liga-rivals-list').innerHTML = html;
+  // GW pill
+  const gw = (AppState.teamData && AppState.teamData.gameweeks)
+    ? (AppState.teamData.gameweeks.find(g => g.is_current) || AppState.teamData.gameweeks.find(g => g.is_next))
+    : null;
+  if (gw) $('ltc-gw-pill').textContent = `GW ${gw.id}`;
+}
+
+function openRivalCompare(rivalId) {
+  if (!rivalId) return;
+  $('rival-id-input') && ($('rival-id-input').value = String(rivalId));
+  switchNav('nav-leagues-rival');
+  if (typeof loadRivalDirect === 'function') setTimeout(loadRivalDirect, 100);
+}
+
+async function renderLigaTrendChart() {
+  const svg = $('liga-line-chart');
+  const legend = $('liga-chart-legend');
+  if (!svg) return;
+  // Build trend from each rival's history endpoint — fetch up to top 4 rivals + you
+  const top = LigaState.standings.slice(0, 4);
+  const idsToFetch = top.map(s => s.entry || s.id).filter(Boolean);
+  if (!idsToFetch.includes(AppState.userId)) idsToFetch.push(AppState.userId);
+  // /api/user/<id> returns season_history
+  const all = await Promise.all(idsToFetch.map(id =>
+    fetch(`/api/user/${id}`).then(r => r.ok ? r.json() : null).catch(() => null)
+  ));
+  const histories = {};
+  all.forEach((d, i) => {
+    if (d && d.season_history) histories[idsToFetch[i]] = d.season_history;
+  });
+  const yourHist = histories[AppState.userId] || [];
+  if (!yourHist.length) {
+    svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" class="axis-text">${currentLocale==='no'?'Ikke nok data':'Not enough data'}</text>`;
+    return;
+  }
+  // Compute cumulative totals
+  function cumTotal(hist) {
+    let total = 0; const out = [];
+    hist.forEach(h => { total += (h.points || 0); out.push({ gw: h.gw || h.event, total }); });
+    return out;
+  }
+  const yourCum = cumTotal(yourHist);
+  const rivalCums = {};
+  Object.entries(histories).forEach(([id, h]) => { if (parseInt(id) !== AppState.userId) rivalCums[id] = cumTotal(h); });
+
+  // Compute deltas: rival_total - your_total at each shared GW
+  const gws = yourCum.map(p => p.gw);
+  const yourMap = {}; yourCum.forEach(p => yourMap[p.gw] = p.total);
+  const rivalDeltas = {};
+  Object.entries(rivalCums).forEach(([id, cum]) => {
+    rivalDeltas[id] = gws.map(gw => {
+      const r = cum.find(p => p.gw === gw);
+      return r ? r.total - yourMap[gw] : null;
+    });
+  });
+
+  // Plot
+  const W = 600, H = 220, padL = 40, padR = 12, padT = 14, padB = 24;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const allDeltas = Object.values(rivalDeltas).flat().filter(v => v != null);
+  const maxAbs = Math.max(20, Math.max(...allDeltas.map(Math.abs)));
+  const yMin = -maxAbs, yMax = maxAbs;
+  const xScale = i => padL + (innerW * i / Math.max(1, gws.length - 1));
+  const yScale = v => padT + innerH * (1 - (v - yMin) / (yMax - yMin));
+
+  let svgHtml = '';
+  // Axes
+  svgHtml += `<line class="axis" x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}"/>`;
+  svgHtml += `<line class="axis" x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}"/>`;
+  // Zero line
+  const zeroY = yScale(0);
+  svgHtml += `<line class="zero-line" x1="${padL}" y1="${zeroY}" x2="${padL+innerW}" y2="${zeroY}"/>`;
+  svgHtml += `<text class="axis-text" x="${padL-6}" y="${zeroY+3}" text-anchor="end">0</text>`;
+  svgHtml += `<text class="axis-text" x="${padL-6}" y="${padT+8}" text-anchor="end">+${Math.round(yMax)}</text>`;
+  svgHtml += `<text class="axis-text" x="${padL-6}" y="${padT+innerH+3}" text-anchor="end">${Math.round(yMin)}</text>`;
+  // GW labels (sparse)
+  gws.forEach((gw, i) => {
+    if (i === 0 || i === gws.length-1 || i % Math.max(1, Math.floor(gws.length / 6)) === 0) {
+      svgHtml += `<text class="axis-text" x="${xScale(i)}" y="${padT+innerH+14}" text-anchor="middle">GW${gw}</text>`;
+    }
+  });
+  // Rival lines
+  Object.entries(rivalDeltas).forEach(([id, deltas]) => {
+    const pts = deltas.map((v, i) => v != null ? `${xScale(i).toFixed(1)},${yScale(v).toFixed(1)}` : null).filter(Boolean);
+    if (pts.length > 1) svgHtml += `<polyline class="rival-line" points="${pts.join(' ')}"/>`;
+  });
+  // Your line at zero (constant baseline)
+  svgHtml += `<polyline class="you-line" points="${gws.map((_, i) => `${xScale(i).toFixed(1)},${zeroY.toFixed(1)}`).join(' ')}"/>`;
+  svg.innerHTML = svgHtml;
+
+  // Legend
+  legend.innerHTML = `
+    <span class="lcl-item"><span class="lcl-swatch" style="background:var(--brand-primary)"></span>${currentLocale==='no'?'Du':'You'}</span>
+    <span class="lcl-item"><span class="lcl-swatch" style="background:var(--text-muted);opacity:0.55"></span>${currentLocale==='no'?'Topp 4 rivaler (positiv = leder)':'Top 4 rivals (positive = ahead)'}</span>`;
+}
+
+async function loadLigaCatchupPicks() {
+  const wrap = $('liga-catchup-list');
+  wrap.innerHTML = `<div style="color:var(--text-muted);font-size:var(--fs-small);padding:var(--sp-3);">${currentLocale==='no'?'Henter differensialer …':'Loading differentials …'}</div>`;
+  try {
+    // Use existing differentials endpoint as catch-up source; cross-reference with rivals' picks if available
+    const diff = await fetch('/api/differentials').then(r => r.ok ? r.json() : null);
+    const items = (diff && (diff.players || diff)) || [];
+    if (!items.length) {
+      wrap.innerHTML = `<div style="color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen catch-up-spillere funnet.':'No catch-up picks found.'}</div>`;
+      return;
+    }
+    // Pick top 6 differentials by score
+    const top = items.slice(0, 6);
+    wrap.innerHTML = top.map(p => `
+      <article class="catchup-card" onclick="openCatchupPick(${p.id || p.element || 0})">
+        <div class="cc-name">${p.name || p.web_name || '—'}</div>
+        <div class="cc-meta">${p.team || p.team_short || ''} · ${p.position_name || ''} · £${Number(p.price || (p.now_cost?p.now_cost/10:0)).toFixed(1)}m</div>
+        <div class="cc-stats">
+          <span class="cc-stat"><span class="v">${p.expected_points ? p.expected_points.toFixed(1) : (p.score?p.score.toFixed(1):'—')}</span><span class="l">xPts</span></span>
+          <span class="cc-stat"><span class="v">${p.selected_by_percent || p.ownership || '—'}%</span><span class="l">EO</span></span>
+          <span class="cc-stat"><span class="v">${p.form || '—'}</span><span class="l">Form</span></span>
+        </div>
+        <div class="cc-rationale">${glossifyText(catchupRationale(p))}</div>
+      </article>`).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div style="color:var(--text-muted);">${currentLocale==='no'?'Kunne ikke hente.':'Failed to load.'}</div>`;
+  }
+}
+
+function catchupRationale(p) {
+  const eo = parseFloat(p.selected_by_percent || p.ownership || 0);
+  if (currentLocale==='no') {
+    return `<strong>${eo.toFixed(1)}% EO</strong> — lite eierskap blant rivalene. ${p.form && parseFloat(p.form) >= 5 ? `Form <strong>${p.form}</strong> indikerer at upsiden er reell.` : ''} Plukk for å skille deg ut.`;
+  }
+  return `<strong>${eo.toFixed(1)}% EO</strong> — low rival ownership. ${p.form && parseFloat(p.form) >= 5 ? `Form <strong>${p.form}</strong> says the upside is real.` : ''} Take it to differentiate.`;
+}
+
+function openCatchupPick(playerId) {
+  // Phase 4f scope: open simple explain panel; full Spiller modal comes later.
+  openExplainPanel({
+    title: currentLocale==='no' ? 'Catch-up-spiller' : 'Catch-up pick',
+    narrative: currentLocale==='no'
+      ? 'Differensial-spiller med lavt eierskap blant rivalene dine. Plukker du ham før de gjør det, henter du avstand.'
+      : 'Differential pick with low rival ownership. Take him before they do — that\'s how you close the gap.',
+    cta: { label: currentLocale==='no' ? 'Åpne Plan' : 'Open Plan', nav: 'nav-transfers-optimizer' },
+  });
+}
+
+// Wrap switchNav to auto-load Liga
 const _origSwitchNav = switchNav;
 switchNav = function(panelId) {
   _origSwitchNav(panelId);
@@ -4726,6 +5171,9 @@ switchNav = function(panelId) {
   }
   if (panelId === 'nav-news-captain' && !KapteinState.picks.length) {
     setTimeout(loadCaptainView, 100);
+  }
+  if (panelId === 'nav-leagues-standings' && AppState.userId && !LigaState.leagues.length) {
+    setTimeout(loadLigaView, 100);
   }
 };
 
