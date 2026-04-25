@@ -5,6 +5,16 @@ Hver feature måles mot: *gjør den brukerens FPL-rang bedre, eller gjør den ik
 
 ---
 
+## Etter Fase 4f — kritisk
+
+### Hjem-cleanup (kaos-pass)
+- **Symptom:** Robert ser at Hjem-siden er "totalt kaos" på live deploy etter Fase 4b/4c/4d.
+- **Sannsynlig årsak:** Phase 2 light-theme override-laget kolliderer med ny Amber/Ink/Paper-identitet fra 4a; gamle CSS-regler med hardkodede mørke farger maskerer ny token-styling; Fraunces variable font (`opsz` axis) lastes ikke som forventet; legacy nav-panel-stil sniker seg inn under nye komponenter; kontrast-issues mellom Hjem-kort og Paper-bakgrunn.
+- **Løsning:** Egen "Hjem-cleanup"-fase — rip ut Phase 2 override-laget, refaktorer alle Hjem-komponenter til å bruke kun :root-tokens, audit alle hardkodede farger på Hjem-siden, sjekk at Fraunces faktisk laster. Sannsynligvis 1 commit, 100-200 linjer.
+- **Skal gjøres rett etter Fase 4f.**
+
+---
+
 ## Deferred / parked
 
 ### Hosting & domene

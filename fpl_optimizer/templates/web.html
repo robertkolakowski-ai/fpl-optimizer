@@ -2107,6 +2107,98 @@
     .plan-projection .pp-value { font-size: 26px; }
     .plan-tab { padding: 6px 10px; font-size: var(--fs-label); }
   }
+
+  /* ==================================================================
+     PHASE 4d — KAPTEIN (concept brief Del 04.4)
+     ================================================================== */
+
+  .kaptein-view { display: flex; flex-direction: column; gap: var(--sp-5); }
+
+  .kaptein-head { display: flex; gap: var(--sp-4); justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+  .kaptein-eyebrow { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .kaptein-title { font-family: var(--font-display); font-variation-settings: 'opsz' 32; font-size: 32px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em; }
+  .kaptein-sub { color: var(--text-muted); font-size: var(--fs-body); margin-top: var(--sp-2); max-width: 56ch; line-height: 1.5; }
+
+  /* Risk profile pills */
+  .risk-toggle { display: flex; flex-direction: column; gap: var(--sp-1); align-items: flex-start; }
+  .risk-toggle .risk-label { font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .risk-pills { display: inline-flex; gap: 2px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); padding: 3px; border-radius: var(--r-md); }
+  .risk-pill {
+    background: transparent; border: 0; padding: 8px 14px;
+    font-family: var(--font-display); font-weight: 600; font-size: var(--fs-small);
+    color: var(--text-muted); cursor: pointer; border-radius: var(--r-sm); min-height: 36px;
+  }
+  .risk-pill:hover { color: var(--text-strong); background: var(--bg-subtle); }
+  .risk-pill.active { background: var(--brand-primary); color: var(--text-on-brand); box-shadow: var(--shadow-1); }
+
+  /* Captain hero — bigger, longer because-text than Hjem captain */
+  .captain-hero {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg); padding: var(--sp-6);
+    box-shadow: var(--shadow-1); position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: var(--sp-4);
+  }
+  .captain-hero::before {
+    content: ''; position: absolute; right: -60px; top: -60px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, var(--brand-primary-tint) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .captain-hero .ch-grid {
+    display: grid; grid-template-columns: 1fr auto; gap: var(--sp-5);
+    position: relative; z-index: 1; align-items: start;
+  }
+  @media (max-width: 700px) { .captain-hero .ch-grid { grid-template-columns: 1fr; } }
+  .captain-hero .ch-name { font-family: var(--font-display); font-variation-settings: 'opsz' 64; font-size: clamp(36px, 5vw, 56px); font-weight: 600; color: var(--text-strong); letter-spacing: -0.02em; line-height: 1.05; }
+  .captain-hero .ch-meta { color: var(--text-muted); font-size: var(--fs-body); margin-top: 4px; }
+  .captain-hero .ch-projection { font-family: var(--font-mono); font-size: clamp(48px, 6vw, 72px); font-weight: 700; color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums; text-align: right; }
+  .captain-hero .ch-proj-sub { font-size: var(--fs-small); color: var(--text-muted); text-align: right; }
+  .captain-hero .ch-because-block {
+    background: var(--brand-primary-tint); border-left: 4px solid var(--brand-primary);
+    padding: var(--sp-4) var(--sp-5); border-radius: 0 var(--r-md) var(--r-md) 0;
+    position: relative; z-index: 1;
+  }
+  .captain-hero .ch-because-label { font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--brand-accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .captain-hero .ch-because-text { font-size: var(--fs-body-lg); color: var(--text-default); line-height: 1.55; }
+  .captain-hero .ch-because-text p { margin-bottom: var(--sp-2); }
+  .captain-hero .ch-because-text p:last-child { margin-bottom: 0; }
+  .captain-hero .ch-because-text strong { color: var(--text-strong); font-weight: 600; }
+  .captain-hero .ch-footer { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding-top: var(--sp-3); border-top: 1px solid var(--border-subtle); position: relative; z-index: 1; }
+  .captain-hero .ch-footer-left { display: flex; gap: var(--sp-4); align-items: center; flex-wrap: wrap; font-size: var(--fs-small); color: var(--text-muted); }
+  .captain-hero .ch-footer-left strong { color: var(--text-strong); font-weight: 600; }
+
+  /* Alternatives grid */
+  .captain-alt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); }
+  .alt-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-3);
+    cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow-1);
+    display: flex; flex-direction: column; gap: var(--sp-1);
+  }
+  .alt-card:hover { box-shadow: var(--shadow-2); border-color: var(--brand-primary); transform: translateY(-1px); }
+  .alt-card .alt-rank { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--text-faint); }
+  .alt-card .alt-name { font-family: var(--font-display); font-variation-settings: 'opsz' 20; font-size: 18px; font-weight: 600; color: var(--text-strong); line-height: 1.2; }
+  .alt-card .alt-meta { font-size: var(--fs-label); color: var(--text-muted); }
+  .alt-card .alt-pts { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--brand-primary); font-variant-numeric: tabular-nums; }
+  .alt-card .alt-form { display: flex; gap: 2px; margin-top: 4px; }
+  .alt-card .alt-form .form-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .alt-card .alt-form .form-dot.high { background: var(--ok); }
+  .alt-card .alt-form .form-dot.mid { background: var(--warn); }
+  .alt-card .alt-form .form-dot.low { background: var(--danger); }
+  .alt-card .alt-form .form-dot.zero { background: var(--bg-muted); }
+
+  /* Comparison */
+  .compare-pickers { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); flex-wrap: wrap; }
+  .compare-pickers select { flex: 1; min-width: 180px; }
+  .compare-pickers .cmp-vs { font-family: var(--font-display); font-weight: 700; color: var(--text-faint); font-size: var(--fs-body-lg); padding: 0 var(--sp-2); }
+  .compare-board { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--sp-2); background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: var(--sp-3); box-shadow: var(--shadow-1); }
+  @media (max-width: 600px) { .compare-board { grid-template-columns: 1fr; } .compare-board .cmp-stat-label { grid-column: 1; } }
+  .cmp-side { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .cmp-side .cmp-name { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text-strong); }
+  .cmp-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-radius: var(--r-sm); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--fs-small); }
+  .cmp-stat.win { background: var(--ok-tint); color: var(--ok); font-weight: 700; }
+  .cmp-stat .lab { color: var(--text-muted); font-family: var(--font-body); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cmp-stat-label { display: grid; place-items: center; padding: 0 var(--sp-2); font-family: var(--font-body); font-weight: 600; color: var(--text-faint); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.04em; }
 </style>
 </head>
 <body>
@@ -3291,21 +3383,66 @@
 
       <!-- ==================== NEWS: CAPTAIN ==================== -->
       <div class="nav-panel" id="nav-news-captain">
-        <div class="section">
-          <div class="section-title">Captain Picks — Next GW</div>
-          <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
-          <div class="export-bar"><button class="export-btn" onclick="exportTableToCSV('captain-table','captain_picks.csv')">&#128229; CSV</button><button class="export-btn" onclick="exportCanvasToImage('captain-ev-canvas','captain_ev.png')">&#128247; Save Chart</button></div>
-          <div class="table-wrap">
-            <table id="captain-table" class="hidden">
-              <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">xPts</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
-              <tbody id="captain-body"></tbody>
-            </table>
+
+        <!-- ==================== PHASE 4d: KAPTEIN DEDICATED ==================== -->
+        <section class="kaptein-view">
+          <header class="kaptein-head">
+            <div>
+              <div class="kaptein-eyebrow" data-i18n="captain.eyebrow">KAPTEINSFORSLAG</div>
+              <h2 class="kaptein-title"><span data-i18n="captain.title">Velg kaptein for</span> <span id="kaptein-gw" class="plan-formation">GW —</span></h2>
+              <p class="kaptein-sub" data-i18n="captain.sub">Captain-valg står for ~15% av sesongens totale poengsum. Denne ene beslutningen er den viktigste du tar hver uke.</p>
+            </div>
+            <div class="risk-toggle">
+              <span class="risk-label" data-i18n="captain.risk">Risikoprofil</span>
+              <div class="risk-pills" role="group">
+                <button type="button" class="risk-pill" data-risk="safe" onclick="setCaptainRisk('safe')" data-i18n="captain.safe">Safe</button>
+                <button type="button" class="risk-pill active" data-risk="balanced" onclick="setCaptainRisk('balanced')" data-i18n="captain.balanced">Balanced</button>
+                <button type="button" class="risk-pill" data-risk="aggressive" onclick="setCaptainRisk('aggressive')" data-i18n="captain.aggressive">Aggressive</button>
+              </div>
+            </div>
+          </header>
+
+          <article class="captain-hero" id="captain-hero">
+            <div class="ch-skeleton" id="captain-hero-skeleton">
+              <div class="loader"><div class="spinner"></div><div class="loader-text" data-i18n="captain.loading">Analyserer kapteinsforslag …</div></div>
+            </div>
+          </article>
+
+          <section class="captain-alternatives" id="captain-alternatives" hidden>
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="captain.alts">Top 5 alternativer</h3>
+            <div class="captain-alt-grid" id="captain-alt-grid"></div>
+          </section>
+
+          <section class="captain-compare" id="captain-compare">
+            <h3 class="plan-section-title plan-section-title--sub" data-i18n="captain.compare">Sammenlign to spillere</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-small);margin-bottom:var(--sp-3);" data-i18n="captain.compare.help">Velg to spillere — det som er bedre vises i grønt.</p>
+            <div class="compare-pickers">
+              <select id="cmp-a" onchange="renderCaptainCompare()"></select>
+              <span class="cmp-vs">vs</span>
+              <select id="cmp-b" onchange="renderCaptainCompare()"></select>
+            </div>
+            <div class="compare-board" id="cmp-board"></div>
+          </section>
+        </section>
+
+        <details class="advanced-section" id="captain-advanced">
+          <summary><span data-i18n="captain.advanced">Avansert: full tabell + EV-graf</span></summary>
+          <div class="section" style="margin-top:var(--sp-3);">
+            <div class="section-title">Captain Picks — Full Table</div>
+            <div class="loader" id="captain-loader"><div class="spinner"></div><div class="loader-text">Analyzing captain picks...</div></div>
+            <div class="export-bar"><button class="export-btn" onclick="exportTableToCSV('captain-table','captain_picks.csv')">&#128229; CSV</button><button class="export-btn" onclick="exportCanvasToImage('captain-ev-canvas','captain_ev.png')">&#128247; Save Chart</button></div>
+            <div class="table-wrap">
+              <table id="captain-table" class="hidden">
+                <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th class="right">Form</th><th class="right">PPG</th><th class="right">xG</th><th class="right">xA</th><th class="right">xPts</th><th class="right">Fixture</th><th class="right">Score</th></tr></thead>
+                <tbody id="captain-body"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:1.2rem;" id="captain-ev-section" class="hidden">
+              <div class="section-title blue">Captain Expected Value (2x)</div>
+              <canvas id="captain-ev-canvas" width="600" height="260" style="max-width:100%;"></canvas>
+            </div>
           </div>
-          <div style="margin-top:1.2rem;" id="captain-ev-section" class="hidden">
-            <div class="section-title blue">Captain Expected Value (2x)</div>
-            <canvas id="captain-ev-canvas" width="600" height="260" style="max-width:100%;"></canvas>
-          </div>
-        </div>
+        </details>
       </div>
 
       <!-- ==================== NEWS: PRICES ==================== -->
@@ -4385,12 +4522,210 @@ function openPlayerExplain(playerId) {
   });
 }
 
-// Auto-load when user navigates to Plan
+// ==================== PHASE 4d — KAPTEIN ====================
+const KapteinState = {
+  risk: 'balanced',
+  picks: [],         // sorted by score for current risk profile
+};
+
+function setCaptainRisk(risk) {
+  KapteinState.risk = risk;
+  document.querySelectorAll('.risk-pill').forEach(p => p.classList.toggle('active', p.dataset.risk === risk));
+  renderCaptainView();
+}
+
+async function loadCaptainView() {
+  try {
+    const data = await fetch('/api/captain-picks').then(r => r.ok ? r.json() : null);
+    if (!data) return;
+    const list = data.picks || data || [];
+    KapteinState.picks = Array.isArray(list) ? list : [];
+    // Set GW label
+    const gw = (AppState.teamData && AppState.teamData.gameweeks)
+      ? (AppState.teamData.gameweeks.find(g => g.is_next) || AppState.teamData.gameweeks.find(g => g.is_current))
+      : null;
+    if (gw) $('kaptein-gw').textContent = `GW ${gw.id}`;
+    renderCaptainView();
+  } catch (e) { console.warn('loadCaptainView failed', e); }
+}
+
+function rankPicksByRisk(picks, risk) {
+  // Score adjustments: safe favours form/floor, balanced = composite, aggressive = upside (xG, EO inverse)
+  return picks.slice().sort((a, b) => {
+    const score = (p) => {
+      const xpts = p.expected_points || p.xpts || p.score || 0;
+      const form = parseFloat(p.form) || 0;
+      const xg = p.xg_per_90 || p.xg || 0;
+      const ownership = parseFloat(p.selected_by_percent || p.ownership || 50);
+      if (risk === 'safe') return xpts + form * 0.4 + (100 - ownership) * 0.001;
+      if (risk === 'aggressive') return xpts + xg * 5 - ownership * 0.05;
+      return xpts;  // balanced
+    };
+    return score(b) - score(a);
+  });
+}
+
+function renderCaptainView() {
+  if (!KapteinState.picks.length) return;
+  const ranked = rankPicksByRisk(KapteinState.picks, KapteinState.risk);
+  const top = ranked[0];
+  const second = ranked[1];
+
+  // Hero card
+  const heroEl = $('captain-hero');
+  if (top) {
+    const pts = (top.expected_points != null ? top.expected_points : (top.score || 0));
+    const sPts = second ? (second.expected_points != null ? second.expected_points : (second.score || 0)) : 0;
+    const delta = pts - sPts;
+    const captainEO = top.eo_top10k || top.selected_by_percent || '—';
+    const fixt = top.next_opponent || (top.fixtures && top.fixtures[0] && top.fixtures[0].opponent) || '';
+    const fixHome = top.is_home != null ? top.is_home : (top.fixtures && top.fixtures[0] && top.fixtures[0].is_home);
+    // Build 3-5 sentence narrative
+    const narrative = currentLocale==='no'
+      ? `<p><strong>${top.name}</strong> har ${top.form?`form <strong>${top.form}</strong>`:'sterk form'} og møter ${fixt?`<strong>${fixt}</strong>${fixHome?' (H)':' (B)'}`:'et håndterbart program'}. xG ${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}/90 — det er hjemmestrekket.</p>
+         <p>Eierskap blant <span class="gloss">top 10k<span class="gloss-tip">De øverste 10 000 managerne globalt — referansen for hva "smart pengene" gjør.</span></span> er <strong>${captainEO}%</strong> (lav nok til å skille deg ut${parseFloat(captainEO)<30?', høy nok til ikke å være risikabel':''}).</p>
+         <p>${KapteinState.risk==='safe'?'Safe-profilen valgte ham fordi han har høyt floor — selv på en svak dag scorer han 4-5 pts.':KapteinState.risk==='aggressive'?'Aggressive-profilen valgte ham fordi upsiden er størst når han eksploderer.':'Balanced-profilen valgte ham som beste samlede vurdering av forventet poeng, form og fixture.'}</p>`
+      : `<p><strong>${top.name}</strong> has ${top.form?`form <strong>${top.form}</strong>`:'strong form'} and faces ${fixt?`<strong>${fixt}</strong>${fixHome?' (H)':' (A)'}`:'a manageable schedule'}. xG ${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}/90 — that's the home stretch.</p>
+         <p>Top 10k ownership is <strong>${captainEO}%</strong> (low enough to differentiate${parseFloat(captainEO)<30?', high enough to not be risky':''}).</p>
+         <p>${KapteinState.risk==='safe'?'Safe profile picked him for his floor — even on an off day he returns 4-5 pts.':KapteinState.risk==='aggressive'?'Aggressive profile picked him because the upside is biggest when he explodes.':'Balanced profile picked him on combined expected points, form and fixture.'}</p>`;
+    const cbLevel = delta >= 1 ? 'cb-high' : (delta >= 0.4 ? 'cb-med' : 'cb-low');
+    const cbLabel = cbLevel==='cb-high' ? (currentLocale==='no'?'Høy':'High') : cbLevel==='cb-med'?(currentLocale==='no'?'Medium':'Medium'):(currentLocale==='no'?'Lav':'Low');
+    heroEl.innerHTML = `
+      <div class="ch-grid">
+        <div>
+          <div class="ch-name">${top.name || '—'}</div>
+          <div class="ch-meta">${[top.team_name||top.team||'', top.position_name||top.position||'', top.price?`£${Number(top.price).toFixed(1)}m`:''].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div>
+          <div class="ch-projection">${pts.toFixed(1)}</div>
+          <div class="ch-proj-sub">${second ? `${delta>=0?'+':''}${delta.toFixed(1)} vs ${second.name||second.web_name||''}` : ''}</div>
+        </div>
+      </div>
+      <div class="ch-because-block">
+        <div class="ch-because-label">${currentLocale==='no'?'FORDI':'WHY'}</div>
+        <div class="ch-because-text">${narrative}</div>
+      </div>
+      <div class="ch-footer">
+        <div class="ch-footer-left">
+          <span><span class="hcc-conf-label">${currentLocale==='no'?'Modellens trygghet':'Model confidence'}:</span>
+            <span class="confidence-bar ${cbLevel}"><span class="cb-seg"></span><span class="cb-seg"></span><span class="cb-seg"></span></span>
+            <span class="cb-text">${cbLabel}</span>
+          </span>
+          ${second ? `<span>${currentLocale==='no'?'Vise-kaptein':'Vice-captain'}: <strong>${second.name||second.web_name||'—'}</strong></span>` : ''}
+        </div>
+        <button class="btn btn-secondary" onclick="openExplainPanel({title:'${(top.name||'').replace(/'/g,'\\\'')}', narrative: \`${narrative.replace(/`/g,'\\\`').replace(/<\/?p>/g,' ').trim()}\`, stats:[{v:'${pts.toFixed(1)}',l:'xPts'},{v:'${top.form||'—'}',l:'Form'},{v:'${top.xg_per_90?top.xg_per_90.toFixed(2):'—'}',l:'xG/90'},{v:'${captainEO}%',l:'EO'}]})">${currentLocale==='no'?'Detaljert forklaring →':'Full explanation →'}</button>
+      </div>`;
+  }
+
+  // Top 5 alternatives
+  const altWrap = $('captain-alternatives');
+  const altGrid = $('captain-alt-grid');
+  altWrap.hidden = false;
+  const alts = ranked.slice(1, 6);
+  altGrid.innerHTML = alts.map((p, i) => {
+    const pts = (p.expected_points != null ? p.expected_points : (p.score || 0));
+    const formDots = renderFormDots(p.form_history || p.recent_points);
+    return `
+      <article class="alt-card" onclick="selectCaptainAlt(${i+1})">
+        <div class="alt-rank">#${i+2}</div>
+        <div class="alt-name">${p.name || p.web_name || '—'}</div>
+        <div class="alt-meta">${(p.team_name||p.team||'')} · £${Number(p.price||0).toFixed(1)}m</div>
+        <div class="alt-pts">${pts.toFixed(1)} pts</div>
+        ${formDots}
+      </article>`;
+  }).join('') || `<div style="color:var(--text-muted);">${currentLocale==='no'?'Ingen alternativer.':'No alternatives.'}</div>`;
+
+  // Populate compare selectors
+  const optsHtml = ranked.slice(0, 20).map(p => `<option value="${p.element || p.id || p.name}">${p.name || p.web_name}</option>`).join('');
+  ['cmp-a','cmp-b'].forEach((id, i) => {
+    const sel = $(id);
+    if (!sel.options.length || sel.options.length !== ranked.slice(0,20).length) {
+      sel.innerHTML = optsHtml;
+      sel.selectedIndex = i;
+    }
+  });
+  renderCaptainCompare();
+}
+
+function renderFormDots(history) {
+  if (!Array.isArray(history) || !history.length) return '<div class="alt-form"></div>';
+  const last5 = history.slice(-5);
+  const dots = last5.map(pts => {
+    const p = typeof pts === 'object' ? (pts.points || 0) : pts;
+    if (p === 0) return '<span class="form-dot zero"></span>';
+    if (p >= 8) return '<span class="form-dot high"></span>';
+    if (p >= 4) return '<span class="form-dot mid"></span>';
+    return '<span class="form-dot low"></span>';
+  }).join('');
+  return `<div class="alt-form" title="${currentLocale==='no'?'Form siste 5':'Last 5 form'}">${dots}</div>`;
+}
+
+function selectCaptainAlt(idx) {
+  // Move clicked alt to top — simulate "what if I captained this player instead"
+  const ranked = rankPicksByRisk(KapteinState.picks, KapteinState.risk);
+  if (!ranked[idx]) return;
+  const newOrder = [ranked[idx], ...ranked.slice(0, idx), ...ranked.slice(idx+1)];
+  KapteinState.picks = newOrder;
+  // Force render with this player on top
+  KapteinState.risk = '_forced'; // sentinel
+  // Easier: just bypass the rank function for one render
+  const heroEl = $('captain-hero');
+  heroEl.scrollIntoView({behavior:'smooth', block:'start'});
+  KapteinState.risk = 'balanced';
+  document.querySelectorAll('.risk-pill').forEach(p => p.classList.toggle('active', p.dataset.risk === 'balanced'));
+  // Re-render with the chosen pick first
+  renderCaptainViewWithTop(idx);
+}
+
+function renderCaptainViewWithTop(idx) {
+  // Temporarily promote the alt to first; revert by re-fetching
+  const ranked = rankPicksByRisk(KapteinState.picks, KapteinState.risk);
+  if (!ranked[idx]) return;
+  const promoted = [ranked[idx], ...ranked.slice(0, idx), ...ranked.slice(idx+1)];
+  KapteinState.picks = promoted;
+  renderCaptainView();
+}
+
+function renderCaptainCompare() {
+  const aSel = $('cmp-a'), bSel = $('cmp-b');
+  if (!aSel || !bSel) return;
+  const board = $('cmp-board');
+  const aId = aSel.value, bId = bSel.value;
+  const a = KapteinState.picks.find(p => String(p.element || p.id || p.name) === aId);
+  const b = KapteinState.picks.find(p => String(p.element || p.id || p.name) === bId);
+  if (!a || !b) { board.innerHTML = ''; return; }
+  const stats = [
+    { key: 'xpts', l: currentLocale==='no'?'xPts':'xPts', v: x => (x.expected_points || x.score || 0).toFixed(1), bigger: true },
+    { key: 'form', l: 'Form', v: x => x.form || '—', bigger: true, parse: x => parseFloat(x.form)||0 },
+    { key: 'xg', l: 'xG/90', v: x => x.xg_per_90 ? x.xg_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xg_per_90 || 0 },
+    { key: 'xa', l: 'xA/90', v: x => x.xa_per_90 ? x.xa_per_90.toFixed(2) : '—', bigger: true, parse: x => x.xa_per_90 || 0 },
+    { key: 'price', l: currentLocale==='no'?'Pris':'Price', v: x => `£${Number(x.price || 0).toFixed(1)}m`, bigger: false, parse: x => x.price || 0 },
+    { key: 'eo', l: currentLocale==='no'?'Eierskap':'Ownership', v: x => `${x.selected_by_percent || x.ownership || '—'}%`, bigger: false, parse: x => parseFloat(x.selected_by_percent)||0 },
+  ];
+  const sideA = `<div class="cmp-side"><div class="cmp-name">${a.name || ''}</div>` + stats.map(s => {
+    const av = s.parse ? s.parse(a) : parseFloat(s.v(a)) || 0;
+    const bv = s.parse ? s.parse(b) : parseFloat(s.v(b)) || 0;
+    const winA = s.bigger ? av > bv : av < bv;
+    return `<div class="cmp-stat ${winA?'win':''}"><span class="lab">${s.l}</span><span>${s.v(a)}</span></div>`;
+  }).join('') + '</div>';
+  const sideB = `<div class="cmp-side"><div class="cmp-name">${b.name || ''}</div>` + stats.map(s => {
+    const av = s.parse ? s.parse(a) : parseFloat(s.v(a)) || 0;
+    const bv = s.parse ? s.parse(b) : parseFloat(s.v(b)) || 0;
+    const winB = s.bigger ? bv > av : bv < av;
+    return `<div class="cmp-stat ${winB?'win':''}"><span class="lab">${s.l}</span><span>${s.v(b)}</span></div>`;
+  }).join('') + '</div>';
+  board.innerHTML = sideA + '<div class="cmp-stat-label">vs</div>' + sideB;
+}
+
+// Auto-load when user navigates to Plan or Kaptein
 const _origSwitchNav = switchNav;
 switchNav = function(panelId) {
   _origSwitchNav(panelId);
   if (panelId === 'nav-transfers-optimizer' && AppState.userId && !PlanState.picks.length) {
     setTimeout(loadPlanPitch, 100);
+  }
+  if (panelId === 'nav-news-captain' && !KapteinState.picks.length) {
+    setTimeout(loadCaptainView, 100);
   }
 };
 
