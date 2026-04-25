@@ -1812,6 +1812,151 @@
     .wizard-card { padding: var(--sp-4); }
     .ep-stats { grid-template-columns: 1fr; }
   }
+
+  /* ==================================================================
+     PHASE 4b — HJEM (per concept brief Del 05)
+     Dominant captain card + transfer + mini-league + chip timeline +
+     team-news strip + model footer.
+     ================================================================== */
+
+  /* Team-news strip (top, friday/saturday or when news exists) */
+  .team-news-strip {
+    display: flex; gap: var(--sp-2); align-items: center;
+    padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); box-shadow: var(--shadow-1);
+    overflow-x: auto; white-space: nowrap; font-size: var(--fs-small);
+  }
+  .team-news-strip .tn-label {
+    font-family: var(--font-display); font-weight: 700; font-size: var(--fs-label);
+    color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .team-news-strip .tn-item { display: inline-flex; align-items: center; gap: 4px; padding-right: var(--sp-3); }
+  .team-news-strip .tn-item:not(:last-child)::after { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--text-faint); margin-left: var(--sp-3); }
+  .team-news-strip .tn-item.warn { color: var(--warn); }
+  .team-news-strip .tn-item.danger { color: var(--danger); }
+  .team-news-strip .tn-item.ok { color: var(--ok); }
+
+  /* Hjem main grid: dominant captain on left, stacked side cards on right */
+  .hjem-main-grid {
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--sp-4);
+    margin-bottom: var(--sp-4);
+  }
+  @media (max-width: 900px) { .hjem-main-grid { grid-template-columns: 1fr; } }
+  .hjem-side-stack { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+  /* Big captain card — the most visually dominant element on the home screen */
+  .hjem-captain-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg); padding: var(--sp-6);
+    cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-1);
+    display: flex; flex-direction: column; gap: var(--sp-4);
+    position: relative; overflow: hidden;
+  }
+  .hjem-captain-card::before {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, var(--brand-primary-tint) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hjem-captain-card:hover { box-shadow: var(--shadow-3); border-color: var(--brand-primary); transform: translateY(-1px); }
+  .hjem-captain-card .hcc-eyebrow { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .hjem-captain-card .hcc-eyebrow .c-mark { display: inline-grid; place-items: center; width: 18px; height: 18px; background: var(--brand-primary); color: var(--text-on-brand); font-family: var(--font-display); font-weight: 700; border-radius: 50%; font-size: 11px; margin-right: 6px; vertical-align: middle; }
+  .hjem-captain-card .hcc-name {
+    font-family: var(--font-display); font-variation-settings: 'opsz' 64;
+    font-size: clamp(32px, 4vw, 48px); line-height: 1.05; font-weight: 600;
+    color: var(--text-strong); letter-spacing: -0.02em;
+  }
+  .hjem-captain-card .hcc-meta { color: var(--text-muted); font-size: var(--fs-small); }
+  .hjem-captain-card .hcc-projection { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; }
+  .hjem-captain-card .hcc-pts {
+    font-family: var(--font-mono); font-size: clamp(40px, 5vw, 56px); font-weight: 700;
+    color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .hjem-captain-card .hcc-delta { font-family: var(--font-mono); font-size: var(--fs-body-lg); font-weight: 600; color: var(--ok); font-variant-numeric: tabular-nums; }
+  .hjem-captain-card .hcc-delta.neg { color: var(--danger); }
+  .hjem-captain-card .hcc-label { font-size: var(--fs-small); color: var(--text-muted); }
+  .hjem-captain-card .hcc-because {
+    background: var(--brand-primary-tint); border-left: 3px solid var(--brand-primary);
+    padding: var(--sp-3) var(--sp-4); border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    position: relative; z-index: 1;
+  }
+  .hjem-captain-card .hcc-because-label { font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--brand-accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .hjem-captain-card .hcc-because p { font-size: var(--fs-body); color: var(--text-default); line-height: 1.5; margin: 0; }
+  .hjem-captain-card .hcc-because strong { color: var(--text-strong); font-weight: 600; }
+  .hjem-captain-card .hcc-confidence { display: flex; align-items: center; gap: var(--sp-3); }
+  .hjem-captain-card .hcc-conf-label { font-size: var(--fs-small); color: var(--text-muted); }
+  .hjem-captain-card .hcc-vc {
+    padding-top: var(--sp-3); border-top: 1px solid var(--border-subtle);
+    font-size: var(--fs-small); color: var(--text-muted);
+  }
+  .hjem-captain-card .hcc-vc strong { color: var(--text-strong); font-weight: 600; }
+  .hjem-captain-card .hcc-vc .vc-mark { display: inline-grid; place-items: center; width: 16px; height: 16px; background: var(--bg-muted); color: var(--text-muted); font-family: var(--font-display); font-weight: 700; border-radius: 50%; font-size: 10px; margin-right: 4px; vertical-align: middle; }
+
+  /* Confidence bar (3-segment: low/med/high) */
+  .confidence-bar { display: inline-flex; gap: 2px; align-items: center; }
+  .confidence-bar .cb-seg { width: 16px; height: 6px; border-radius: 2px; background: var(--bg-muted); }
+  .confidence-bar.cb-low .cb-seg:nth-child(1) { background: var(--warn); }
+  .confidence-bar.cb-med .cb-seg:nth-child(-n+2) { background: var(--brand-primary); }
+  .confidence-bar.cb-high .cb-seg { background: var(--brand-primary); }
+  .confidence-bar + .cb-text { font-family: var(--font-display); font-size: var(--fs-label); font-weight: 600; color: var(--text-strong); margin-left: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Side cards: transfer + mini-league */
+  .hjem-side-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4);
+    cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-1);
+    display: flex; flex-direction: column; gap: var(--sp-2);
+  }
+  .hjem-side-card:hover { box-shadow: var(--shadow-2); border-color: var(--brand-primary); }
+  .hjem-side-card .hsc-eyebrow { font-size: var(--fs-label); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: var(--sp-1); }
+  .hjem-side-card .hsc-headline { font-family: var(--font-display); font-variation-settings: 'opsz' 24; font-size: 22px; line-height: 1.15; color: var(--text-strong); font-weight: 600; }
+  .hjem-side-card .hsc-headline .arr { color: var(--text-faint); margin: 0 6px; }
+  .hjem-side-card .hsc-projection { font-family: var(--font-mono); font-size: var(--fs-body-lg); font-weight: 700; color: var(--ok); font-variant-numeric: tabular-nums; }
+  .hjem-side-card .hsc-projection.neg { color: var(--danger); }
+  .hjem-side-card .hsc-because { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.45; }
+  .hjem-side-card .hsc-because strong { color: var(--text-default); font-weight: 600; }
+  .hjem-side-card .hsc-cta { margin-top: auto; font-size: var(--fs-label); font-weight: 600; color: var(--brand-primary); display: inline-flex; align-items: center; gap: var(--sp-1); }
+  .hjem-side-card .hsc-cta::after { content: '→'; transition: transform 0.15s; }
+  .hjem-side-card:hover .hsc-cta::after { transform: translateX(2px); }
+
+  /* Chip timeline */
+  .chip-timeline-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md); padding: var(--sp-4) var(--sp-5);
+    margin-bottom: var(--sp-4); box-shadow: var(--shadow-1);
+  }
+  .chip-timeline-card .ctc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2); }
+  .chip-timeline-card .ctc-title { font-family: var(--font-display); font-variation-settings: 'opsz' 20; font-size: 18px; font-weight: 600; color: var(--text-strong); }
+  .chip-track { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+  .chip-pip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 12px; border-radius: var(--r-sm);
+    font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small);
+    border: 1px solid var(--border-subtle); background: var(--bg-subtle); color: var(--text-muted);
+  }
+  .chip-pip.available { background: var(--bg-canvas); color: var(--text-strong); border-color: var(--border-default); }
+  .chip-pip.planned { background: var(--brand-primary-tint); color: var(--brand-primary-hover); border-color: var(--brand-primary); }
+  .chip-pip.used { background: var(--bg-muted); color: var(--text-faint); border-color: var(--border-subtle); text-decoration: line-through; }
+  .chip-pip .chip-gw { font-family: var(--font-mono); font-size: 11px; font-weight: 600; opacity: 0.85; }
+  .chip-narrative { font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; }
+  .chip-narrative strong { color: var(--text-default); font-weight: 600; }
+
+  /* Model footer (Mandagsrapport teaser) */
+  .model-footer {
+    display: flex; gap: var(--sp-4); flex-wrap: wrap; align-items: center;
+    padding: var(--sp-3) var(--sp-4); border-top: 1px dashed var(--border-default);
+    font-size: var(--fs-small); color: var(--text-muted);
+  }
+  .model-footer .mf-stat strong { color: var(--text-strong); font-weight: 600; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .model-footer .mf-link { margin-left: auto; color: var(--brand-primary); font-weight: 600; cursor: pointer; }
+  .model-footer .mf-link:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .hjem-captain-card { padding: var(--sp-4); }
+    .chip-timeline-card { padding: var(--sp-3); }
+  }
 </style>
 </head>
 <body>
@@ -3468,91 +3613,255 @@ function wizardFinish() {
   });
 }
 
-// ----- Home brief (#15): 4 personalised answer cards -----
+// ----- Home brief (Phase 4b): captain-dominant layout per concept brief Del 05 -----
+let HomeBriefData = {};
+
 async function renderHomeBrief() {
   const wrap = $('home-brief');
   if (!wrap) return;
   if (!AppState.userId) { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-  // Render skeleton immediately, fill async
+  const L = currentLocale === 'no' ? {
+    teamNews: 'TEAM NEWS', captainEyebrow: 'KAPTEIN', vc: 'Vise-kaptein',
+    confidence: 'Modellens trygghet', loading: 'Henter…', because: 'FORDI',
+    transferEyebrow: 'ANBEFALT BYTTE', leagueEyebrow: 'MINI-LIGA',
+    chipTitle: 'Chip-strategi', chipNoData: 'Henter chip-anbefaling …',
+    modelLastWeek: 'Modellen sist uke', captainHit: 'Captain-treff sesong',
+    fullReport: 'Se full mandagsrapport →',
+    noTransfer: 'Hold heller — ingen bytte gir +4 pts',
+    noTransferWhy: 'Free transfer spares til neste uke. Ingen forslag har høy nok forventet gevinst akkurat nå.',
+    noLeagueBound: 'Koble til en liga i Innstillinger',
+  } : {
+    teamNews: 'TEAM NEWS', captainEyebrow: 'CAPTAIN', vc: 'Vice',
+    confidence: 'Model confidence', loading: 'Loading…', because: 'WHY',
+    transferEyebrow: 'RECOMMENDED TRANSFER', leagueEyebrow: 'MINI-LEAGUE',
+    chipTitle: 'Chip strategy', chipNoData: 'Loading chip recommendation …',
+    modelLastWeek: 'Model last week', captainHit: 'Captain hit rate',
+    fullReport: 'View full Monday report →',
+    noTransfer: 'Hold instead — no move clears +4 pts',
+    noTransferWhy: 'Save your free transfer. No suggestion meets the bar this week.',
+    noLeagueBound: 'Link a league in Settings',
+  };
+  const gw = (AppState.teamData && AppState.teamData.gameweeks)
+    ? (AppState.teamData.gameweeks.find(g => g.is_next) || AppState.teamData.gameweeks.find(g => g.is_current))
+    : null;
+  const gwLabel = gw ? `· GW ${gw.id}` : '';
+
   wrap.innerHTML = `
-    <div class="brief-card" data-kind="transfer" onclick="openHomeBrief('transfer')">
-      <div class="bc-eyebrow"><span class="icon">&#8644;</span><span>${currentLocale==='no'?'Anbefalt bytte':'Recommended transfer'}</span></div>
-      <div class="bc-headline" id="brief-transfer-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
-      <div class="bc-because" id="brief-transfer-why"></div>
-      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+    <div class="team-news-strip" id="team-news-strip" hidden>
+      <span class="tn-label">${L.teamNews}</span>
+      <span id="team-news-items"></span>
     </div>
-    <div class="brief-card tone-ok" data-kind="captain" onclick="openHomeBrief('captain')">
-      <div class="bc-eyebrow"><span class="icon">&#169;</span><span>${currentLocale==='no'?'Anbefalt kaptein':'Recommended captain'}</span></div>
-      <div class="bc-headline" id="brief-captain-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
-      <div class="bc-because" id="brief-captain-why"></div>
-      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+
+    <div class="hjem-main-grid">
+      <article class="hjem-captain-card" id="hjem-captain" onclick="openHomeBrief('captain')" tabindex="0">
+        <div class="hcc-eyebrow"><span class="c-mark">C</span>${L.captainEyebrow} ${gwLabel}</div>
+        <div class="hcc-name" id="hcc-name">${L.loading}</div>
+        <div class="hcc-meta" id="hcc-meta">—</div>
+        <div class="hcc-projection">
+          <span class="hcc-pts" id="hcc-pts">—</span>
+          <span class="hcc-delta" id="hcc-delta"></span>
+          <span class="hcc-label" id="hcc-label">${currentLocale==='no'?'Projekert m/ kapteinsbinde':'Projected with armband'}</span>
+        </div>
+        <div class="hcc-because">
+          <div class="hcc-because-label">${L.because}</div>
+          <p id="hcc-because-text">—</p>
+        </div>
+        <div class="hcc-confidence">
+          <span class="hcc-conf-label">${L.confidence}:</span>
+          <span class="confidence-bar cb-high" id="hcc-confidence"><span class="cb-seg"></span><span class="cb-seg"></span><span class="cb-seg"></span></span>
+          <span class="cb-text" id="hcc-conf-text">—</span>
+        </div>
+        <div class="hcc-vc"><span class="vc-mark">V</span>${L.vc}: <strong id="hcc-vc">—</strong></div>
+      </article>
+
+      <div class="hjem-side-stack">
+        <article class="hjem-side-card" id="hjem-transfer" onclick="openHomeBrief('transfer')" tabindex="0">
+          <div class="hsc-eyebrow">⇄ ${L.transferEyebrow}</div>
+          <div class="hsc-headline" id="hjem-transfer-h">${L.loading}</div>
+          <div class="hsc-projection" id="hjem-transfer-pts"></div>
+          <div class="hsc-because" id="hjem-transfer-why"></div>
+          <div class="hsc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
+        </article>
+
+        <article class="hjem-side-card" id="hjem-league" onclick="openHomeBrief('league')" tabindex="0">
+          <div class="hsc-eyebrow">▲ ${L.leagueEyebrow}</div>
+          <div class="hsc-headline" id="hjem-league-h">${L.loading}</div>
+          <div class="hsc-because" id="hjem-league-why"></div>
+          <div class="hsc-cta">${currentLocale==='no'?'Se ligaen':'View league'}</div>
+        </article>
+      </div>
     </div>
-    <div class="brief-card tone-warn" data-kind="cost" onclick="openHomeBrief('cost')">
-      <div class="bc-eyebrow"><span class="icon">&#9888;</span><span>${currentLocale==='no'?'Koster deg poeng':'Costing you points'}</span></div>
-      <div class="bc-headline" id="brief-cost-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
-      <div class="bc-because" id="brief-cost-why"></div>
-      <div class="bc-cta">${currentLocale==='no'?'Se forklaring':'See why'}</div>
-    </div>
-    <div class="brief-card tone-info" data-kind="price" onclick="openHomeBrief('price')">
-      <div class="bc-eyebrow"><span class="icon">&#128176;</span><span>${currentLocale==='no'?'Pris-alert':'Price alert'}</span></div>
-      <div class="bc-headline" id="brief-price-h">${currentLocale==='no'?'Henter…':'Loading…'}</div>
-      <div class="bc-because" id="brief-price-why"></div>
-      <div class="bc-cta">${currentLocale==='no'?'Se detaljer':'View details'}</div>
-    </div>`;
-  // Fill from existing endpoints
+
+    <section class="chip-timeline-card" id="hjem-chips">
+      <div class="ctc-head">
+        <span class="ctc-title">${L.chipTitle}</span>
+      </div>
+      <div class="chip-track" id="chip-track"></div>
+      <div class="chip-narrative" id="chip-narrative">${L.chipNoData}</div>
+    </section>
+
+    <footer class="model-footer">
+      <span class="mf-stat">${L.modelLastWeek}: <strong id="mf-lastweek">—</strong></span>
+      <span class="mf-stat">${L.captainHit}: <strong id="mf-cap-hit">—</strong></span>
+      <span class="mf-link" onclick="openMondayReport()">${L.fullReport}</span>
+    </footer>`;
+
+  // Fetch data in parallel from existing endpoints
   try {
-    const [trans, cap, prices] = await Promise.all([
+    const [trans, cap, leagues] = await Promise.all([
       fetch(`/api/transfer-suggestions/${AppState.userId}`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`/api/captain-picks`).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`/api/price-changes`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/leagues/${AppState.userId}`).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
-    HomeBriefData = { trans, cap, prices };
-    // Recommended transfer
+    HomeBriefData = { trans, cap, leagues };
+
+    // ---- Big captain card ----
+    const capPick = (cap && cap.picks && cap.picks[0]) || (cap && cap[0]) || null;
+    const capSecond = (cap && cap.picks && cap.picks[1]) || (cap && cap[1]) || null;
+    if (capPick) {
+      const name = capPick.name || capPick.web_name || '—';
+      $('hcc-name').textContent = name;
+      const pos = capPick.position_name || capPick.position || '';
+      const team = capPick.team_short || capPick.team_name || capPick.team || '';
+      const price = capPick.price ? `£${parseFloat(capPick.price).toFixed(1)}m` : (capPick.now_cost ? `£${(capPick.now_cost/10).toFixed(1)}m` : '');
+      $('hcc-meta').textContent = [team, pos, price].filter(Boolean).join(' · ');
+      const pts = capPick.expected_points != null ? capPick.expected_points : (capPick.score || capPick.composite_score);
+      $('hcc-pts').textContent = pts != null ? Number(pts).toFixed(1) : '—';
+      if (capSecond && pts != null) {
+        const sPts = capSecond.expected_points != null ? capSecond.expected_points : (capSecond.score || capSecond.composite_score);
+        if (sPts != null) {
+          const delta = pts - sPts;
+          $('hcc-delta').textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} vs ${capSecond.name || capSecond.web_name || ''}`;
+          $('hcc-delta').classList.toggle('neg', delta < 0);
+        }
+      }
+      $('hcc-because-text').innerHTML = glossifyText(explainCaptain(capPick));
+      // Confidence: high if delta>1, med if 0.4-1, low if <0.4
+      const delta = (capSecond && pts != null) ? Math.abs(pts - (capSecond.expected_points || capSecond.score || 0)) : 0;
+      const cbLevel = delta >= 1 ? 'cb-high' : (delta >= 0.4 ? 'cb-med' : 'cb-low');
+      const cbLabel = cbLevel === 'cb-high' ? (currentLocale==='no'?'Høy':'High') : cbLevel === 'cb-med' ? (currentLocale==='no'?'Medium':'Medium') : (currentLocale==='no'?'Lav':'Low');
+      const cb = $('hcc-confidence');
+      cb.classList.remove('cb-low','cb-med','cb-high');
+      cb.classList.add(cbLevel);
+      $('hcc-conf-text').textContent = cbLabel;
+      $('hcc-vc').textContent = capSecond ? (capSecond.name || capSecond.web_name || '—') : '—';
+    } else {
+      $('hcc-name').textContent = '—';
+    }
+
+    // ---- Transfer side card ----
     const tCard = (trans && trans.suggestions && trans.suggestions[0]) || (trans && trans[0]) || null;
     if (tCard) {
       const out = tCard.out || tCard.sell || {};
       const inn = tCard.in || tCard.buy || {};
-      $('brief-transfer-h').innerHTML = `${out.name || '—'} <span style="color:var(--text-faint)">→</span> ${inn.name || '—'}`;
-      $('brief-transfer-why').innerHTML = explainTransfer(out, inn, tCard);
+      const gain = tCard.points_gain || tCard.points_5gw || tCard.gain;
+      $('hjem-transfer-h').innerHTML = `${out.name || '—'}<span class="arr">→</span>${inn.name || '—'}`;
+      $('hjem-transfer-pts').textContent = gain != null ? `+${Number(gain).toFixed(1)} pts ${currentLocale==='no'?'forventet':'expected'}` : '';
+      $('hjem-transfer-why').innerHTML = glossifyText(explainTransfer(out, inn, tCard));
     } else {
-      $('brief-transfer-h').textContent = currentLocale==='no' ? 'Ingen åpenbare bytter' : 'No obvious moves';
-      $('brief-transfer-why').textContent = currentLocale==='no' ? 'Laget ditt ser balansert ut for neste GW.' : 'Your squad looks balanced for next GW.';
+      $('hjem-transfer-h').textContent = L.noTransfer;
+      $('hjem-transfer-pts').textContent = '';
+      $('hjem-transfer-why').textContent = L.noTransferWhy;
     }
-    // Captain
-    const capPick = (cap && cap.picks && cap.picks[0]) || (cap && cap[0]) || null;
-    if (capPick) {
-      $('brief-captain-h').innerHTML = `${capPick.name || capPick.web_name || '—'}`;
-      $('brief-captain-why').innerHTML = explainCaptain(capPick);
+
+    // ---- Mini-league side card ----
+    let leagueCard = null;
+    if (leagues && Array.isArray(leagues.classic || leagues)) {
+      const list = leagues.classic || leagues;
+      // Skip global "Overall" leagues; pick first private classic league
+      leagueCard = list.find(l => l.id && l.name && !/overall|global/i.test(l.name)) || list[0];
+    }
+    if (leagueCard) {
+      const rank = leagueCard.entry_rank || leagueCard.rank || '—';
+      const total = leagueCard.entry_total || leagueCard.total_entries || leagueCard.size;
+      $('hjem-league-h').innerHTML = `${leagueCard.name}<br><span style="font-size:var(--fs-small);color:var(--text-muted);font-weight:400;">${rank}${total ? `. ${currentLocale==='no'?'av':'of'} ${total}` : ''}</span>`;
+      $('hjem-league-why').innerHTML = currentLocale==='no'
+        ? `Klikk for catch-up-strategi og rivalradar.`
+        : `Click for catch-up strategy and rival radar.`;
     } else {
-      $('brief-captain-h').textContent = '—';
+      $('hjem-league-h').textContent = L.noLeagueBound;
+      $('hjem-league-why').textContent = '';
     }
-    // Cost: highest-priced bench player or rotation-risk starter
-    if (AppState.userData && AppState.userData.picks) {
-      const cost = findCostingPlayer(AppState.userData.picks);
-      if (cost) {
-        $('brief-cost-h').textContent = cost.name || '—';
-        $('brief-cost-why').innerHTML = explainCost(cost);
-      } else {
-        $('brief-cost-h').textContent = currentLocale==='no' ? 'Ingen røde flagg' : 'No red flags';
-        $('brief-cost-why').textContent = currentLocale==='no' ? 'Alle starterne dine ser stabile ut.' : 'All your starters look solid.';
-      }
-    }
-    // Price alert
-    const priceItem = (prices && (prices.rising || prices)[0]) || null;
-    if (priceItem) {
-      const dir = priceItem.delta > 0 ? '↑' : '↓';
-      $('brief-price-h').innerHTML = `${priceItem.name || priceItem.web_name} ${dir}`;
-      $('brief-price-why').innerHTML = explainPrice(priceItem);
-    } else {
-      $('brief-price-h').textContent = currentLocale==='no' ? 'Ingen prisendringer i kveld' : 'No price moves tonight';
-      $('brief-price-why').textContent = '';
-    }
+
+    // ---- Chip timeline ----
+    renderChipTimeline();
+
+    // ---- Model footer (Mandagsrapport teaser) ----
+    // Pull from cached user data if available; full report comes in Phase 4f
+    const ud = AppState.userData || {};
+    if (ud.gw_points != null) $('mf-lastweek').textContent = `+${ud.gw_points} pts`;
+    if (cap && cap.season_hit_rate != null) $('mf-cap-hit').textContent = `${cap.season_hit_rate}%`;
+
+    // ---- Team news strip — only show if we have news or it's Thu-Sat ----
+    renderTeamNews();
+
   } catch (e) {
     console.warn('home brief fill failed', e);
   }
 }
-let HomeBriefData = {};
+
+function renderChipTimeline() {
+  const ud = AppState.userData || {};
+  const used = ud.chips_used || [];
+  const avail = ud.chips_available || [];
+  const order = ['wildcard','freehit','bboost','3xc'];
+  const labels = currentLocale === 'no'
+    ? { wildcard:'WC', freehit:'FH', bboost:'BB', '3xc':'TC' }
+    : { wildcard:'WC', freehit:'FH', bboost:'BB', '3xc':'TC' };
+  const fullNames = currentLocale === 'no'
+    ? { wildcard:'Wildcard', freehit:'Free Hit', bboost:'Bench Boost', '3xc':'Triple Captain' }
+    : { wildcard:'Wildcard', freehit:'Free Hit', bboost:'Bench Boost', '3xc':'Triple Captain' };
+  const trackEl = $('chip-track');
+  if (!trackEl) return;
+  let html = '';
+  order.forEach(name => {
+    const isUsed = used.find(u => u.name === name);
+    const isAvail = avail.includes(name);
+    let cls = 'available', text = labels[name];
+    if (isUsed) { cls = 'used'; text = `${labels[name]} <span class="chip-gw">GW${isUsed.event}</span>`; }
+    else if (!isAvail) { cls = 'used'; text = `${labels[name]} —`; }
+    html += `<span class="chip-pip ${cls}" title="${fullNames[name]}">${text}</span>`;
+  });
+  trackEl.innerHTML = html;
+  // Narrative: simple heuristic recommendation. Phase 4c can wire to real chip-strategy endpoint.
+  const remaining = order.filter(n => avail.includes(n) && !used.find(u => u.name === n));
+  const narEl = $('chip-narrative');
+  if (!remaining.length) {
+    narEl.textContent = currentLocale==='no' ? 'Alle chips brukt for sesongen.' : 'All chips spent for the season.';
+  } else {
+    const tips = [];
+    if (remaining.includes('wildcard')) tips.push(currentLocale==='no' ? '<strong>Wildcard</strong> spares til en stor fixture-swing eller dobbel-GW.' : '<strong>Wildcard</strong> — save for a major fixture swing or DGW.');
+    if (remaining.includes('bboost')) tips.push(currentLocale==='no' ? '<strong>Bench Boost</strong> har høyest verdi i en dobbel-GW når benken har 4 startere.' : '<strong>Bench Boost</strong> peaks in a DGW when 4 bench players start.');
+    if (remaining.includes('3xc')) tips.push(currentLocale==='no' ? '<strong>Triple Captain</strong> bør spilles på en safe premium i dobbel-GW.' : '<strong>Triple Captain</strong> — play it on a safe premium in a DGW.');
+    if (remaining.includes('freehit')) tips.push(currentLocale==='no' ? '<strong>Free Hit</strong> er gull i blank-GW.' : '<strong>Free Hit</strong> shines in a blank GW.');
+    narEl.innerHTML = glossifyText(tips.slice(0, 3).join(' '));
+  }
+}
+
+function renderTeamNews() {
+  // Show on Thu-Sat or if user squad has injuries/doubts
+  const day = new Date().getDay(); // 0=Sun, 4=Thu, 5=Fri, 6=Sat
+  const showWindow = day >= 4 || day === 0;
+  const picks = AppState.userData && AppState.userData.picks ? AppState.userData.picks : [];
+  const news = picks.filter(p => p.news || p.chance_of_playing != null && p.chance_of_playing < 100).slice(0, 5);
+  const strip = $('team-news-strip');
+  const items = $('team-news-items');
+  if (!strip || !items) return;
+  if (!news.length && !showWindow) { strip.hidden = true; return; }
+  if (!news.length) { strip.hidden = true; return; }
+  strip.hidden = false;
+  items.innerHTML = news.map(p => {
+    const tone = p.chance_of_playing === 0 ? 'danger' : (p.chance_of_playing != null && p.chance_of_playing < 75 ? 'warn' : '');
+    const text = p.news || `${p.name}: ${p.chance_of_playing}% ${currentLocale==='no'?'klar':'fit'}`;
+    return `<span class="tn-item ${tone}">${text}</span>`;
+  }).join('');
+}
+
+function openMondayReport() {
+  // Phase 4f: full Mandagsrapport will live in Arkiv. For now, deep-link there.
+  switchNav('nav-season-history');
+}
 
 // ----- "Fordi"-felt: human-readable reasoning (#2, #21) -----
 // Tone: kompetent venn, ikke akademisk paper.
@@ -3680,6 +3989,22 @@ function openHomeBrief(kind) {
         { v: p.total_points || '—', l: currentLocale==='no'?'Total poeng':'Total pts' },
       ],
       cta: { label: currentLocale==='no' ? 'Bytte denne' : 'Replace this player', nav: 'nav-transfers-suggestions' },
+    });
+  } else if (kind === 'league') {
+    const leagues = (d.leagues && (d.leagues.classic || d.leagues)) || [];
+    const lg = leagues.find(l => l.id && l.name && !/overall|global/i.test(l.name)) || leagues[0] || {};
+    const rank = lg.entry_rank || lg.rank;
+    const total = lg.entry_total || lg.total_entries || lg.size;
+    openExplainPanel({
+      title: lg.name || (currentLocale==='no'?'Mini-liga':'Mini-league'),
+      narrative: currentLocale==='no'
+        ? `Du er nummer <strong>${rank||'—'}</strong> av <strong>${total||'—'}</strong>. Catch-up-strategi og rivalradar er under utvikling i Liga-seksjonen — der får du differensial-anbefaling for å hente inn de over deg.`
+        : `You're <strong>${rank||'—'}</strong> of <strong>${total||'—'}</strong>. Catch-up strategy and rival radar are coming in the League section — differential picks to chase down the rivals above you.`,
+      stats: [
+        { v: rank || '—', l: currentLocale==='no'?'Din plass':'Your rank' },
+        { v: total || '—', l: currentLocale==='no'?'Managere':'Managers' },
+      ],
+      cta: { label: currentLocale==='no' ? 'Åpne Liga' : 'Open League', nav: 'nav-leagues-standings' },
     });
   } else if (kind === 'price') {
     const p = (d.prices && (d.prices.rising || d.prices)[0]) || {};
