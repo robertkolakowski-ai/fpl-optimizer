@@ -162,16 +162,16 @@
   .container { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
 
   /* Fixture Ticker */
-  .fixture-ticker { background: #0a0d14; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.45rem 0; overflow: hidden; position: sticky; top: 0; z-index: 100; }
+  .fixture-ticker { background: var(--bg-canvas); border-bottom: 1px solid var(--border-subtle); padding: 0.55rem 0; overflow: hidden; position: sticky; top: 0; z-index: 100; }
   .ticker-track { display: flex; gap: 1.2rem; overflow-x: auto; scrollbar-width: none; padding: 0 1rem; scroll-behavior: smooth; align-items: center; }
   .ticker-track::-webkit-scrollbar { display: none; }
-  .ticker-gw { color: var(--info); font-weight: 700; font-size: 0.78rem; flex-shrink: 0; white-space: nowrap; padding-right: 0.4rem; border-right: 1px solid rgba(255,255,255,0.1); margin-right: 0.2rem; }
-  .ticker-item { flex-shrink: 0; display: flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; }
-  .ticker-item .team-abbr { color: var(--text-default); font-weight: 600; }
-  .ticker-item .score-live { color: var(--brand-primary); font-weight: 700; }
+  .ticker-gw { color: var(--brand-primary); font-family: var(--font-display); font-weight: 700; font-size: var(--fs-label); flex-shrink: 0; white-space: nowrap; padding-right: 0.4rem; border-right: 1px solid var(--border-default); margin-right: 0.2rem; }
+  .ticker-item { flex-shrink: 0; display: flex; align-items: center; gap: 0.35rem; font-size: var(--fs-label); color: var(--text-muted); white-space: nowrap; }
+  .ticker-item .team-abbr { color: var(--text-strong); font-weight: 600; }
+  .ticker-item .score-live { color: var(--danger); font-weight: 700; }
   .ticker-item .score-ft { color: var(--text-muted); font-weight: 600; }
-  .ticker-item .kickoff { color: var(--info); font-size: 0.7rem; }
-  .ticker-item .live-pulse { display: inline-block; width: 6px; height: 6px; background: var(--brand-primary); border-radius: 50%; margin-right: 2px; animation: pulse 1.5s infinite; }
+  .ticker-item .kickoff { color: var(--text-faint); font-size: 11px; }
+  .ticker-item .live-pulse { display: inline-block; width: 6px; height: 6px; background: var(--danger); border-radius: 50%; margin-right: 2px; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   /* Mobile topbar & hamburger */
@@ -256,7 +256,7 @@
   .btn-outline:hover { border-color: var(--info); color: var(--info); }
 
   /* User bar (reused in settings) */
-  .user-bar { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+  .user-bar { background: var(--bg-canvas); border-radius: var(--r-md); padding: 1rem 1.2rem; margin-bottom: 1rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); }
   .user-bar-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; }
   .user-bar-header .title { color: var(--info); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .user-bar-row { display: flex; gap: 0.6rem; align-items: end; flex-wrap: wrap; }
@@ -330,7 +330,7 @@
   .nav-panel.active { display: block; }
 
   /* Sections & cards */
-  .section { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 12px rgba(0,0,0,0.25); transition: box-shadow 0.2s, transform 0.2s; }
+  .section { background: var(--bg-canvas); border-radius: var(--r-md); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); transition: box-shadow 0.2s; }
   .section:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
   .section-title { color: var(--brand-primary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.8rem; }
   .section-title.blue { color: var(--info); }
@@ -559,8 +559,8 @@
 
   /* Mid section: pitch + captain */
   .dash-mid { display: flex; flex-direction: column; gap: 1rem; }
-  .dash-section { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1rem 1.2rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 12px rgba(0,0,0,0.2); transition: box-shadow 0.2s; }
-  .dash-section:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .dash-section { background: var(--bg-canvas); border-radius: var(--r-md); padding: 1rem 1.2rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); transition: box-shadow 0.2s; }
+  .dash-section:hover { box-shadow: var(--shadow-2); }
   .dash-section-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--brand-primary); margin-bottom: 0.7rem; letter-spacing: 0.03em; display: flex; align-items: center; justify-content: space-between; }
   .dash-section-title .ds-link { font-size: 0.72rem; color: var(--info); cursor: pointer; text-transform: none; font-weight: 500; }
   .dash-section-title .ds-link:hover { text-decoration: underline; }
@@ -640,7 +640,7 @@
 
   /* Quick links grid (shown when no user) */
   .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .dash-card { background: rgba(27,45,69,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 14px; padding: 1.2rem; cursor: pointer; transition: all 0.25s; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .dash-card { background: var(--bg-canvas); border-radius: var(--r-md); padding: 1.2rem; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); }
   .dash-card:hover { border-color: var(--brand-primary); background: #1e3148; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,230,118,0.08); }
   .dash-card .dc-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
   .dash-card .dc-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
@@ -4236,9 +4236,10 @@ async function renderHomeBrief() {
   if (!AppState.userId) { wrap.style.display = 'none'; document.body.classList.remove('has-home-brief'); return; }
   wrap.style.display = '';
   document.body.classList.add('has-home-brief');
-  // Hide the legacy dash-welcome so we don't get a duplicate header above the brief
-  const dw = $('dash-welcome'); if (dw) dw.style.display = 'none';
-  const ds = $('dash-stats'); if (ds) ds.style.display = 'none';
+  // Hide the legacy dash-welcome + dash-live tree so we don't render duplicate
+  // captain/news/starting-XI cards below the new home brief.
+  const hideIds = ['dash-welcome', 'dash-stats', 'dash-live', 'dash-empty-state', 'dash-entry-cards'];
+  hideIds.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
   const L = currentLocale === 'no' ? {
     teamNews: 'TEAM NEWS', captainEyebrow: 'KAPTEIN', vc: 'Vise-kaptein',
     confidence: 'Modellens trygghet', loading: 'Henter…', because: 'FORDI',
@@ -4524,21 +4525,24 @@ async function loadPlanPitch() {
     // /api/live/<uid> returns picks with full data
     const live = await fetch(`/api/live/${AppState.userId}`).then(r => r.ok ? r.json() : null);
     if (!live || !live.picks) { throw new Error('no picks'); }
-    PlanState.picks = live.picks.map(p => ({
-      element: p.element || p.id,
-      name: p.name || p.web_name,
-      position: p.position,                     // 1=GK 2=DEF 3=MID 4=FWD
-      pitch_pos: p.pitch_position || p.position,// FPL pick position 1-15 (1-11 starting, 12-15 bench)
-      slot: p.slot != null ? p.slot : (p.pick_position || 0),
-      team: p.team || p.team_short || '',
-      team_id: p.team_id || p.team_code,
+    // /api/live/<id> picks shape: {id, name, team_name, position, position_name, multiplier,
+    //   is_captain, is_vice_captain, live_points, ep_next, news, chance_of_playing, upcoming...}
+    // Slot derived from picks order (FPL keeps starters first 1-11, bench 12-15)
+    PlanState.picks = live.picks.map((p, i) => ({
+      element: p.id || p.element,
+      name: p.name || p.web_name || '',
+      position: p.position,                              // 1=GK 2=DEF 3=MID 4=FWD
+      slot: i + 1,                                       // FPL pick order: 1-11 start, 12-15 bench
+      team: p.team_name || p.team_short || '',
+      team_id: p.team || p.team_id,
       price: p.price || (p.now_cost ? p.now_cost/10 : 0),
-      points: p.expected_points != null ? p.expected_points : (p.score || p.composite_score || p.gw_points || 0),
+      points: p.ep_next != null ? Number(p.ep_next) : (p.live_points || 0),
       is_captain: !!p.is_captain,
-      is_vice: !!p.is_vice_captain,
+      is_vice: !!(p.is_vice_captain || p.is_vice),
       news: p.news || (p.chance_of_playing != null && p.chance_of_playing < 100),
       chance: p.chance_of_playing,
-      multiplier: p.multiplier != null ? p.multiplier : 1,
+      multiplier: p.multiplier != null ? p.multiplier : (i < 11 ? 1 : 0),
+      upcoming: p.upcoming || [],
     }));
     renderPlanPitch();
     loadPlanFdr();
@@ -5009,10 +5013,13 @@ async function loadLigaView() {
   }
   empty.hidden = true;
   try {
-    const data = await fetch(`/api/leagues/${AppState.userId}`).then(r => r.ok ? r.json() : null);
-    if (!data) throw new Error('no leagues');
-    const list = (data.classic || data) || [];
-    LigaState.leagues = Array.isArray(list) ? list.filter(l => l.id && l.name && !/overall|global/i.test(l.name)) : [];
+    // Leagues come back inside /api/user/<id>.leagues — reuse cached AppState.userData
+    let leagues = (AppState.userData && AppState.userData.leagues) || null;
+    if (!leagues) {
+      const u = await fetch(`/api/user/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+      leagues = u && u.leagues || [];
+    }
+    LigaState.leagues = Array.isArray(leagues) ? leagues.filter(l => l.id && l.name && !/overall|global/i.test(l.name)) : [];
     if (!LigaState.leagues.length) {
       bar.innerHTML = `<span style="color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen private mini-ligaer funnet.':'No private mini-leagues found.'}</span>`;
       grid.hidden = true;
@@ -5047,9 +5054,10 @@ async function selectLiga(leagueId) {
   $('liga-rivals-list').innerHTML = `<div style="color:var(--text-muted);font-size:var(--fs-small);padding:var(--sp-3);">${currentLocale==='no'?'Henter standings …':'Loading standings …'}</div>`;
 
   try {
-    const standings = await fetch(`/api/league/${leagueId}/standings`).then(r => r.ok ? r.json() : null);
-    LigaState.standings = (standings && (standings.results || standings.standings || standings)) || [];
-    LigaState.yourEntry = LigaState.standings.find(s => (s.entry || s.id) === AppState.userId) || null;
+    // Endpoint: /api/league/<id> → {league_name, standings:[{rank, entry, manager_name, team_name, gw_points, total_points}]}
+    const data = await fetch(`/api/league/${leagueId}`).then(r => r.ok ? r.json() : null);
+    LigaState.standings = (data && data.standings) || [];
+    LigaState.yourEntry = LigaState.standings.find(s => s.entry === AppState.userId) || null;
     renderLigaPositionCard();
     renderLigaRivals();
     renderLigaTrendChart();
@@ -5064,19 +5072,19 @@ function renderLigaPositionCard() {
   const standings = LigaState.standings;
   const total = standings.length;
   if (yours) {
-    $('lpc-rank').textContent = yours.rank || yours.entry_rank || '—';
+    $('lpc-rank').textContent = yours.rank || '—';
     $('lpc-rank-of').textContent = `${currentLocale==='no'?'av':'of'} ${total}`;
   }
   // Biggest threat = closest rival above you OR best in league if you're #1
-  const myIdx = standings.findIndex(s => (s.entry || s.id) === AppState.userId);
+  const myIdx = standings.findIndex(s => s.entry === AppState.userId);
   let threat = null;
-  if (myIdx > 0) threat = standings[myIdx - 1];     // person above you
-  else if (myIdx === 0 && standings[1]) threat = standings[1];  // person closest below if you're #1
+  if (myIdx > 0) threat = standings[myIdx - 1];
+  else if (myIdx === 0 && standings[1]) threat = standings[1];
   if (threat && yours) {
-    const myPts = yours.total || yours.points || 0;
-    const tPts = threat.total || threat.points || 0;
+    const myPts = yours.total_points || 0;
+    const tPts = threat.total_points || 0;
     const delta = myPts - tPts;
-    $('lpc-threat-name').textContent = threat.player_name || threat.entry_name || '—';
+    $('lpc-threat-name').textContent = threat.manager_name || '—';
     const dEl = $('lpc-threat-delta');
     dEl.textContent = `${delta >= 0 ? '+' : ''}${delta} pts ${myIdx > 0 ? (currentLocale==='no'?'bak':'behind') : (currentLocale==='no'?'foran':'ahead')}`;
     dEl.classList.toggle('ahead', delta >= 0 && myIdx === 0);
@@ -5108,17 +5116,17 @@ function generateLeagueStrategy(myIdx, total, gap) {
 
 function renderLigaRivals() {
   const list = LigaState.standings.slice(0, 10);
-  const yourIdx = list.findIndex(s => (s.entry || s.id) === AppState.userId);
-  const yourPts = yourIdx >= 0 ? (list[yourIdx].total || list[yourIdx].points || 0) : 0;
+  const yourIdx = list.findIndex(s => s.entry === AppState.userId);
+  const yourPts = yourIdx >= 0 ? (list[yourIdx].total_points || 0) : 0;
   const html = list.map((s, i) => {
-    const isYou = (s.entry || s.id) === AppState.userId;
-    const pts = s.total || s.points || 0;
+    const isYou = s.entry === AppState.userId;
+    const pts = s.total_points || 0;
     const delta = isYou ? 0 : pts - yourPts;
     const dCls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : 'zero');
     return `
-      <div class="liga-rival-row ${isYou?'is-you':''}" onclick="openRivalCompare(${s.entry || s.id})">
+      <div class="liga-rival-row ${isYou?'is-you':''}" onclick="openRivalCompare(${s.entry})">
         <span class="lrr-rank">#${s.rank || i+1}</span>
-        <span class="lrr-name">${s.player_name || '—'}<span class="lrr-team">${s.entry_name || ''}</span></span>
+        <span class="lrr-name">${s.manager_name || '—'}<span class="lrr-team">${s.team_name || ''}</span></span>
         <span class="lrr-pts">${pts}</span>
         <span class="lrr-delta ${dCls}">${isYou?'—':(delta >= 0 ? '+' : '')+delta}</span>
       </div>`;
@@ -11846,12 +11854,8 @@ function tourEnd() {
   localStorage.setItem('fpl_tour_done', '1');
 }
 
-// Auto-start tour on first visit (after a short delay)
-window.addEventListener('DOMContentLoaded', () => {
-  if (!localStorage.getItem('fpl_tour_done') && !localStorage.getItem('fpl_user_id')) {
-    setTimeout(tourStart, 1500);
-  }
-});
+// Tour is opt-in only — click "Guide" in sidebar. No auto-start.
+// (Robert: avoid intrusive popups for returning users.)
 
 // Escape key to close tour
 document.addEventListener('keydown', e => {
