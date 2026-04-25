@@ -8011,8 +8011,8 @@ async function loadCaptainPicks() {
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
 
-    $('captain-body').innerHTML = data.picks.map((p, i) => `<tr${i === 0 ? ' style="background:#1a2a1a"' : ''}>
-      <td>${i === 0 ? '<span style="color:var(--warn);font-weight:bold">1</span>' : i + 1}</td>
+    $('captain-body').innerHTML = data.picks.map((p, i) => `<tr${i === 0 ? ' class="top-pick"' : ''}>
+      <td>${i === 0 ? '<span style="color:var(--brand-primary);font-weight:700">1</span>' : i + 1}</td>
       <td><strong>${playerLink(p)}</strong></td>
       <td>${p.team_name}</td>
       <td class="pos">${p.position_name}</td>
