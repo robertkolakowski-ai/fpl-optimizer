@@ -1600,31 +1600,113 @@
   }
 
   /* ==================================================================
-     PHASE 2 — MOBILE-FIRST BREAKPOINTS (#13)
-     Design starts at 390px, scales up. Bottom nav on phones; sidebar
-     drawer toggles via .open. Touch targets ≥44px.
+     MOBILE-FIRST BREAKPOINTS — design starts at 390px, scales up.
+     Sidebar becomes a drawer below 768px. All touch targets ≥44px.
      ================================================================== */
   @media (max-width: 768px) {
     :root { --sidebar-w: 280px; }
     .sidebar { transform: translateX(-100%); width: var(--sidebar-w); box-shadow: var(--shadow-3); }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0; padding-bottom: calc(var(--bottomnav-h) + var(--sp-3)); }
-    .container { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
+    .container { padding: var(--sp-3) var(--sp-3) var(--sp-6); max-width: 100%; }
     .btn, .btn-blue, .btn-green, .btn-gold, .btn-secondary { min-height: 44px; padding: 0.6rem 1rem; }
     input[type="text"], input[type="number"], select, textarea { min-height: 44px; font-size: var(--fs-body); }
-    .mode-tab { min-height: 56px; }
     .locale-btn { min-height: 36px; min-width: 40px; }
-    .user-header-bar { top: var(--topbar-h); }
+    .user-header-bar { top: var(--topbar-h); flex-wrap: wrap; gap: 0.4rem; }
     h1 { font-size: 24px; }
     h2 { font-size: 20px; }
     h3 { font-size: 17px; }
     table { font-size: var(--fs-small); }
     th, td { padding: 0.5rem 0.5rem; }
+
+    /* Phase 4 components */
+    .hjem-main-grid { grid-template-columns: 1fr; }
+    .hjem-captain-card { padding: var(--sp-4); }
+    .hjem-captain-card .hcc-name { font-size: clamp(28px, 8vw, 36px); }
+    .hjem-captain-card .hcc-pts { font-size: clamp(36px, 10vw, 48px); }
+    .liga-grid { grid-template-columns: 1fr; }
+    .lpc-rank-value { font-size: 48px; }
+    .compare-board { grid-template-columns: 1fr; }
+    .compare-board .cmp-stat-label { display: none; }
+    .captain-hero { padding: var(--sp-4); }
+    .captain-hero .ch-grid { grid-template-columns: 1fr; }
+    .captain-hero .ch-projection { text-align: left; font-size: 48px; }
+
+    /* Plan tabs scroll horizontally if needed */
+    .plan-tabs { width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+    .plan-tabs::-webkit-scrollbar { display: none; }
+    .plan-tab { flex-shrink: 0; padding: 8px 12px; font-size: var(--fs-label); min-height: 40px; }
+    .plan-projection { width: 100%; justify-content: space-between; }
+    .plan-projection .pp-value { font-size: 26px; }
+
+    /* FDR grid: 90px name col on phones */
+    .plan-fdr-row { grid-template-columns: 100px repeat(5, 1fr); }
+    .plan-fdr-row .fdr-name { font-size: 12px; }
+
+    /* Pitch tile sizing */
+    .pp-tile { min-width: 60px; max-width: 76px; padding: 3px 4px 4px; }
+    .pp-tile .pp-name { font-size: 10px; }
+    .pp-tile .pp-pts { font-size: 12px; }
+
+    /* Mandagsrapport / Arkiv */
+    .mandagsrapport { padding: var(--sp-4); }
+    .mr-headline { font-size: clamp(20px, 5vw, 24px); }
+    .mr-stats { grid-template-columns: repeat(2, 1fr); }
+
+    /* Changelog */
+    .cl-head { gap: var(--sp-3); }
+    .cl-stats { width: 100%; justify-content: space-between; }
+    .cl-stat .v { font-size: 26px; }
+    .cl-entry { padding: var(--sp-3) var(--sp-4); }
+
+    /* Explain panel: full width on phone */
+    .explain-panel { width: 100vw; }
   }
+
   @media (max-width: 480px) {
     .container { padding: var(--sp-2); }
-    .mode-tab .mode-label { font-size: 11px; }
     h1 { font-size: 22px; }
+    .hcc-name, .ch-name, .liga-title, .arkiv-title, .cl-title { font-size: clamp(22px, 6vw, 28px) !important; }
+    .ma-stat .v { font-size: 22px; }
+    .alt-card .alt-pts { font-size: 16px; }
+    .liga-rival-row { grid-template-columns: 22px 1fr 50px 50px; gap: 6px; padding: 6px 8px; }
+    .liga-rival-row .lrr-name { font-size: 12px; }
+    .liga-rival-row .lrr-name .lrr-team { display: none; }
+    .ticker-track { padding: 0 0.6rem; gap: 0.8rem; }
+    .ticker-item { font-size: 11px; }
+
+    /* Bottom nav on tiny phones — keep cockpit info essential */
+    .uhb-item { font-size: 11px; }
+    .deadline-countdown { font-size: 11px; padding: 3px 8px; }
+  }
+
+  /* Touch-friendly drag handles for Plan-pitch on mobile */
+  @media (pointer: coarse) {
+    .pp-tile { cursor: pointer; }
+    .pp-tile:active { transform: scale(0.96); }
+  }
+
+  /* ==================================================================
+     A11Y — focus rings, skip link, screen-reader helpers
+     ================================================================== */
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  .skip-link {
+    position: absolute; top: -40px; left: 0;
+    background: var(--brand-primary); color: var(--text-on-brand);
+    padding: 8px 16px; border-radius: 0 0 var(--r-sm) 0;
+    font-weight: 600; z-index: 1000; text-decoration: none;
+    transition: top 0.15s;
+  }
+  .skip-link:focus { top: 0; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0;
+    margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
   }
 
   /* Reduced motion */
@@ -2452,6 +2534,7 @@
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Hopp til hovedinnhold</a>
 
 <a href="#main-content" class="skip-link">Skip to content</a>
 
@@ -4527,10 +4610,15 @@ async function renderHomeBrief() {
     renderChipTimeline();
 
     // ---- Model footer (Mandagsrapport teaser) ----
-    // Pull from cached user data if available; full report comes in Phase 4f
     const ud = AppState.userData || {};
-    if (ud.gw_points != null) $('mf-lastweek').textContent = `+${ud.gw_points} pts`;
-    if (cap && cap.season_hit_rate != null) $('mf-cap-hit').textContent = `${cap.season_hit_rate}%`;
+    const gwPts = ud.gw_points;
+    if (gwPts != null && gwPts !== '-') {
+      $('mf-lastweek').textContent = `+${gwPts} pts`;
+    } else {
+      $('mf-lastweek').textContent = currentLocale==='no' ? 'venter på GW' : 'awaiting GW';
+    }
+    // Captain hit rate requires a persisted predictions log — don't fabricate.
+    $('mf-cap-hit').innerHTML = `<span style="color:var(--text-faint);font-style:italic;">${currentLocale==='no'?'logges fra neste runde':'logged from next iteration'}</span>`;
 
     // ---- Team news strip — only show if we have news or it's Thu-Sat ----
     renderTeamNews();
@@ -4578,21 +4666,31 @@ function renderChipTimeline() {
   }
 }
 
-function renderTeamNews() {
-  // Show on Thu-Sat or if user squad has injuries/doubts
-  const day = new Date().getDay(); // 0=Sun, 4=Thu, 5=Fri, 6=Sat
-  const showWindow = day >= 4 || day === 0;
-  const picks = AppState.userData && AppState.userData.picks ? AppState.userData.picks : [];
-  const news = picks.filter(p => p.news || p.chance_of_playing != null && p.chance_of_playing < 100).slice(0, 5);
+async function renderTeamNews() {
+  // Picks from /api/live carry .news + .chance_of_playing — re-use PlanState if loaded,
+  // otherwise fetch /api/live for the current user.
   const strip = $('team-news-strip');
   const items = $('team-news-items');
   if (!strip || !items) return;
-  if (!news.length && !showWindow) { strip.hidden = true; return; }
+  let picks = (PlanState && PlanState.picks && PlanState.picks.length) ? PlanState.picks : null;
+  if (!picks && AppState.userId) {
+    try {
+      const live = await fetch(`/api/live/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+      if (live && live.picks) picks = live.picks.map(p => ({
+        name: p.name || p.web_name,
+        news: p.news,
+        chance: p.chance_of_playing,
+      }));
+    } catch (e) { /* silent */ }
+  }
+  if (!picks || !picks.length) { strip.hidden = true; return; }
+  const news = picks.filter(p => p.news || (p.chance != null && p.chance < 100));
   if (!news.length) { strip.hidden = true; return; }
   strip.hidden = false;
-  items.innerHTML = news.map(p => {
-    const tone = p.chance_of_playing === 0 ? 'danger' : (p.chance_of_playing != null && p.chance_of_playing < 75 ? 'warn' : '');
-    const text = p.news || `${p.name}: ${p.chance_of_playing}% ${currentLocale==='no'?'klar':'fit'}`;
+  items.innerHTML = news.slice(0, 6).map(p => {
+    const c = p.chance;
+    const tone = c === 0 ? 'danger' : (c != null && c < 75 ? 'warn' : '');
+    const text = p.news ? `${p.name}: ${p.news}` : `${p.name}: ${c}% ${currentLocale==='no'?'klar':'fit'}`;
     return `<span class="tn-item ${tone}">${text}</span>`;
   }).join('');
 }
@@ -4756,10 +4854,13 @@ function updateProjectionUI(value, delta) {
   }
 }
 
-// Drag-and-drop within a position row (swap two players' slots)
+// Drag-and-drop within a position row (swap two players' slots).
+// Desktop: HTML5 drag events. Mobile: tap-to-select + tap-target for swap.
 function attachDragHandlers() {
   let draggedId = null;
+  let selectedTouchId = null;
   document.querySelectorAll('#plan-pitch .pp-tile').forEach(tile => {
+    // Desktop drag
     tile.addEventListener('dragstart', (e) => {
       draggedId = parseInt(tile.dataset.id);
       tile.classList.add('dragging');
@@ -4771,7 +4872,6 @@ function attachDragHandlers() {
       document.querySelectorAll('#plan-pitch .pp-tile').forEach(t => t.classList.remove('drop-target'));
     });
     tile.addEventListener('dragover', (e) => {
-      // Only allow drop on same position OR between starting/bench within same position
       const dragged = PlanState.picks.find(p => p.element === draggedId);
       const target = PlanState.picks.find(p => p.element === parseInt(tile.dataset.id));
       if (dragged && target && dragged.position === target.position) {
@@ -4788,6 +4888,31 @@ function attachDragHandlers() {
         swapSlots(draggedId, targetId);
       }
     });
+
+    // Touch: long-press a tile to "select", tap another same-position tile to swap.
+    let touchTimer = null;
+    tile.addEventListener('touchstart', (e) => {
+      touchTimer = setTimeout(() => {
+        if (selectedTouchId === parseInt(tile.dataset.id)) {
+          selectedTouchId = null;
+          tile.classList.remove('drop-target');
+        } else {
+          if (selectedTouchId) {
+            // Second selection — attempt swap
+            const a = PlanState.picks.find(p => p.element === selectedTouchId);
+            const b = PlanState.picks.find(p => p.element === parseInt(tile.dataset.id));
+            if (a && b && a.position === b.position) swapSlots(selectedTouchId, b.element);
+            selectedTouchId = null;
+            document.querySelectorAll('#plan-pitch .pp-tile').forEach(t => t.classList.remove('drop-target'));
+          } else {
+            selectedTouchId = parseInt(tile.dataset.id);
+            tile.classList.add('drop-target');
+          }
+        }
+      }, 350);
+    }, { passive: true });
+    tile.addEventListener('touchmove', () => { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } }, { passive: true });
+    tile.addEventListener('touchend', () => { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } });
   });
 }
 
@@ -5275,14 +5400,26 @@ async function renderLigaTrendChart() {
   const svg = $('liga-line-chart');
   const legend = $('liga-chart-legend');
   if (!svg) return;
-  // Build trend from each rival's history endpoint — fetch up to top 4 rivals + you
   const top = LigaState.standings.slice(0, 4);
-  const idsToFetch = top.map(s => s.entry || s.id).filter(Boolean);
+  const idsToFetch = top.map(s => s.entry).filter(Boolean);
   if (!idsToFetch.includes(AppState.userId)) idsToFetch.push(AppState.userId);
-  // /api/user/<id> returns season_history
-  const all = await Promise.all(idsToFetch.map(id =>
-    fetch(`/api/user/${id}`).then(r => r.ok ? r.json() : null).catch(() => null)
-  ));
+  // 10-min localStorage TTL cache to avoid refetching 5 rivals on every visit
+  const cacheKey = 'fpl_liga_history_';
+  const TTL = 10 * 60 * 1000;
+  const all = await Promise.all(idsToFetch.map(async id => {
+    try {
+      const cached = localStorage.getItem(cacheKey + id);
+      if (cached) {
+        const { ts, data } = JSON.parse(cached);
+        if (Date.now() - ts < TTL) return data;
+      }
+    } catch (e) { /* ignore parse errors */ }
+    const data = await fetch(`/api/user/${id}`).then(r => r.ok ? r.json() : null).catch(() => null);
+    try {
+      if (data) localStorage.setItem(cacheKey + id, JSON.stringify({ ts: Date.now(), data }));
+    } catch (e) { /* localStorage quota — silent */ }
+    return data;
+  }));
   const histories = {};
   all.forEach((d, i) => {
     if (d && d.season_history) histories[idsToFetch[i]] = d.season_history;
@@ -5410,10 +5547,14 @@ const ArkivState = {
 async function loadArkivView() {
   if (!AppState.userId) return;
   try {
-    // Use season_history from cached AppState.userData if available
     const ud = AppState.userData || {};
     const hist = ud.season_history || (await fetch(`/api/user/${AppState.userId}`).then(r => r.json())).season_history || [];
     ArkivState.history = hist;
+    // Fetch latest GW picks for best/worst — silent fail if endpoint hiccups
+    try {
+      const live = await fetch(`/api/live/${AppState.userId}`).then(r => r.ok ? r.json() : null);
+      ArkivState.lastGwPicks = live && live.picks ? live.picks : [];
+    } catch (e) { ArkivState.lastGwPicks = []; }
     renderMandagsrapport(hist, ud);
     renderModelAccuracy(hist);
     renderRecommendationLog(hist);
@@ -5443,16 +5584,23 @@ function renderMandagsrapport(hist, ud) {
   $('mr-pts').textContent = `+${pts}`;
   $('mr-percentile').textContent = typeof percentile === 'number' ? `Top ${percentile}%` : '—';
 
-  // Best/worst player — needs picks data; fall back to placeholders
-  if (AppState.userData && AppState.userData.best_pick) {
-    $('mr-best').textContent = AppState.userData.best_pick.name || '—';
+  // Best/worst player from /api/live picks (live_points). Async-fetched on Arkiv enter.
+  if (Array.isArray(ArkivState.lastGwPicks) && ArkivState.lastGwPicks.length) {
+    const playing = ArkivState.lastGwPicks.filter(p => p.multiplier > 0);
+    if (playing.length) {
+      const sorted = playing.slice().sort((a,b) => (b.live_points||0) - (a.live_points||0));
+      const best = sorted[0], worst = sorted[sorted.length - 1];
+      const bPts = (best.live_points||0) * (best.multiplier||1);
+      const wPts = (worst.live_points||0) * (worst.multiplier||1);
+      $('mr-best').innerHTML = `${best.name} <span style="font-size:13px;color:var(--ok);font-family:var(--font-mono);">+${bPts}</span>`;
+      $('mr-worst').innerHTML = `${worst.name} <span style="font-size:13px;color:${wPts<3?'var(--danger)':'var(--text-muted)'};font-family:var(--font-mono);">+${wPts}</span>`;
+    } else {
+      $('mr-best').textContent = '—';
+      $('mr-worst').textContent = '—';
+    }
   } else {
-    $('mr-best').textContent = currentLocale==='no' ? 'Henter…' : '…';
-  }
-  if (AppState.userData && AppState.userData.worst_pick) {
-    $('mr-worst').textContent = AppState.userData.worst_pick.name || '—';
-  } else {
-    $('mr-worst').textContent = currentLocale==='no' ? 'Henter…' : '…';
+    $('mr-best').textContent = currentLocale==='no' ? 'venter på GW' : 'awaiting GW';
+    $('mr-worst').textContent = currentLocale==='no' ? 'venter på GW' : 'awaiting GW';
   }
 
   // Lesson — pick from a simple rotation based on patterns
@@ -5496,46 +5644,47 @@ function generateWeeklyLesson(hist, ud) {
 }
 
 function renderModelAccuracy(hist) {
-  // Heuristics based on available data; real values come from logged predictions in future
-  // Captain hit: how often was your captain in top 10 picks?
-  // We don't have that data yet, so use proxies / known constants for now.
-  const totalGws = hist.length;
-  const capHit = totalGws >= 10 ? 73 : Math.max(40, totalGws * 6);
-  const transferHit = totalGws >= 10 ? 64 : Math.max(35, totalGws * 5);
-  const chipHit = totalGws >= 25 ? 80 : (totalGws >= 10 ? 60 : 0);
-  const overall = Math.round((capHit + transferHit + (chipHit||60)) / 3);
-  $('ma-captain').textContent = `${capHit}%`;
-  $('ma-transfer').textContent = `${transferHit}%`;
-  $('ma-chip').textContent = chipHit ? `${chipHit}%` : '—';
-  $('ma-overall').textContent = `${overall}%`;
+  // Phase 4f used heuristic constants — that's misleading. Until we persist a
+  // recommendations log, hide the bar entirely with a one-line "coming soon".
+  const card = document.querySelector('.model-accuracy');
+  if (!card) return;
+  card.innerHTML = `
+    <h3 class="plan-section-title plan-section-title--sub">${currentLocale==='no'?'Modellens treffrate':'Model accuracy'}</h3>
+    <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);line-height:1.5;">
+      ${currentLocale==='no'
+        ? 'Vi viser <strong>ikke</strong> tall vi ikke kan stå inne for. Treffrate krever at vi logger hver anbefaling og sammenligner med fasit per GW — det kommer i en senere iterasjon.'
+        : 'We don\'t show numbers we can\'t back up. Hit-rate requires us to log each recommendation and compare against actuals per GW — coming in a future iteration.'}
+    </p>`;
 }
 
 function renderRecommendationLog(hist) {
-  // Build last 8 GWs with placeholder verdicts. Real implementation will read from a
-  // persisted recommendations-log endpoint; for now we synthesise from points patterns.
+  // No persisted recommendations log yet — show GW-by-GW points trajectory
+  // honestly instead of fabricating "we advised X" text.
   const list = $('reco-log-list');
   if (!list) return;
-  if (!hist.length) { list.innerHTML = ''; return; }
-  const head = `<div class="reco-row head">
+  if (!hist.length) { list.innerHTML = `<p style="color:var(--text-muted);font-size:var(--fs-small);">${currentLocale==='no'?'Ingen GW-data ennå.':'No GW data yet.'}</p>`; return; }
+  const head = `<div class="reco-row head" style="grid-template-columns: 80px 1fr 1fr 60px;">
     <span>GW</span>
-    <span>${currentLocale==='no'?'Vi anbefalte':'We advised'}</span>
     <span>${currentLocale==='no'?'Du gjorde':'You did'}</span>
-    <span>${currentLocale==='no'?'Fasit':'Outcome'}</span>
-    <span>${currentLocale==='no'?'Treff':'Verdict'}</span>
+    <span>${currentLocale==='no'?'Resultat':'Outcome'}</span>
+    <span></span>
   </div>`;
+  // Compute average for tone reference
+  const avg = hist.length ? hist.reduce((s, h) => s + (h.points || 0), 0) / hist.length : 50;
   const rows = hist.slice(-8).reverse().map(h => {
     const pts = h.points || 0;
-    const verdict = pts >= 65 ? 'hit' : (pts >= 50 ? 'partial' : 'miss');
-    const verdictLabel = verdict === 'hit' ? '✓' : (verdict === 'partial' ? '~' : '✗');
-    const ourAdvice = currentLocale==='no' ? 'Roll FT, captain Salah' : 'Roll FT, captain Salah';
-    const yourMove = h.event_transfers ? `${h.event_transfers}T${h.event_transfers_cost?` (-${h.event_transfers_cost})`:''}` : (currentLocale==='no'?'Holdt':'Held');
-    const outcome = `+${pts} pts`;
-    return `<div class="reco-row">
+    const verdict = pts >= avg + 10 ? 'hit' : (pts >= avg - 5 ? 'partial' : 'miss');
+    const verdictLabel = verdict === 'hit' ? '↑' : (verdict === 'partial' ? '·' : '↓');
+    const moves = h.event_transfers || 0;
+    const cost = h.event_transfers_cost || 0;
+    const yourMove = moves
+      ? `${moves} ${currentLocale==='no'?'bytte':'transfer'}${moves>1?'r':''}${cost?` (-${cost})`:''}`
+      : (currentLocale==='no'?'Holdt FT':'Held FT');
+    return `<div class="reco-row" style="grid-template-columns: 80px 1fr 1fr 60px;">
       <span class="reco-gw">GW${h.gw||h.event||'?'}</span>
-      <span class="reco-cell">${ourAdvice}</span>
       <span class="reco-cell">${yourMove}</span>
-      <span class="reco-cell"><strong>${outcome}</strong></span>
-      <span class="reco-verdict ${verdict}">${verdictLabel}</span>
+      <span class="reco-cell"><strong>+${pts} pts</strong></span>
+      <span class="reco-verdict ${verdict}" title="${currentLocale==='no'?'Sammenlignet med ditt sesong-snitt':'vs your season average'}">${verdictLabel}</span>
     </div>`;
   }).join('');
   list.innerHTML = head + rows;
@@ -6023,7 +6172,8 @@ const I18N = {
   no: {
     // Nav
     'nav.home':'Hjem','nav.plan':'Plan','nav.captain':'Kaptein','nav.league':'Liga','nav.archive':'Arkiv',
-    'nav.player':'Spiller','nav.settings':'Innstillinger','nav.guide':'Guide',
+    'nav.player':'Spiller','nav.settings':'Innstillinger','nav.guide':'Guide','nav.changelog':'Hva er nytt',
+    'changelog.eyebrow':'HVA ER NYTT',
 
     // Header
     'uhb.deadline':'Deadline',
@@ -6070,7 +6220,7 @@ const I18N = {
     'arkiv.lesson':'DENNE UKAS LÆRDOM','arkiv.subscribe':'Få push hver mandag',
     'arkiv.accuracy':'Modellens treffrate','arkiv.cap.hit':'Captain-treff','arkiv.transfer.hit':'Transfer-anbefalinger','arkiv.chip.hit':'Chip-strategi','arkiv.overall':'Samlet',
     'arkiv.trajectory':'Sesongbane','arkiv.chart.pts':'GW-poeng','arkiv.chart.rank':'Total rang',
-    'arkiv.recolog':'Anbefaling vs. handling vs. fasit','arkiv.recolog.help':'Hva modellen sa, hva du gjorde, og hva som faktisk skjedde — uke for uke.',
+    'arkiv.recolog':'Din uke-for-uke-bane','arkiv.recolog.help':'Dine bytter, poeng og hvordan ukene står seg mot ditt sesong-snitt. (Ekte modellanbefalinger logges fra og med neste oppdatering.)',
     'arkiv.advanced':'Avansert: full GW-tabell + CSV-eksport',
 
     // Settings
@@ -6078,7 +6228,8 @@ const I18N = {
   },
   en: {
     'nav.home':'Home','nav.plan':'Plan','nav.captain':'Captain','nav.league':'League','nav.archive':'Archive',
-    'nav.player':'Player','nav.settings':'Settings','nav.guide':'Guide',
+    'nav.player':'Player','nav.settings':'Settings','nav.guide':'Guide','nav.changelog':"What's new",
+    'changelog.eyebrow':"WHAT'S NEW",
 
     'uhb.deadline':'Deadline',
 
@@ -6118,7 +6269,7 @@ const I18N = {
     'arkiv.lesson':'THIS WEEK\'S LESSON','arkiv.subscribe':'Get a push every Monday',
     'arkiv.accuracy':'Model accuracy','arkiv.cap.hit':'Captain hit-rate','arkiv.transfer.hit':'Transfer recommendations','arkiv.chip.hit':'Chip strategy','arkiv.overall':'Overall',
     'arkiv.trajectory':'Season trajectory','arkiv.chart.pts':'GW points','arkiv.chart.rank':'Overall rank',
-    'arkiv.recolog':'Advice vs. action vs. outcome','arkiv.recolog.help':'What the model said, what you did, and what actually happened — week by week.',
+    'arkiv.recolog':'Your week-by-week trajectory','arkiv.recolog.help':'Your transfers, points and how each week stacks up against your season average. (Real model recommendations get logged starting next iteration.)',
     'arkiv.advanced':'Advanced: full GW table + CSV export',
 
     'settings.advanced':'Advanced',
