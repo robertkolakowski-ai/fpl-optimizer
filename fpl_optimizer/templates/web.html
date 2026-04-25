@@ -5778,27 +5778,127 @@ function syncModeToNav() {}
 // ==================== I18N (Phase 1.3) ====================
 const I18N = {
   no: {
+    // Nav
     'nav.home':'Hjem','nav.plan':'Plan','nav.captain':'Kaptein','nav.league':'Liga','nav.archive':'Arkiv',
     'nav.player':'Spiller','nav.settings':'Innstillinger','nav.guide':'Guide',
+
+    // Header
     'uhb.deadline':'Deadline',
+
+    // Hero / USP
     'hero.eyebrow':'FORKLARBAR FPL-RÅDGIVER',
+    'hero.headline':'Vi viser deg <em style="font-style:normal;color:var(--brand-primary)">hvorfor</em> — ikke bare hva.',
+    'hero.sub':'Hver anbefaling kommer med en menneskelig forklaring: form, kamper, eierskap og risiko forklart i klartekst — så du tar bedre FPL-beslutninger og ser raskere resultater.',
     'hero.cta':'Koble til laget mitt','hero.demo':'eller prøv med demodata →',
+
+    // Wizard
+    'wiz.s1.num':'STEG 1 AV 3','wiz.s1.title':'Lim inn FPL Team ID','wiz.s1.desc':'Vi henter automatisk laget ditt, budsjettet, free transfers, brukte chips og rang.',
+    'wiz.s1.btn':'Hent →','wiz.s1.hint':'Finn ID-en din: gå til <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. URL-en blir <code>/entry/<span class="hl">123456</span>/event/29</code> — det fete tallet er ID-en din.',
+    'wiz.skip':'Hopp over — bruk demodata','wiz.back':'← Tilbake',
+    'wiz.s2.num':'STEG 2 AV 3','wiz.s2.title':'Bekreft at dette er ditt lag','wiz.s2.desc':'Vi fant følgende — sjekk at det stemmer.','wiz.s2.btn':'Ja, dette er meg →',
+    'wiz.s3.num':'STEG 3 AV 3','wiz.s3.title':'Her er din situasjon','wiz.s3.desc':'En rask oppsummering før du går videre.',
+    'wiz.s3.rank':'Overall rang','wiz.s3.pts':'Total poeng','wiz.s3.ft':'Free transfers','wiz.s3.bank':'Bank','wiz.s3.btn':'Gå til Hjem →',
+
+    // Plan (pitch view)
+    'plan.tab.thisgw':'Denne GW','plan.tab.next5':'Neste 5 GW','plan.tab.wc':'Wildcard','plan.tab.fh':'Free Hit',
+    'plan.live':'Live-projeksjon','plan.yourteam':'Ditt lag','plan.formation':'Formasjon','plan.bench':'Benk',
+    'plan.nouser':'Koble til laget ditt for å se pitchen.','plan.connect':'Koble til',
+    'plan.fdr.title':'Fixture-vansker · neste 5 GW','plan.transfers.title':'Foreslåtte transfers',
+    'plan.advanced':'Avansert: kjør optimizer fra bunn','plan.suggest.apply':'Bruk','plan.suggest.explain':'Forklar mer',
+
+    // Captain
+    'captain.eyebrow':'KAPTEINSFORSLAG','captain.title':'Velg kaptein for','captain.sub':'Captain-valg står for ~15% av sesongens totale poengsum. Denne ene beslutningen er den viktigste du tar hver uke.',
+    'captain.risk':'Risikoprofil','captain.safe':'Safe','captain.balanced':'Balanced','captain.aggressive':'Aggressive',
+    'captain.loading':'Analyserer kapteinsforslag …','captain.alts':'Top 5 alternativer',
+    'captain.compare':'Sammenlign to spillere','captain.compare.help':'Velg to spillere — det som er bedre vises i grønt.',
+    'captain.advanced':'Avansert: full tabell + EV-graf',
+
+    // Liga
+    'liga.eyebrow':'MINI-LIGA','liga.sub':'Bryt mini-ligaen. Konkurranse om kollegene er viktigere enn global rang — her får du differensial-strategi for å hente inn rivalene over deg.',
+    'liga.empty':'Koble til laget ditt for å se mini-ligaen.','liga.connect':'Koble til',
+    'liga.yourplace':'Din plass','liga.biggest':'Største trussel','liga.strategy':'Strategi',
+    'liga.top':'Topp i ligaen','liga.trend':'Avstand til rivalene · sesongen','liga.trend.help':'Hver linje = poengforskjellen mellom deg og en rival per GW. Negativ = rivalen leder.',
+    'liga.catchup':'Catch-up-spillere','liga.catchup.help':'Differensialer du kan plukke for å hente inn de over deg — lav eierskap, høy upside, ikke i rivalenes lag.',
+    'liga.advanced':'Avansert: full standings-tabell',
+
+    // Arkiv
+    'arkiv.eyebrow':'ARKIV · TILLIT OG LÆRING','arkiv.title':'Hadde modellen rett?','arkiv.sub':'Vi viser deg når vi traff og når vi bommet — så bygges tilliten over tid, og du blir bedre selv neste sesong.',
+    'arkiv.weekly':'UKERAPPORT','arkiv.gwpts':'GW-poeng','arkiv.percentile':'Persentil','arkiv.best':'Beste valg','arkiv.worst':'Verste valg',
+    'arkiv.lesson':'DENNE UKAS LÆRDOM','arkiv.subscribe':'Få push hver mandag',
+    'arkiv.accuracy':'Modellens treffrate','arkiv.cap.hit':'Captain-treff','arkiv.transfer.hit':'Transfer-anbefalinger','arkiv.chip.hit':'Chip-strategi','arkiv.overall':'Samlet',
+    'arkiv.trajectory':'Sesongbane','arkiv.chart.pts':'GW-poeng','arkiv.chart.rank':'Total rang',
+    'arkiv.recolog':'Anbefaling vs. handling vs. fasit','arkiv.recolog.help':'Hva modellen sa, hva du gjorde, og hva som faktisk skjedde — uke for uke.',
+    'arkiv.advanced':'Avansert: full GW-tabell + CSV-eksport',
+
+    // Settings
+    'settings.advanced':'Avansert',
   },
   en: {
     'nav.home':'Home','nav.plan':'Plan','nav.captain':'Captain','nav.league':'League','nav.archive':'Archive',
     'nav.player':'Player','nav.settings':'Settings','nav.guide':'Guide',
+
     'uhb.deadline':'Deadline',
+
     'hero.eyebrow':'EXPLAINABLE FPL ADVISOR',
+    'hero.headline':'We show you <em style="font-style:normal;color:var(--brand-primary)">why</em> — not just what.',
+    'hero.sub':'Every recommendation comes with a human explanation: form, fixtures, ownership and risk in plain language — so you make better FPL decisions and climb faster.',
     'hero.cta':'Connect my team','hero.demo':'or try with demo data →',
+
+    'wiz.s1.num':'STEP 1 OF 3','wiz.s1.title':'Paste your FPL Team ID','wiz.s1.desc':'We auto-fetch your squad, budget, free transfers, used chips and rank.',
+    'wiz.s1.btn':'Fetch →','wiz.s1.hint':'Find your ID: go to <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. The URL becomes <code>/entry/<span class="hl">123456</span>/event/29</code> — the bold number is your ID.',
+    'wiz.skip':'Skip — use demo data','wiz.back':'← Back',
+    'wiz.s2.num':'STEP 2 OF 3','wiz.s2.title':'Confirm this is your team','wiz.s2.desc':'We found the following — check it\'s right.','wiz.s2.btn':'Yes, that\'s me →',
+    'wiz.s3.num':'STEP 3 OF 3','wiz.s3.title':'Here\'s your situation','wiz.s3.desc':'Quick summary before you continue.',
+    'wiz.s3.rank':'Overall rank','wiz.s3.pts':'Total points','wiz.s3.ft':'Free transfers','wiz.s3.bank':'Bank','wiz.s3.btn':'Go to Home →',
+
+    'plan.tab.thisgw':'This GW','plan.tab.next5':'Next 5 GW','plan.tab.wc':'Wildcard','plan.tab.fh':'Free Hit',
+    'plan.live':'Live projection','plan.yourteam':'Your team','plan.formation':'Formation','plan.bench':'Bench',
+    'plan.nouser':'Connect your team to see the pitch.','plan.connect':'Connect',
+    'plan.fdr.title':'Fixture difficulty · next 5 GW','plan.transfers.title':'Suggested transfers',
+    'plan.advanced':'Advanced: run optimizer from scratch','plan.suggest.apply':'Use','plan.suggest.explain':'Explain more',
+
+    'captain.eyebrow':'CAPTAIN PICKS','captain.title':'Pick captain for','captain.sub':'Captain choice accounts for ~15% of season points. This single decision is the most important one you make each week.',
+    'captain.risk':'Risk profile','captain.safe':'Safe','captain.balanced':'Balanced','captain.aggressive':'Aggressive',
+    'captain.loading':'Analysing captain picks …','captain.alts':'Top 5 alternatives',
+    'captain.compare':'Compare two players','captain.compare.help':'Pick two players — the better value is highlighted green.',
+    'captain.advanced':'Advanced: full table + EV chart',
+
+    'liga.eyebrow':'MINI-LEAGUE','liga.sub':'Win the mini-league. Beating colleagues matters more than global rank — here\'s the differential strategy to chase down rivals above you.',
+    'liga.empty':'Connect your team to see your mini-league.','liga.connect':'Connect',
+    'liga.yourplace':'Your rank','liga.biggest':'Biggest threat','liga.strategy':'Strategy',
+    'liga.top':'League leaders','liga.trend':'Distance to rivals · season','liga.trend.help':'Each line = points difference between you and a rival per GW. Negative = rival is ahead.',
+    'liga.catchup':'Catch-up picks','liga.catchup.help':'Differentials to chase down rivals — low ownership, high upside, not in their squad.',
+    'liga.advanced':'Advanced: full standings table',
+
+    'arkiv.eyebrow':'ARCHIVE · TRUST AND LEARNING','arkiv.title':'Did the model get it right?','arkiv.sub':'We show you when we hit and when we missed — that\'s how trust is built, and how you become a better manager next season.',
+    'arkiv.weekly':'WEEKLY REPORT','arkiv.gwpts':'GW points','arkiv.percentile':'Percentile','arkiv.best':'Best pick','arkiv.worst':'Worst pick',
+    'arkiv.lesson':'THIS WEEK\'S LESSON','arkiv.subscribe':'Get a push every Monday',
+    'arkiv.accuracy':'Model accuracy','arkiv.cap.hit':'Captain hit-rate','arkiv.transfer.hit':'Transfer recommendations','arkiv.chip.hit':'Chip strategy','arkiv.overall':'Overall',
+    'arkiv.trajectory':'Season trajectory','arkiv.chart.pts':'GW points','arkiv.chart.rank':'Overall rank',
+    'arkiv.recolog':'Advice vs. action vs. outcome','arkiv.recolog.help':'What the model said, what you did, and what actually happened — week by week.',
+    'arkiv.advanced':'Advanced: full GW table + CSV export',
+
+    'settings.advanced':'Advanced',
   },
 };
+// Allow rich HTML in select i18n strings (hero, hints) — extend applyTranslations
+function applyTranslationsRich() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = (I18N[currentLocale] && I18N[currentLocale][key]) || (I18N.en[key]);
+    if (val == null) return;
+    if (val.indexOf('<') >= 0) el.innerHTML = val; else el.textContent = val;
+  });
+}
 let currentLocale = localStorage.getItem('fpl_locale') || AppConfig.defaultLocale;
 function t(key) { return (I18N[currentLocale] && I18N[currentLocale][key]) || (I18N.en[key]) || key; }
 function applyTranslations(root) {
   (root || document).querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    const val = t(key);
-    if (val) el.textContent = val;
+    const raw = (I18N[currentLocale] && I18N[currentLocale][key]) || (I18N.en[key]);
+    if (raw == null) return;
+    if (raw.indexOf('<') >= 0) el.innerHTML = raw;
+    else el.textContent = raw;
   });
 }
 function setLocale(loc) {
