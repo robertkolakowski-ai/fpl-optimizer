@@ -2134,6 +2134,32 @@
     display: flex; flex-direction: column; gap: var(--sp-2);
     box-shadow: var(--shadow-1);
   }
+  /* Player search hero */
+  .player-search-hero {
+    position: relative; display: flex; align-items: center;
+    background: var(--bg-canvas); border: 2px solid var(--border-default);
+    border-radius: 12px; padding: 4px 4px 4px 14px; margin-bottom: var(--sp-3);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .player-search-hero:focus-within {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand-primary) 15%, transparent);
+  }
+  .player-search-hero .player-search-icon { font-size: 18px; margin-right: 10px; opacity: 0.7; }
+  .player-search-hero .player-search-input {
+    flex: 1; border: 0; background: transparent; outline: 0;
+    padding: 12px 0; font-size: 16px; font-family: var(--font-body);
+    color: var(--text-strong);
+  }
+  .player-search-hero .player-search-input::placeholder { color: var(--text-faint); font-weight: 400; }
+  .player-search-hero .player-search-clear {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg-subtle); color: var(--text-muted); border: 0;
+    font-size: 18px; cursor: pointer; transition: background 0.15s;
+  }
+  .player-search-hero .player-search-clear:hover { background: var(--bg-muted); color: var(--text-strong); }
+
   .plan-suggest.differential { border-color: var(--brand-accent); }
   .plan-suggest.marginal { border-color: var(--border-default); opacity: 0.85; }
   .plan-suggest.marginal .ps-eyebrow { color: var(--text-faint); }
@@ -3658,11 +3684,12 @@
       <!-- ==================== PLAYER STATS: TABLE ==================== -->
       <div class="nav-panel" id="nav-playerstats-table">
         <div class="section">
+          <div class="player-search-hero">
+            <span class="player-search-icon" aria-hidden="true">&#128269;</span>
+            <input type="text" id="player-search" class="player-search-input" placeholder="Søk spiller — f.eks. Haaland, Salah, Saka …" oninput="onPlayerSearchInput()" autocomplete="off">
+            <button type="button" class="player-search-clear" id="player-search-clear" onclick="clearPlayerSearch()" style="display:none;" aria-label="Tøm søk">&times;</button>
+          </div>
           <div class="filters">
-            <div class="field" style="flex:2">
-              <label>Search</label>
-              <input type="text" id="player-search" placeholder="Player name..." oninput="debouncedLoadPlayers()">
-            </div>
             <div class="field">
               <label>Position</label>
               <select id="player-pos-filter" onchange="loadPlayers()">
@@ -8560,6 +8587,19 @@ function renderRivalOutput(data) {
 function debouncedLoadPlayers() {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(loadPlayers, 300);
+}
+function onPlayerSearchInput() {
+  const inp = document.getElementById('player-search');
+  const clr = document.getElementById('player-search-clear');
+  if (clr) clr.style.display = inp && inp.value ? 'inline-flex' : 'none';
+  debouncedLoadPlayers();
+}
+function clearPlayerSearch() {
+  const inp = document.getElementById('player-search');
+  const clr = document.getElementById('player-search-clear');
+  if (inp) { inp.value = ''; inp.focus(); }
+  if (clr) clr.style.display = 'none';
+  debouncedLoadPlayers();
 }
 
 let lastPlayersData = [];
