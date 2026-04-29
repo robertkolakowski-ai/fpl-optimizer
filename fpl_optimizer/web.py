@@ -2102,10 +2102,22 @@ def api_transfer_gain(user_id):
 
 @app.route("/api/multi-gw/<int:user_id>")
 def api_multi_gw(user_id):
-    """Multi-gameweek transfer plan."""
+    """Multi-gameweek transfer plan.
+
+    Returns three risk-profile variants in parallel: safe / balanced /
+    aggressive. The frontend renders these as Plan A (Trygg), Plan B (Balansert),
+    Plan C (Aggressiv) so the user picks based on their own risk tolerance —
+    not the model's view of "optimal".
+
+    Query params:
+      horizon: planning horizon in GWs (default 6, range 3–6)
+      profile: if set ("safe"|"balanced"|"aggressive"), returns only that
+               variant (back-compat for callers that only want one plan)
+    """
     try:
         horizon = int(request.args.get("horizon", 6))
         horizon = max(3, min(6, horizon))
+        single_profile = request.args.get("profile")
 
         players, teams, gameweeks, fixtures = _get_cached_data()
         score_players(players, fixtures, gameweeks, teams, lookahead=1)
@@ -2116,10 +2128,38 @@ def api_multi_gw(user_id):
             squad_players, bank = load_user_team(user_id, players, gameweeks)
 
         from .multi_gw import plan_transfers
-        plan = plan_transfers(squad_players, players, fixtures, gameweeks,
-                              teams, bank, horizon)
 
-        return jsonify({"plan": plan, "horizon": horizon, "bank": round(bank, 1)})
+        def _summarize(plan_list: list[dict]) -> dict:
+            """Compact summary so frontend can compare profiles at a glance."""
+            transfers = sum(1 for g in plan_list if g.get("transfer_in"))
+            hits = sum(g.get("hit_cost", 0) for g in plan_list)
+            xpts_gain = round(sum(g.get("expected_points_gain", 0) for g in plan_list), 2)
+            return {"transfers": transfers, "hits": hits, "xpts_gain_total": xpts_gain}
+
+        def _plan(profile: str) -> dict:
+            p = plan_transfers(squad_players, players, fixtures, gameweeks,
+                               teams, bank, horizon, risk_profile=profile)
+            return {"plan": p, "summary": _summarize(p), "profile": profile}
+
+        if single_profile in ("safe", "balanced", "aggressive"):
+            plan = plan_transfers(squad_players, players, fixtures, gameweeks,
+                                  teams, bank, horizon, risk_profile=single_profile)
+            return jsonify({"plan": plan, "horizon": horizon, "bank": round(bank, 1),
+                            "profile": single_profile})
+
+        # Default: return all three
+        return jsonify({
+            "plans": {
+                "safe":       _plan("safe"),
+                "balanced":   _plan("balanced"),
+                "aggressive": _plan("aggressive"),
+            },
+            "horizon": horizon,
+            "bank": round(bank, 1),
+            # Back-compat: also expose balanced as top-level "plan"
+            "plan": plan_transfers(squad_players, players, fixtures, gameweeks,
+                                   teams, bank, horizon, risk_profile="balanced"),
+        })
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             return jsonify({"error": "User not found"}), 404

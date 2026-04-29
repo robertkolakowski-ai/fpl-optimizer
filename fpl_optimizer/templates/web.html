@@ -2830,6 +2830,51 @@
               <div class="dash-onboard-error" id="wizard-error" style="color:var(--danger);font-size:var(--fs-small);margin-top:8px;"></div>
               <div class="wizard-fpl-hint">
                 <span data-i18n="wiz.s1.hint">Finn ID-en din: gå til <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. URL-en blir <code>/entry/<span class="hl">123456</span>/event/29</code> — det fete tallet er ID-en din.</span>
+                <details style="margin-top:8px;">
+                  <summary style="cursor:pointer;color:var(--brand-primary);font-size:var(--fs-small);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:4px;">
+                    <span style="display:inline-block;transform:rotate(0);transition:transform 0.15s;">▸</span>
+                    <span data-i18n="wiz.s1.howto">Vis meg hvordan, steg for steg</span>
+                  </summary>
+                  <style>
+                    details[open] > summary > span:first-child { transform: rotate(90deg) !important; }
+                    .wiz-step-card { background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--r-md); padding: var(--sp-3); margin-top: var(--sp-2); }
+                    .wiz-step-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand-primary); color: var(--text-on-brand); font-weight: 700; font-size: 12px; margin-right: 8px; }
+                    .wiz-step-title { font-weight: 600; color: var(--text-strong); display: inline; }
+                    .wiz-step-body { margin-top: var(--sp-2); font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; }
+                    .browser-mock { background: #1a1a1a; border-radius: 8px; padding: 8px; margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+                    .browser-mock .url-bar { background: #2a2a2a; border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; gap: 6px; }
+                    .browser-mock .url-bar::before { content: '🔒'; opacity: 0.6; }
+                    .browser-mock .highlight-id { background: #ffeb3b; color: #000; padding: 1px 4px; border-radius: 3px; font-weight: 700; box-shadow: 0 0 0 2px #ffeb3b; }
+                    .browser-mock .nav-tabs { display: flex; gap: 12px; margin-top: 10px; padding: 0 6px; font-size: 12px; }
+                    .browser-mock .nav-tabs span { padding: 4px 8px; opacity: 0.5; }
+                    .browser-mock .nav-tabs span.active { background: #37003c; color: #fff; opacity: 1; border-radius: 3px; box-shadow: 0 0 0 2px #00ff87; }
+                  </style>
+                  <div class="wiz-step-card">
+                    <span class="wiz-step-num">1</span><span class="wiz-step-title" data-i18n="wiz.s1.howto.s1.t">Logg inn på FPL</span>
+                    <div class="wiz-step-body" data-i18n="wiz.s1.howto.s1.b">Gå til <code>fantasy.premierleague.com</code> i samme nettleser hvor du vanligvis logger inn.</div>
+                  </div>
+                  <div class="wiz-step-card">
+                    <span class="wiz-step-num">2</span><span class="wiz-step-title" data-i18n="wiz.s1.howto.s2.t">Klikk på «Points»-fanen</span>
+                    <div class="wiz-step-body" data-i18n="wiz.s1.howto.s2.b">I toppmenyen — ikke «My Team». Det er klikket som avslører ID-en din i URL-en.</div>
+                    <div class="browser-mock">
+                      <div class="url-bar">fantasy.premierleague.com/<span style="opacity:0.5">a/</span>home</div>
+                      <div class="nav-tabs">
+                        <span>My Team</span><span class="active">Points</span><span>Status</span><span>Fixtures</span><span>Stats</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="wiz-step-card">
+                    <span class="wiz-step-num">3</span><span class="wiz-step-title" data-i18n="wiz.s1.howto.s3.t">Kopier tallet fra URL-en</span>
+                    <div class="wiz-step-body" data-i18n="wiz.s1.howto.s3.b">URL-en endres til noe som <code>/entry/<b>1234567</b>/event/29</code>. Tallet mellom <code>/entry/</code> og neste skråstrek er din Team ID. Kopier det og lim det inn over.</div>
+                    <div class="browser-mock">
+                      <div class="url-bar">fantasy.premierleague.com/entry/<span class="highlight-id">1234567</span>/event/29</div>
+                    </div>
+                  </div>
+                  <div class="wiz-step-card" style="background:rgba(0,255,135,0.06);border-color:var(--ok);">
+                    <span class="wiz-step-num" style="background:var(--ok);">✓</span><span class="wiz-step-title" data-i18n="wiz.s1.howto.tip.t">Tips: lim inn hele URL-en</span>
+                    <div class="wiz-step-body" data-i18n="wiz.s1.howto.tip.b">Du trenger ikke å trekke ut bare tallet — vi finner det automatisk hvis du limer inn hele lenken.</div>
+                  </div>
+                </details>
               </div>
               <!-- Hidden compatibility input — keeps loadUserFromDashboard() working -->
               <input type="hidden" id="dash-fpl-input">
@@ -4092,6 +4137,17 @@
 
       <div class="nav-panel" id="nav-settings">
         <h2 style="margin-bottom:1rem;font-size:1.2rem;">Innstillinger</h2>
+
+        <!-- Stat language toggle -->
+        <div class="user-bar" style="margin-bottom:1rem;">
+          <div class="user-bar-header"><span class="title">Språk i tabeller</span></div>
+          <div style="padding:0.5rem 0;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+              <input type="checkbox" id="toggle-plain-norsk" onchange="setPlainNorsk(this.checked)">
+              <span><strong>Plain norsk i stat-labels</strong><br><span style="color:var(--text-muted);font-size:var(--fs-small)">Erstatter forkortelser (xG, xA, xGI, FDR, ICT, BPS, EO, PPG) med klare norske begreper i spiller-modal, sammenligning og avansert-fane. Forkortelsene står ofte fortsatt i parentes.</span></span>
+            </label>
+          </div>
+        </div>
 
         <!-- Advanced toggles (Phase 4a) -->
         <div class="user-bar" style="margin-bottom:1rem;">
@@ -5880,18 +5936,85 @@ function generateWeeklyLesson(hist, ud) {
   return arr[idx];
 }
 
-function renderModelAccuracy(hist) {
-  // Phase 4f used heuristic constants — that's misleading. Until we persist a
-  // recommendations log, hide the bar entirely with a one-line "coming soon".
+async function renderModelAccuracy(hist) {
+  // Pulls real hit-rate data from /api/predictions/hit-rate (backed by the
+  // persistent predictions_log). Shows numbers when settled GWs exist; shows
+  // an honest empty-state when the log hasn't accumulated data yet.
   const card = document.querySelector('.model-accuracy');
   if (!card) return;
+  const isNo = currentLocale === 'no';
+  const title = isNo ? 'Hadde modellen rett?' : 'Was the model right?';
   card.innerHTML = `
-    <h3 class="plan-section-title plan-section-title--sub">${currentLocale==='no'?'Modellens treffrate':'Model accuracy'}</h3>
+    <h3 class="plan-section-title plan-section-title--sub">${title}</h3>
+    <div style="color:var(--text-muted);font-size:var(--fs-small);">${isNo?'Henter logg …':'Loading log …'}</div>`;
+
+  let data = null;
+  try {
+    data = await fetch('/api/predictions/hit-rate').then(r => r.ok ? r.json() : null);
+  } catch (e) { /* network — fall through to empty state */ }
+
+  const fx = (data && data.fixtures) || {};
+  const recs = (data && data.fpl_recommendations) || {};
+  const hasFx = (fx.total_settled || 0) > 0;
+  const hasCap = (recs.captains_settled || 0) > 0;
+  const hasTransfer = (recs.transfers_settled || 0) > 0;
+
+  if (!hasFx && !hasCap && !hasTransfer) {
+    card.innerHTML = `
+      <h3 class="plan-section-title plan-section-title--sub">${title}</h3>
+      <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);line-height:1.5;">
+        ${isNo
+          ? 'Loggen er klar, men ingen GW har gått ferdig siden vi begynte å persistere anbefalinger. Etter første ferdige GW vises ekte treffrate her — captain-hit, transfer-delta, og fixture-prediksjoner (1X2/O2.5/BTTS).'
+          : 'The log is live, but no GW has finished since we started persisting recommendations. After the first completed GW we\'ll show real hit-rate here — captain hits, transfer deltas, and fixture predictions (1X2/O2.5/BTTS).'}
+      </p>
+      <div style="margin-top:var(--sp-3);display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2);">
+        <div class="ma-stat"><div class="v" style="opacity:0.4">—</div><div class="l">${isNo?'Captain-treff':'Captain'}</div></div>
+        <div class="ma-stat"><div class="v" style="opacity:0.4">—</div><div class="l">${isNo?'Transfer-vinnere':'Transfers won'}</div></div>
+        <div class="ma-stat"><div class="v" style="opacity:0.4">—</div><div class="l">1X2</div></div>
+        <div class="ma-stat"><div class="v" style="opacity:0.4">—</div><div class="l">O2.5 / BTTS</div></div>
+      </div>`;
+    return;
+  }
+
+  // Build one stat block per available metric — only show what's settled.
+  const blocks = [];
+  if (hasCap) {
+    const exp = recs.captain_expected_avg, act = recs.captain_actual_avg;
+    const diff = (act != null && exp != null) ? (act - exp) : null;
+    const tone = diff == null ? '' : (diff >= 0 ? 'color:var(--ok);' : 'color:var(--danger);');
+    blocks.push(`<div class="ma-stat">
+      <div class="v" style="${tone}">${act != null ? act.toFixed(1) : '—'}</div>
+      <div class="l">${isNo?'Captain ø·sn (n='+recs.captains_settled+')':'Captain avg (n='+recs.captains_settled+')'}</div>
+      ${exp != null ? `<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">${isNo?'forventet':'expected'} ${exp.toFixed(1)}${diff!=null?` (${diff>0?'+':''}${diff.toFixed(1)})`:''}</div>` : ''}
+    </div>`);
+  }
+  if (hasTransfer) {
+    const pct = recs.transfers_winning_pct;
+    const tone = pct == null ? '' : (pct >= 50 ? 'color:var(--ok);' : 'color:var(--warn);');
+    blocks.push(`<div class="ma-stat">
+      <div class="v" style="${tone}">${pct != null ? pct.toFixed(0)+'%' : '—'}</div>
+      <div class="l">${isNo?'Transfer-vinnere':'Transfers won'} (n=${recs.transfers_settled})</div>
+    </div>`);
+  }
+  if (hasFx) {
+    blocks.push(`<div class="ma-stat">
+      <div class="v">${fx.onextwo_pct != null ? fx.onextwo_pct.toFixed(0)+'%' : '—'}</div>
+      <div class="l">1X2 (n=${fx.total_settled})</div>
+    </div>`);
+    blocks.push(`<div class="ma-stat">
+      <div class="v">${fx.over25_pct != null ? fx.over25_pct.toFixed(0)+'%' : '—'} / ${fx.btts_pct != null ? fx.btts_pct.toFixed(0)+'%' : '—'}</div>
+      <div class="l">O2.5 / BTTS</div>
+    </div>`);
+  }
+
+  card.innerHTML = `
+    <h3 class="plan-section-title plan-section-title--sub">${title}</h3>
     <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);line-height:1.5;">
-      ${currentLocale==='no'
-        ? 'Vi viser <strong>ikke</strong> tall vi ikke kan stå inne for. Treffrate krever at vi logger hver anbefaling og sammenligner med fasit per GW — det kommer i en senere iterasjon.'
-        : 'We don\'t show numbers we can\'t back up. Hit-rate requires us to log each recommendation and compare against actuals per GW — coming in a future iteration.'}
-    </p>`;
+      ${isNo
+        ? 'Ekte tall fra anbefalings-loggen. Vi viser kun metrics som har minst én ferdig GW — ingen ekstrapolering.'
+        : 'Real numbers from the recommendations log. Only metrics with at least one completed GW are shown — no extrapolation.'}
+    </p>
+    <div class="ma-grid" style="margin-top:var(--sp-3);">${blocks.join('')}</div>`;
 }
 
 function renderRecommendationLog(hist) {
@@ -6278,6 +6401,52 @@ function openHomeBrief(kind) {
 // ESC closes panel
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExplainPanel(); });
 
+// ----- Plain Norwegian stat labels -----
+// User-toggleable: when on, replaces stat abbreviations with plain Norwegian
+// in JS-rendered surfaces (player modal, compare modal, advanced tab).
+const PlainLabels = {
+  'xG':       'Forventede mål',
+  'xA':       'Forventede assists',
+  'xGI':      'Mål-involvering',
+  'xGC':      'Forventede baklengs',
+  'FDR':      'Vanskelighet',
+  'ICT':      'Aktivitet',
+  'BPS':      'Bonus-poeng',
+  'EO':       'Effektivt eierskap',
+  'PPG':      'Snitt per kamp',
+  'xPts':     'Forventede poeng',
+  'ep_next':  'Neste GW (FPL)',
+  'Form':     'Form',
+  'Own%':     'Eierskap',
+  'Own':      'Eierskap',
+  'Bonus':    'Bonus-poeng',
+  'Proj Min': 'Spilletid',
+  'Total Pts':'Totalpoeng',
+  'Influence':'Innflytelse',
+  'Creativity':'Kreativitet',
+  'Threat':   'Trussel',
+};
+function isPlainNorskOn() {
+  return localStorage.getItem('fpl_plain_norsk') === '1';
+}
+function setPlainNorsk(on) {
+  localStorage.setItem('fpl_plain_norsk', on ? '1' : '0');
+  // Re-render any open modals/views that include stat labels
+  try { if (!$('player-modal-overlay').classList.contains('hidden')) {
+    const id = window._lastPlayerModalId; if (id) openPlayerModal(id);
+  } } catch (e) {}
+  try { if (!$('compare-modal-overlay').classList.contains('hidden')) renderCompareModal(); } catch (e) {}
+  try { renderCaptainCompare(); } catch (e) {}
+}
+// plainLabel(abbrev) returns either the abbreviation (default) or the plain-Norwegian
+// label suffixed with "(abbrev)" so the abbreviation is still discoverable.
+function plainLabel(abbrev) {
+  if (!isPlainNorskOn() || currentLocale !== 'no') return abbrev;
+  const plain = PlainLabels[abbrev];
+  if (!plain || plain === abbrev) return abbrev;
+  return `${plain} (${abbrev})`;
+}
+
 // ----- Inline glossary (#22) -----
 const Glossary = {
   no: {
@@ -6426,6 +6595,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) el.checked = isFeatureEnabled(key);
   });
+  // Plain-norsk toggle
+  const pnEl = document.getElementById('toggle-plain-norsk');
+  if (pnEl) pnEl.checked = isPlainNorskOn();
 });
 
 // Legacy: setMode() and MODE_OF_NAV are kept as no-ops so any stray calls don't error.
@@ -6451,6 +6623,15 @@ const I18N = {
 
     // Wizard
     'wiz.s1.num':'STEG 1 AV 3','wiz.s1.title':'Lim inn FPL Team ID','wiz.s1.desc':'Vi henter automatisk laget ditt, budsjettet, free transfers, brukte chips og rang.',
+    'wiz.s1.howto':'Vis meg hvordan, steg for steg',
+    'wiz.s1.howto.s1.t':'Logg inn på FPL',
+    'wiz.s1.howto.s1.b':'Gå til <code>fantasy.premierleague.com</code> i samme nettleser hvor du vanligvis logger inn.',
+    'wiz.s1.howto.s2.t':'Klikk på «Points»-fanen',
+    'wiz.s1.howto.s2.b':'I toppmenyen — ikke «My Team». Det er klikket som avslører ID-en din i URL-en.',
+    'wiz.s1.howto.s3.t':'Kopier tallet fra URL-en',
+    'wiz.s1.howto.s3.b':'URL-en endres til noe som <code>/entry/<b>1234567</b>/event/29</code>. Tallet mellom <code>/entry/</code> og neste skråstrek er din Team ID. Kopier det og lim det inn over.',
+    'wiz.s1.howto.tip.t':'Tips: lim inn hele URL-en',
+    'wiz.s1.howto.tip.b':'Du trenger ikke å trekke ut bare tallet — vi finner det automatisk hvis du limer inn hele lenken.',
     'wiz.s1.btn':'Hent →','wiz.s1.hint':'Finn ID-en din: gå til <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. URL-en blir <code>/entry/<span class="hl">123456</span>/event/29</code> — det fete tallet er ID-en din.',
     'wiz.skip':'Hopp over — bruk demodata','wiz.back':'← Tilbake',
     'wiz.s2.num':'STEG 2 AV 3','wiz.s2.title':'Bekreft at dette er ditt lag','wiz.s2.desc':'Vi fant følgende — sjekk at det stemmer.','wiz.s2.btn':'Ja, dette er meg →',
@@ -6504,6 +6685,15 @@ const I18N = {
     'hero.cta':'Connect my team','hero.demo':'or try with demo data →',
 
     'wiz.s1.num':'STEP 1 OF 3','wiz.s1.title':'Paste your FPL Team ID','wiz.s1.desc':'We auto-fetch your squad, budget, free transfers, used chips and rank.',
+    'wiz.s1.howto':'Show me how, step by step',
+    'wiz.s1.howto.s1.t':'Log in to FPL',
+    'wiz.s1.howto.s1.b':'Open <code>fantasy.premierleague.com</code> in the browser where you usually sign in.',
+    'wiz.s1.howto.s2.t':'Click the «Points» tab',
+    'wiz.s1.howto.s2.b':'Top nav — not «My Team». That click reveals your ID in the URL.',
+    'wiz.s1.howto.s3.t':'Copy the number from the URL',
+    'wiz.s1.howto.s3.b':'The URL becomes something like <code>/entry/<b>1234567</b>/event/29</code>. The number between <code>/entry/</code> and the next slash is your Team ID. Copy it and paste it above.',
+    'wiz.s1.howto.tip.t':'Tip: paste the whole URL',
+    'wiz.s1.howto.tip.b':'You don\'t need to extract just the number — paste the full link and we\'ll detect it.',
     'wiz.s1.btn':'Fetch →','wiz.s1.hint':'Find your ID: go to <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. The URL becomes <code>/entry/<span class="hl">123456</span>/event/29</code> — the bold number is your ID.',
     'wiz.skip':'Skip — use demo data','wiz.back':'← Back',
     'wiz.s2.num':'STEP 2 OF 3','wiz.s2.title':'Confirm this is your team','wiz.s2.desc':'We found the following — check it\'s right.','wiz.s2.btn':'Yes, that\'s me →',
@@ -10069,6 +10259,7 @@ if (draftRosterIds.length > 0) {
 // ==================== #1 AUTO FPL URL DETECT ====================
 // ==================== PLAYER DRILLDOWN MODAL (Item 17) ====================
 async function openPlayerModal(playerId) {
+  window._lastPlayerModalId = playerId;
   const overlay = $('player-modal-overlay');
   const content = $('player-modal-content');
   overlay.classList.remove('hidden');
@@ -10157,14 +10348,14 @@ async function openPlayerModal(playerId) {
       <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;font-weight:600;">${currentLocale==='no'?'Kommende kamper':'Upcoming Fixtures'}</div>
       <div class="pm-fixtures">${fixturesHtml || '<span style="color:#555">No fixture data</span>'}</div>
       <div class="pm-stats">
-        <div class="pm-stat"><div class="label">Total Pts</div><div class="value score">${p.total_points}</div></div>
-        <div class="pm-stat"><div class="label">Form</div><div class="value">${p.form}</div></div>
-        <div class="pm-stat"><div class="label">PPG</div><div class="value">${p.points_per_game}</div></div>
-        <div class="pm-stat"><div class="label">xGI</div><div class="value">${(p.xG + p.xA).toFixed(1)}</div></div>
-        <div class="pm-stat"><div class="label">ICT</div><div class="value">${p.ict_index}</div></div>
-        <div class="pm-stat"><div class="label">Bonus</div><div class="value">${p.bonus}</div></div>
-        <div class="pm-stat"><div class="label">Own%</div><div class="value" style="color:var(--info)">${p.selected_by_percent}%</div></div>
-        <div class="pm-stat"><div class="label">Proj Min</div><div class="value">${bd.projected_minutes}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('Total Pts')}</div><div class="value score">${p.total_points}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('Form')}</div><div class="value">${p.form}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('PPG')}</div><div class="value">${p.points_per_game}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('xGI')}</div><div class="value">${(p.xG + p.xA).toFixed(1)}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('ICT')}</div><div class="value">${p.ict_index}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('Bonus')}</div><div class="value">${p.bonus}</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('Own%')}</div><div class="value" style="color:var(--info)">${p.selected_by_percent}%</div></div>
+        <div class="pm-stat"><div class="label">${plainLabel('Proj Min')}</div><div class="value">${bd.projected_minutes}</div></div>
       </div>
       ${p.news ? `<div style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:8px;padding:0.4rem 0.6rem;font-size:0.78rem;color:#FFAAAA;margin-bottom:0.8rem;">${p.news}</div>` : ''}
       <div style="margin-top:0.8rem;display:flex;gap:0.3rem;flex-wrap:wrap;font-size:0.72rem;">
@@ -10410,15 +10601,15 @@ async function renderCompareModal() {
   };
 
   const stats = [
-    { l: currentLocale==='no'?'xPts (5 GW)':'xPts (5 GW)', v: pl => pl.player.expected_points || pl.player.score || 0, fmt: v => v.toFixed(1), bigger: true },
-    { l: 'Form', v: pl => parseFloat(pl.player.form) || 0, fmt: v => v.toFixed(1), bigger: true },
-    { l: 'PPG', v: pl => parseFloat(pl.player.points_per_game) || 0, fmt: v => v.toFixed(1), bigger: true },
-    { l: 'xG', v: pl => pl.player.xG || 0, fmt: v => v.toFixed(2), bigger: true },
-    { l: 'xA', v: pl => pl.player.xA || 0, fmt: v => v.toFixed(2), bigger: true },
-    { l: 'ICT', v: pl => parseFloat(pl.player.ict_index) || 0, fmt: v => v.toFixed(0), bigger: true },
+    { l: plainLabel('xPts') + ' (5 GW)', v: pl => pl.player.expected_points || pl.player.score || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: plainLabel('Form'), v: pl => parseFloat(pl.player.form) || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: plainLabel('PPG'), v: pl => parseFloat(pl.player.points_per_game) || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: plainLabel('xG'), v: pl => pl.player.xG || 0, fmt: v => v.toFixed(2), bigger: true },
+    { l: plainLabel('xA'), v: pl => pl.player.xA || 0, fmt: v => v.toFixed(2), bigger: true },
+    { l: plainLabel('ICT'), v: pl => parseFloat(pl.player.ict_index) || 0, fmt: v => v.toFixed(0), bigger: true },
     { l: currentLocale==='no'?'Pris':'Price', v: pl => pl.player.cost || 0, fmt: v => `£${v.toFixed(1)}m`, bigger: false },
-    { l: currentLocale==='no'?'Eierskap':'Ownership', v: pl => parseFloat(pl.player.selected_by_percent) || 0, fmt: v => `${v.toFixed(1)}%`, bigger: false },
-    { l: currentLocale==='no'?'Proj. min':'Proj. min', v: pl => (pl.composite_breakdown && pl.composite_breakdown.projected_minutes) || 0, fmt: v => v.toFixed(0), bigger: true },
+    { l: plainLabel('Own%'), v: pl => parseFloat(pl.player.selected_by_percent) || 0, fmt: v => `${v.toFixed(1)}%`, bigger: false },
+    { l: plainLabel('Proj Min'), v: pl => (pl.composite_breakdown && pl.composite_breakdown.projected_minutes) || 0, fmt: v => v.toFixed(0), bigger: true },
     { l: currentLocale==='no'?'Rotasjonsrisiko':'Rotation risk', v: pl => (pl.composite_breakdown && pl.composite_breakdown.rotation_risk) || 0, fmt: v => v.toFixed(2), bigger: false },
   ];
 
@@ -10507,6 +10698,10 @@ function autoDetectFplId(input) {
 }
 
 // ==================== #2 MULTI-GW PLANNER ====================
+// Renders all three risk profiles (safe / balanced / aggressive) so the user
+// picks based on their risk tolerance — not the model's view of "optimal".
+let MultiGwState = { data: null, activeProfile: 'balanced' };
+
 async function loadMultiGW() {
   if (!AppState.userId) { $('multigw-error').innerHTML = '<div class="error-msg">Load your FPL ID in Settings first.</div>'; return; }
   const loader = $('multigw-loader'), content = $('multigw-content'), err = $('multigw-error');
@@ -10516,28 +10711,95 @@ async function loadMultiGW() {
     const resp = await fetch(`/api/multi-gw/${AppState.userId}?horizon=${horizon}`);
     const data = await resp.json();
     if (data.error) { err.innerHTML = `<div class="error-msg">${data.error}</div>`; return; }
-    $('multigw-summary').innerHTML = `
-      <div class="stat-card"><div class="label">Bank</div><div class="value">${data.bank}M</div></div>
-      <div class="stat-card"><div class="label">Horizon</div><div class="value">${data.horizon} GWs</div></div>
-      <div class="stat-card"><div class="label">Total Gain</div><div class="value">${data.plan.length ? data.plan[data.plan.length-1].cumulative_gain : 0}</div></div>
-    `;
-    $('multigw-body').innerHTML = data.plan.map(gw => {
-      const out = gw.transfer_out ? `<span class="out">${gw.transfer_out.name}</span> <span style="color:var(--text-muted)">(${gw.transfer_out.position_name})</span>` : '<span style="color:#555">— Hold —</span>';
-      const inn = gw.transfer_in ? `<span class="in">${gw.transfer_in.name}</span> <span style="color:var(--text-muted)">(${gw.transfer_in.position_name})</span>` : '—';
-      const hitColor = gw.hit_cost > 0 ? 'color:var(--danger)' : '';
-      return `<tr>
-        <td><strong>GW${gw.gameweek}</strong></td>
-        <td>${gw.free_transfers}</td>
-        <td>${out}</td><td>${inn}</td>
-        <td class="right score">${gw.expected_points_gain > 0 ? '+' : ''}${gw.expected_points_gain}</td>
-        <td class="right" style="${hitColor}">${gw.hit_cost ? '-' + gw.hit_cost : '0'}</td>
-        <td class="right" style="font-weight:600">${gw.cumulative_gain > 0 ? '+' : ''}${gw.cumulative_gain}</td>
-      </tr>`;
-    }).join('');
-    applyCardLabels($('multigw-body').closest('table'));
+    MultiGwState.data = data;
+    renderMultiGwProfiles();
     content.style.display = '';
   } catch(e) { err.innerHTML = `<div class="error-msg">${e.message}</div>`; }
   finally { loader.classList.remove('active'); }
+}
+
+function selectMultiGwProfile(profile) {
+  MultiGwState.activeProfile = profile;
+  renderMultiGwProfiles();
+}
+
+function renderMultiGwProfiles() {
+  const data = MultiGwState.data;
+  if (!data) return;
+  const isNo = currentLocale === 'no';
+  const plans = data.plans || {
+    balanced: { plan: data.plan, summary: { transfers: 0, hits: 0, xpts_gain_total: 0 }, profile: 'balanced' }
+  };
+
+  const META = {
+    safe:       { label: isNo?'Trygg':'Safe',           sub: isNo?'Ingen hits, høy terskel':'No hits, high threshold',     color: 'var(--ok)' },
+    balanced:   { label: isNo?'Balansert':'Balanced',   sub: isNo?'Standard — anbefalt':'Default — recommended',           color: 'var(--brand-primary)' },
+    aggressive: { label: isNo?'Aggressiv':'Aggressive', sub: isNo?'Tar -4 hits når lønnsomt':'Takes -4 hits when worth it', color: 'var(--warn)' },
+  };
+
+  // Profile selector cards (top of multigw-content)
+  const profileCards = ['safe', 'balanced', 'aggressive'].map(key => {
+    const p = plans[key];
+    if (!p) return '';
+    const m = META[key];
+    const s = p.summary || {};
+    const isActive = MultiGwState.activeProfile === key;
+    const totalGain = (s.xpts_gain_total || 0).toFixed(1);
+    return `<div onclick="selectMultiGwProfile('${key}')" style="
+        flex:1;min-width:200px;cursor:pointer;
+        background:var(--bg-canvas);
+        border:2px solid ${isActive ? m.color : 'var(--border-default)'};
+        border-radius:var(--r-md);padding:var(--sp-3);
+        transition:all 0.15s;
+        ${isActive ? `box-shadow:0 0 0 4px ${m.color}22;` : ''}
+      ">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.4rem;">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;color:${m.color};">${isActive?'● ':'○ '}${m.label}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">${m.sub}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--text-strong);">${totalGain > 0 ? '+' : ''}${totalGain}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">${isNo?'forventet':'expected'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.8rem;font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;border-top:1px solid var(--border-subtle);padding-top:0.5rem;">
+        <span>${s.transfers || 0} ${isNo?'bytte':'transfer'}${s.transfers===1?'':'r'}</span>
+        <span>${s.hits ? `<span style="color:var(--danger)">-${s.hits} pts hit</span>` : (isNo?'Ingen hits':'No hits')}</span>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  // Active plan detail
+  const active = plans[MultiGwState.activeProfile] || plans.balanced;
+  const planList = (active && active.plan) || [];
+  const totalGain = planList.length ? planList[planList.length - 1].cumulative_gain : 0;
+
+  $('multigw-summary').innerHTML = `
+    <div style="display:flex;gap:0.8rem;flex-wrap:wrap;width:100%;margin-bottom:1rem;">
+      ${profileCards}
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <div class="stat-card"><div class="label">Bank</div><div class="value">${data.bank}M</div></div>
+      <div class="stat-card"><div class="label">Horizon</div><div class="value">${data.horizon} GWs</div></div>
+      <div class="stat-card"><div class="label">${isNo?'Total gevinst':'Total Gain'}</div><div class="value" style="color:${totalGain >= 0 ? 'var(--ok)' : 'var(--danger)'}">${totalGain > 0 ? '+' : ''}${totalGain}</div></div>
+    </div>`;
+
+  $('multigw-body').innerHTML = planList.map(gw => {
+    const out = gw.transfer_out ? `<span class="out">${gw.transfer_out.name}</span> <span style="color:var(--text-muted)">(${gw.transfer_out.position_name})</span>` : `<span style="color:#555">— ${isNo?'Hold':'Hold'} —</span>`;
+    const inn = gw.transfer_in ? `<span class="in">${gw.transfer_in.name}</span> <span style="color:var(--text-muted)">(${gw.transfer_in.position_name})</span>` : '—';
+    const hitColor = gw.hit_cost > 0 ? 'color:var(--danger)' : '';
+    return `<tr>
+      <td><strong>GW${gw.gameweek}</strong></td>
+      <td>${gw.free_transfers}</td>
+      <td>${out}</td><td>${inn}</td>
+      <td class="right score">${gw.expected_points_gain > 0 ? '+' : ''}${gw.expected_points_gain}</td>
+      <td class="right" style="${hitColor}">${gw.hit_cost ? '-' + gw.hit_cost : '0'}</td>
+      <td class="right" style="font-weight:600">${gw.cumulative_gain > 0 ? '+' : ''}${gw.cumulative_gain}</td>
+    </tr>`;
+  }).join('');
+  const tbl = $('multigw-body').closest('table');
+  if (tbl && typeof applyCardLabels === 'function') applyCardLabels(tbl);
 }
 
 // ==================== #3 CHIP STRATEGY ====================

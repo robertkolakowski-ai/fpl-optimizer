@@ -25,11 +25,32 @@ def plan_transfers(
     bank: float,
     horizon: int = 6,
     free_transfers: int = 1,
+    risk_profile: str = "balanced",
 ) -> list[dict]:
     """Plan transfers across multiple gameweeks using greedy approach.
 
+    Args:
+        risk_profile: "safe" | "balanced" | "aggressive"
+            - safe:       never take a hit (forces hold when ft = 0). Higher
+                          threshold (1.5 xPts) for taking even free transfers.
+            - balanced:   default behavior — 0.5 xPts threshold, accepts hits
+                          when net gain is positive.
+            - aggressive: accepts hits eagerly (-4 ok if gain > 1.0). Lower
+                          threshold (0.2 xPts) for free transfers.
+
     Returns a list of dicts, one per GW in the horizon.
     """
+    if risk_profile == "safe":
+        free_threshold = 1.5
+        allow_hits = False
+    elif risk_profile == "aggressive":
+        free_threshold = 0.2
+        allow_hits = True
+        hit_threshold_extra = 1.0  # net gain after -4 hit must still beat this
+    else:  # balanced
+        free_threshold = 0.5
+        allow_hits = True
+        hit_threshold_extra = 0.5
     current_squad_ids = [p.id for p in squad_players]
     current_bank = bank
     ft = free_transfers
@@ -95,9 +116,18 @@ def plan_transfers(
                     best_out_id = out_id
                     best_in_id = candidate.id
 
-        # Decide: make transfer or hold
+        # Decide: make transfer or hold — risk-profile-aware
         hit_cost = 0 if ft > 0 else POINTS_PER_HIT
-        net_gain = best_gain - hit_cost if best_out_id else 0
+        # Safe profile: never take a hit, regardless of gain
+        if hit_cost > 0 and not allow_hits:
+            net_gain = 0
+            best_out_id = None
+            best_in_id = None
+        else:
+            net_gain = best_gain - hit_cost if best_out_id else 0
+
+        # Threshold: free transfers vs. hit-taking decisions
+        threshold = free_threshold if hit_cost == 0 else hit_threshold_extra
 
         gw_plan: dict = {
             "gameweek": gw_id,
@@ -106,7 +136,7 @@ def plan_transfers(
             "squad_xpts": round(squad_xpts, 2),
         }
 
-        if net_gain > 0.5 and best_out_id and best_in_id:
+        if net_gain > threshold and best_out_id and best_in_id:
             out_p = player_map.get(best_out_id)
             in_p = player_map.get(best_in_id)
             gw_plan["transfer_out"] = {

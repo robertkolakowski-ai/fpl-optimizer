@@ -39,6 +39,25 @@ Vurderes slettet permanent etter 60-90 dager hvis ingen savner det.
 
 ## Levert (mai 2026)
 
+### 4 ideer plukket fra ekstern redesign-vurdering ✓
+- **Plain-norsk toggle:** Innstillinger → "Plain norsk i stat-labels". Erstatter
+  forkortelser (xG, xA, xGI, FDR, ICT, BPS, EO, PPG, Form, Own%, Proj Min,
+  Total Pts, Influence, Creativity, Threat) med klare norske begreper i
+  spiller-modal, sammenligning og advanced tab. Forkortelse beholdes i parentes.
+- **Honesty-modul UI:** `renderModelAccuracy` i Arkiv kobler nå til
+  `/api/predictions/hit-rate`. Viser ekte tall (captain ø·snitt, transfer-vinnere %,
+  1X2-treff, O2.5/BTTS) når GW-er er ferdige. Honest empty-state inntil
+  første GW har data.
+- **Onboarding Team ID-veiledning:** Expandable "Vis meg hvordan, steg for steg"
+  under Team ID-input. 4 numererte kort med browser-mockup som viser hvor i
+  URL-en (`/entry/<b>1234567</b>/event/29`) ID-en ligger. NO + EN.
+- **Plan A vs Plan B vs Plan C i Multi-GW:** `plan_transfers()` parametriseres
+  med `risk_profile` (safe / balanced / aggressive). `/api/multi-gw/<id>`
+  returnerer alle tre i én respons. Frontend viser tre cards med
+  total xPts-gevinst, antall bytter og hit-cost — bruker velger profil.
+
+
+
 ### Spiller-modal (full) ✓
 ep_next-projeksjon (FPL offisiell) + egen modell, set-piece-badges (PK/FK/Hjørne
 med ordre), rotasjons-badge ved >40% risiko, ny Advanced tab med per-90/ICT/BPS/risk.
