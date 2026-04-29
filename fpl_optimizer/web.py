@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
@@ -22,6 +23,7 @@ from .models import Player, Squad
 from .optimizer import select_squad
 from .football_data import get_fd_team_id, get_match_referee, get_referee_data, get_team_stats, fetch_season_matches
 from .predictions import generate_predictions, predict_cards, predict_corners, predict_shots, get_player_card_risks, predict_other_markets
+from . import predictions_log
 from .transfers import suggest_transfers
 
 app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
@@ -84,61 +86,34 @@ def _resolve_fd_team_id(fpl_team_id: int) -> int | None:
     return get_fd_team_id(team.code)
 
 
-# Prediction Tracker (in-memory)
-_prediction_history: list[dict] = []
-
+# Prediction Tracker — persisted via predictions_log module.
+# The legacy in-memory list is kept as a thin wrapper around the persistent store
+# so any old code paths that read it still work. New code should call
+# predictions_log.* directly.
 
 def _store_predictions(gw: int, predictions: list) -> None:
-    """Store predictions for accuracy tracking."""
-    # Avoid duplicates
-    existing_gws = {p["gameweek"] for p in _prediction_history}
-    if gw in existing_gws:
-        return
-    for pred in predictions:
-        _prediction_history.append({
-            "gameweek": gw,
-            "fixture_id": pred.fixture_id,
-            "home_team": pred.home_team_short,
-            "away_team": pred.away_team_short,
-            "home_xg": pred.home_xg,
-            "away_xg": pred.away_xg,
-            "predicted_1x2": "1" if pred.home_win_prob > max(pred.draw_prob, pred.away_win_prob)
-                            else "X" if pred.draw_prob > pred.away_win_prob else "2",
-            "home_win_prob": pred.home_win_prob,
-            "draw_prob": pred.draw_prob,
-            "away_win_prob": pred.away_win_prob,
-            "predicted_over_25": pred.over_25 > 0.5,
-            "over_25_prob": pred.over_25,
-            "predicted_btts": pred.btts_yes > 0.5,
-            "btts_prob": pred.btts_yes,
-            "actual_home_score": None,
-            "actual_away_score": None,
-            "actual_1x2": None,
-            "actual_over_25": None,
-            "actual_btts": None,
-        })
+    """Store fixture predictions persistently for accuracy tracking."""
+    predictions_log.record_fixture_predictions(gw, predictions)
 
 
 def _update_actuals() -> None:
-    """Check finished fixtures and fill in actual results."""
+    """Check finished fixtures and fill in actual results (persistent)."""
     _, _, _, fixtures = _get_cached_data()
     fixture_map = {f.id: f for f in fixtures}
-    for entry in _prediction_history:
-        if entry["actual_1x2"] is not None:
-            continue
-        f = fixture_map.get(entry["fixture_id"])
-        if not f or not f.finished or f.home_score is None:
-            continue
-        entry["actual_home_score"] = f.home_score
-        entry["actual_away_score"] = f.away_score
-        if f.home_score > f.away_score:
-            entry["actual_1x2"] = "1"
-        elif f.home_score == f.away_score:
-            entry["actual_1x2"] = "X"
-        else:
-            entry["actual_1x2"] = "2"
-        entry["actual_over_25"] = (f.home_score + f.away_score) > 2.5
-        entry["actual_btts"] = f.home_score > 0 and f.away_score > 0
+    predictions_log.update_fixture_actuals(fixture_map)
+
+
+# Back-compat shim: any reads of _prediction_history pull from the persistent store.
+class _PredictionHistoryProxy(list):
+    def __iter__(self):
+        return iter(predictions_log.get_state().get("fixtures", []))
+    def __len__(self):
+        return len(predictions_log.get_state().get("fixtures", []))
+    def __getitem__(self, i):
+        return predictions_log.get_state().get("fixtures", [])[i]
+
+
+_prediction_history = _PredictionHistoryProxy()
 
 
 def _compute_tracker_accuracy() -> dict:
@@ -624,6 +599,65 @@ def api_user(user_id):
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/users/history")
+def api_users_history():
+    """Batch fetch season_history for multiple FPL user IDs in parallel.
+
+    Query params:
+      ids=12345,67890,...  (comma-separated FPL entry IDs, max 10)
+
+    Returns: {"users": {"12345": {"season_history": [...]}}, "errors": {...}}
+
+    Used by the Liga line-chart to avoid 5 parallel HTTP roundtrips from the
+    browser. Server-side parallelism via ThreadPoolExecutor cuts wall-clock
+    time to ~1× FPL API latency instead of N×.
+    """
+    raw = request.args.get("ids", "").strip()
+    if not raw:
+        return jsonify({"error": "Missing ids"}), 400
+    try:
+        ids = [int(x) for x in raw.split(",") if x.strip()][:10]
+    except ValueError:
+        return jsonify({"error": "Invalid ids"}), 400
+    if not ids:
+        return jsonify({"users": {}, "errors": {}})
+
+    out: dict[str, dict] = {}
+    errs: dict[str, str] = {}
+
+    def _fetch_one(uid: int):
+        if uid == DEMO_USER_ID:
+            return uid, {
+                "season_history": [
+                    {"gw": i, "points": 40 + (i * 3) + (i % 3) * 8, "rank": 300000 - i * 5000}
+                    for i in range(1, 11)
+                ],
+            }, None
+        try:
+            with httpx.Client(timeout=15) as client:
+                history = fetch_entry_history(client, uid)
+            gw_history = history.get("current", [])
+            season_history = [
+                {"gw": h.get("event", 0), "points": h.get("points", 0), "rank": h.get("overall_rank", 0)}
+                for h in gw_history
+            ]
+            return uid, {"season_history": season_history}, None
+        except httpx.HTTPStatusError as e:
+            return uid, None, ("not_found" if e.response.status_code == 404 else f"http_{e.response.status_code}")
+        except Exception as e:
+            return uid, None, str(e)[:80]
+
+    # Parallel fan-out — capped at len(ids) to avoid spawning unused threads
+    with ThreadPoolExecutor(max_workers=min(len(ids), 8)) as pool:
+        for uid, payload, err in pool.map(_fetch_one, ids):
+            if err:
+                errs[str(uid)] = err
+            elif payload is not None:
+                out[str(uid)] = payload
+
+    return jsonify({"users": out, "errors": errs})
 
 
 @app.route("/api/league/<int:league_id>")
@@ -2797,6 +2831,138 @@ def api_prediction_tracker():
     try:
         accuracy = _compute_tracker_accuracy()
         return jsonify(accuracy)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/hit-rate")
+def api_predictions_hit_rate():
+    """Aggregated hit-rate across persisted predictions (fixtures + FPL recs)."""
+    try:
+        # Refresh actuals first so the hit rate reflects latest finished GWs
+        try:
+            _update_actuals()
+        except Exception:
+            pass
+        return jsonify(predictions_log.compute_hit_rate())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/log")
+def api_predictions_log():
+    """Full persisted log — fixtures + FPL recommendations.
+
+    Used by the GH Actions cron to checkpoint state to the repo, and by the
+    Arkiv view to render per-GW history.
+    """
+    try:
+        return jsonify(predictions_log.get_state())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/snapshot", methods=["POST"])
+def api_predictions_snapshot():
+    """Snapshot the model's current FPL recommendations for a given GW.
+
+    Intended to be called once per GW at deadline-time (manually or via cron).
+    Captures: optimal squad's captain, top transfer suggestion, and a
+    differential pick. After the GW finishes, ``/api/predictions/refresh-actuals``
+    fills in real points so we can compute hit rate.
+
+    Body (JSON, all optional):
+        {"gw": 30, "user_id": 12345}
+
+    If user_id is omitted, snapshots use a fresh optimal squad as the proxy
+    for the model's recommendation (no user team needed).
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+
+        gw = data.get("gw")
+        if not gw:
+            current_gw = next((g for g in gameweeks if g.is_next), None) or next((g for g in gameweeks if g.is_current), None)
+            if not current_gw:
+                return jsonify({"error": "No active GW"}), 400
+            gw = current_gw.id
+
+        # Optimal squad → captain = highest expected_points among starting XI
+        squad = select_squad(players)
+        starting = sorted(squad.starting, key=lambda p: -p.expected_points if hasattr(p, "expected_points") else -p.composite_score)
+        captain = starting[0] if starting else None
+
+        # Differential pick: highest scoring player with <10% ownership in optimal squad
+        diff = next((p for p in starting if (p.selected_by_percent or 0) < 10), None)
+
+        # Top transfer for a logged-in user (if provided)
+        top_transfer = None
+        user_id = data.get("user_id")
+        if user_id:
+            try:
+                user_players, _bank = load_user_team(int(user_id), players, gameweeks)
+                from .transfers import suggest_transfers as _st
+                suggestions = _st(user_players, players, max_transfers=1)
+                if suggestions:
+                    s = suggestions[0]
+                    top_transfer = {
+                        "out_id": s.player_out.id,
+                        "out_name": s.player_out.name,
+                        "in_id": s.player_in.id,
+                        "in_name": s.player_in.name,
+                        "delta_xpts": round(getattr(s, "score_gain", 0.0), 2),
+                    }
+            except Exception:
+                pass
+
+        from datetime import datetime, timezone
+        predictions_log.record_fpl_recommendation(
+            gw=gw,
+            captain_id=captain.id if captain else None,
+            captain_name=captain.name if captain else None,
+            captain_expected=round(getattr(captain, "expected_points", captain.composite_score) if captain else 0, 2),
+            top_transfer=top_transfer,
+            optimal_squad_ids=[p.id for p in squad.players],
+            differential_pick_id=diff.id if diff else None,
+            differential_pick_name=diff.name if diff else None,
+            snapshot_at=datetime.now(timezone.utc).isoformat(),
+        )
+        return jsonify({"ok": True, "gw": gw, "captain": captain.name if captain else None})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/predictions/refresh-actuals", methods=["POST"])
+def api_predictions_refresh_actuals():
+    """Pull live/finished GW data and fill in actual points for all logged GWs."""
+    try:
+        # Update fixture actuals
+        _update_actuals()
+
+        # Update FPL recommendation actuals
+        players, _teams, gameweeks, _fixtures = _get_cached_data()
+        finished_gws = [g.id for g in gameweeks if g.finished]
+        total_updates = 0
+        for gw in finished_gws:
+            try:
+                live = fetch_live_gameweek(httpx.Client(timeout=15), gw) if False else None
+            except Exception:
+                live = None
+            # Use httpx properly
+            try:
+                with httpx.Client(timeout=15) as client:
+                    live = fetch_live_gameweek(client, gw)
+            except Exception:
+                continue
+            elements = (live or {}).get("elements", []) if live else []
+            actuals = {e["id"]: (e.get("stats") or {}).get("total_points", 0) for e in elements}
+            if predictions_log.update_fpl_actuals(gw, actuals):
+                total_updates += 1
+        return jsonify({"ok": True, "gws_updated": total_updates})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

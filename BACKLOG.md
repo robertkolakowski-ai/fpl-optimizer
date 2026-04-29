@@ -7,37 +7,66 @@ Hver feature måles mot: *gjør den brukerens FPL-rang bedre, eller gjør den ik
 
 ## Park / Deferred
 
-### Hosting & domene
-Flytt fra Render free → en plattform som er alltid på, tilgjengelig på `fpl.kolakowski.no`.
-Beslutning om plattform tas senere (Render Starter / Fly.io / Railway / annet).
-Ikke blokkerende for redesign — alle kodeendringer fungerer uavhengig.
+### Hosting & domene — KLAR FOR AKTIVERING
+Status: kode + cron-workflow er på plass. Gjenstår beslutning + DNS.
+Anbefalt sti: Render Starter ($7/mnd, ingen cold-start) + custom domain
+`fpl.kolakowski.no`.
 
-### Spiller-modal (full)
-Konseptbrief Del 4.7. Klikk på en spiller hvor som helst → modal/full-screen
-med projeksjon-graf, set pieces, rotasjonsrisiko, sammenligning, Advanced tab
-med Opta-stats. I dag finnes bare en search-side. Ikke startet.
+Steg for aktivering:
+1. Render dashboard → tjenesten → Settings → Instance Type → **Starter**
+2. Settings → Custom Domains → legg til `fpl.kolakowski.no` → Render gir
+   en CNAME-verdi
+3. DNS hos kolakowski.no-registrar: CNAME `fpl` → den onrender.com-verdien
+4. GitHub repo → Settings → Secrets → Actions → ny secret `APP_URL` =
+   `https://fpl.kolakowski.no` (kreves for predictions-snapshot cron)
+5. Verifisering: `curl -X POST https://fpl.kolakowski.no/api/predictions/snapshot`
+   skal returnere `{"ok": true, ...}`
 
-### Real predictions log
-Persistere modellanbefalinger per GW for ekte hit-rate i Arkiv. Krever
-DB eller fil-skriving for å bygge troverdig "Hadde modellen rett?"-loop.
-Inntil dette finnes er Arkiv-statistikk merket som heuristikk.
+Alternativ: Fly.io Hobby (krever Dockerfile + Fly CLI) eller bli på Render
+Free (cold start på første besøk).
 
 ### Web Push (server-side)
 Send faktisk varsel mandag morgen via cron + Push-API. Bare opt-in-flow
 finnes nå (browser-permission, lokal flag). Trenger backend-job.
+Når GH Actions-cron er på plass for predictions, kan samme mekanisme
+gjenbrukes til å pinge Push-API.
 
-### Sammenligning hvor som helst
-Generell "sammenlign to spillere"-mekanisme tilgjengelig fra Hjem og Plan,
-ikke bare Kaptein. Konseptbrief Del 03 bullet 19.
+### Bet Builder / Match Centre / Prediction Tracker / Draft
+Skjult bak feature flags i Innstillinger. Kode beholdt for reversibilitet.
+Vurderes slettet permanent etter 60-90 dager hvis ingen savner det.
 
-### Touch drag-and-drop på Plan-pitch
-Mobil-versjon. HTML5 drag-events fungerer ikke godt på touch — trenger
-egne touchstart/touchmove/touchend-handlers. (G3 dekker minimum mobil-
-versjon, men full drag-drop er parkert.)
+---
 
-### Liga line-chart caching
-Trend-chart fetcher 5 brukere parallelt fra `/api/user/<id>` per visning.
-Treg + ikke cachet. Trenger localStorage TTL (10 min) + bedre batch-API.
+## Levert (mai 2026)
+
+### Spiller-modal (full) ✓
+ep_next-projeksjon (FPL offisiell) + egen modell, set-piece-badges (PK/FK/Hjørne
+med ordre), rotasjons-badge ved >40% risiko, ny Advanced tab med per-90/ICT/BPS/risk.
+Tilgjengelig overalt openPlayerModal() kalles fra (Hjem, Plan, søk).
+
+### Sammenligning hvor som helst ✓
+`openCompareModal(idA, idB?)` — universell compare-modal med søke-picker for
+motstander hvis bare én spiller er gitt. ⇄-knapp i spiller-modal gir
+launchpoint fra alle eksisterende klikkflater.
+
+### Touch drag-and-drop på Plan-pitch ✓
+Long-press (250ms) → drag-modus med haptic feedback. `elementFromPoint`
+detekterer drop-target under finger, samme-posisjon-validering, snap-back
+ved ugyldig drop. Tap-tap-fallback bevart for tilgjengelighet.
+
+### Liga line-chart caching ✓
+localStorage TTL 10 min + nytt server-side batch-endepunkt
+`/api/users/history?ids=...` med ThreadPoolExecutor. Reduserer 5 sekvensielle
+HTTP-roundtrips til 1 og kutter wall-clock til ~1× FPL API-latency.
+
+### Real predictions log ✓
+Ny `predictions_log.py` med disk-persistering (atomic write via temp+rename).
+Tracker både fixture-prediksjoner (1X2/O2.5/BTTS) og FPL-anbefalinger
+(captain, top transfer, differential). Endepunkter:
+`/api/predictions/{hit-rate, log, snapshot, refresh-actuals}`.
+GH Actions cron (`predictions-snapshot.yml`) committer JSON tilbake til repo
+fredag 17:00 UTC (snapshot) og tirsdag 00:30 UTC (actuals) — gratis
+persistens på Render free.
 
 ### Bet Builder / Match Centre / Prediction Tracker / Draft
 Skjult bak feature flags i Innstillinger. Kode beholdt for reversibilitet.

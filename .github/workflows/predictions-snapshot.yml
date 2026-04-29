@@ -1,0 +1,60 @@
+name: Predictions snapshot
+# Free persistence layer for the predictions log on Render free plan:
+# - Tuesday 00:30 UTC: refresh actuals (last GW finished by Mon evening)
+# - Friday 17:00 UTC : snapshot model recommendations before the typical
+#                       Saturday 11:30 UTC deadline
+# - Commits the resulting JSON back to the repo so data survives Render redeploys.
+
+on:
+  schedule:
+    - cron: '30 0 * * 2'   # Tue 00:30 UTC — pull actuals for the just-finished GW
+    - cron: '0 17 * * 5'   # Fri 17:00 UTC — snapshot upcoming-GW recommendations
+  workflow_dispatch:        # also runnable on demand from the Actions tab
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine action from schedule
+        id: action
+        run: |
+          if [ "${{ github.event.schedule }}" = "30 0 * * 2" ]; then
+            echo "kind=refresh" >> "$GITHUB_OUTPUT"
+          else
+            echo "kind=snapshot" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Hit production endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}   # e.g. https://fpl.kolakowski.no
+        run: |
+          set -e
+          if [ -z "$APP_URL" ]; then
+            echo "::error::APP_URL secret not set — configure repo secret to enable snapshot"
+            exit 1
+          fi
+          if [ "${{ steps.action.outputs.kind }}" = "refresh" ]; then
+            curl -fsS -X POST "$APP_URL/api/predictions/refresh-actuals" -H 'Content-Type: application/json' -d '{}'
+          else
+            curl -fsS -X POST "$APP_URL/api/predictions/snapshot" -H 'Content-Type: application/json' -d '{}'
+          fi
+          echo
+          # Pull the full log to commit
+          mkdir -p data
+          curl -fsS "$APP_URL/api/predictions/log" -o data/predictions_log.json
+
+      - name: Commit updated log
+        run: |
+          if git diff --quiet data/predictions_log.json 2>/dev/null; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "fpl-bot"
+          git config user.email "fpl-bot@users.noreply.github.com"
+          git add data/predictions_log.json
+          git commit -m "chore(predictions): ${{ steps.action.outputs.kind }} $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push

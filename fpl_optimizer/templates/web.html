@@ -4940,30 +4940,128 @@ function attachDragHandlers() {
       }
     });
 
-    // Touch: long-press a tile to "select", tap another same-position tile to swap.
+    // Touch drag-and-drop: long-press to start, drag to a same-position tile, release to swap.
+    // Falls back to tap-tap-select on short tap (kept for accessibility).
     let touchTimer = null;
+    let touchDragging = false;
+    let touchStartX = 0, touchStartY = 0;
+    let touchOffsetX = 0, touchOffsetY = 0;
+    let lastDropTarget = null;
+    let touchMoved = false;
+
+    const clearDropTargets = () => document.querySelectorAll('#plan-pitch .pp-tile.drop-target').forEach(t => t.classList.remove('drop-target'));
+    const startTouchDrag = (touch) => {
+      touchDragging = true;
+      tile.classList.add('dragging');
+      // Visual lift: position fixed under finger, follow with translate3d (cheap)
+      const rect = tile.getBoundingClientRect();
+      touchOffsetX = touch.clientX - rect.left;
+      touchOffsetY = touch.clientY - rect.top;
+      tile.style.position = 'fixed';
+      tile.style.left = rect.left + 'px';
+      tile.style.top = rect.top + 'px';
+      tile.style.width = rect.width + 'px';
+      tile.style.zIndex = '1000';
+      tile.style.pointerEvents = 'none';
+      tile.style.opacity = '0.85';
+      tile.style.transform = 'scale(1.08)';
+      tile.style.transition = 'transform 0.1s';
+      try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
+    };
+    const endTouchDrag = (didSwap) => {
+      tile.classList.remove('dragging');
+      tile.style.position = '';
+      tile.style.left = '';
+      tile.style.top = '';
+      tile.style.width = '';
+      tile.style.zIndex = '';
+      tile.style.pointerEvents = '';
+      tile.style.opacity = '';
+      tile.style.transform = '';
+      tile.style.transition = '';
+      touchDragging = false;
+      lastDropTarget = null;
+      clearDropTargets();
+    };
+
     tile.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      touchStartX = t.clientX; touchStartY = t.clientY;
+      touchMoved = false;
+      // Long-press → drag mode
       touchTimer = setTimeout(() => {
-        if (selectedTouchId === parseInt(tile.dataset.id)) {
-          selectedTouchId = null;
-          tile.classList.remove('drop-target');
-        } else {
-          if (selectedTouchId) {
-            // Second selection — attempt swap
-            const a = PlanState.picks.find(p => p.element === selectedTouchId);
-            const b = PlanState.picks.find(p => p.element === parseInt(tile.dataset.id));
-            if (a && b && a.position === b.position) swapSlots(selectedTouchId, b.element);
-            selectedTouchId = null;
-            document.querySelectorAll('#plan-pitch .pp-tile').forEach(t => t.classList.remove('drop-target'));
-          } else {
-            selectedTouchId = parseInt(tile.dataset.id);
-            tile.classList.add('drop-target');
+        touchTimer = null;
+        if (!touchMoved) startTouchDrag(t);
+      }, 250);
+    }, { passive: true });
+
+    tile.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      // Cancel long-press if user starts scrolling before drag activates
+      if (!touchDragging && Math.hypot(dx, dy) > 8) {
+        touchMoved = true;
+        if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+        return;
+      }
+      if (!touchDragging) return;
+      e.preventDefault(); // suppress page scroll during drag
+      // Move tile with finger
+      tile.style.left = (t.clientX - touchOffsetX) + 'px';
+      tile.style.top = (t.clientY - touchOffsetY) + 'px';
+      // Detect element under finger (pointerEvents:none on tile makes elementFromPoint skip it)
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      const target = el && el.closest && el.closest('#plan-pitch .pp-tile');
+      if (target !== lastDropTarget) {
+        clearDropTargets();
+        lastDropTarget = null;
+        if (target && target !== tile) {
+          const dragged = PlanState.picks.find(p => p.element === parseInt(tile.dataset.id));
+          const tgt = PlanState.picks.find(p => p.element === parseInt(target.dataset.id));
+          if (dragged && tgt && dragged.position === tgt.position) {
+            target.classList.add('drop-target');
+            lastDropTarget = target;
           }
         }
-      }, 350);
-    }, { passive: true });
-    tile.addEventListener('touchmove', () => { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } }, { passive: true });
-    tile.addEventListener('touchend', () => { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } });
+      }
+    }, { passive: false });
+
+    tile.addEventListener('touchend', (e) => {
+      if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+      if (!touchDragging) {
+        // Short tap fallback: tap-to-select swap behaviour (keeps accessibility)
+        if (touchMoved) return; // was scrolling, ignore
+        const id = parseInt(tile.dataset.id);
+        if (selectedTouchId && selectedTouchId !== id) {
+          const a = PlanState.picks.find(p => p.element === selectedTouchId);
+          const b = PlanState.picks.find(p => p.element === id);
+          if (a && b && a.position === b.position) swapSlots(selectedTouchId, id);
+          selectedTouchId = null;
+          clearDropTargets();
+        } else if (!selectedTouchId) {
+          // Let onclick handle it (opens explain panel) — don't intercept short tap
+        }
+        return;
+      }
+      // Drag end: attempt swap with last valid drop target
+      const targetEl = lastDropTarget;
+      if (targetEl) {
+        const draggedId = parseInt(tile.dataset.id);
+        const targetId = parseInt(targetEl.dataset.id);
+        endTouchDrag(true);
+        if (draggedId !== targetId) swapSlots(draggedId, targetId);
+      } else {
+        endTouchDrag(false);
+      }
+    });
+
+    tile.addEventListener('touchcancel', () => {
+      if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+      if (touchDragging) endTouchDrag(false);
+    });
   });
 }
 
@@ -5530,27 +5628,39 @@ async function renderLigaTrendChart() {
   const top = LigaState.standings.slice(0, 4);
   const idsToFetch = top.map(s => s.entry).filter(Boolean);
   if (!idsToFetch.includes(AppState.userId)) idsToFetch.push(AppState.userId);
-  // 10-min localStorage TTL cache to avoid refetching 5 rivals on every visit
+  // 10-min localStorage TTL cache + server-side batch fan-out for cache misses.
+  // Cache stores just season_history (lighter than full /api/user payload).
   const cacheKey = 'fpl_liga_history_';
   const TTL = 10 * 60 * 1000;
-  const all = await Promise.all(idsToFetch.map(async id => {
+  const histories = {};
+  const missing = [];
+  idsToFetch.forEach(id => {
     try {
       const cached = localStorage.getItem(cacheKey + id);
       if (cached) {
-        const { ts, data } = JSON.parse(cached);
-        if (Date.now() - ts < TTL) return data;
+        const { ts, season_history } = JSON.parse(cached);
+        if (Date.now() - ts < TTL && Array.isArray(season_history)) {
+          histories[id] = season_history;
+          return;
+        }
       }
     } catch (e) { /* ignore parse errors */ }
-    const data = await fetch(`/api/user/${id}`).then(r => r.ok ? r.json() : null).catch(() => null);
-    try {
-      if (data) localStorage.setItem(cacheKey + id, JSON.stringify({ ts: Date.now(), data }));
-    } catch (e) { /* localStorage quota — silent */ }
-    return data;
-  }));
-  const histories = {};
-  all.forEach((d, i) => {
-    if (d && d.season_history) histories[idsToFetch[i]] = d.season_history;
+    missing.push(id);
   });
+  if (missing.length) {
+    try {
+      const resp = await fetch(`/api/users/history?ids=${missing.join(',')}`).then(r => r.ok ? r.json() : null);
+      const users = (resp && resp.users) || {};
+      Object.entries(users).forEach(([id, payload]) => {
+        const sh = payload && payload.season_history;
+        if (Array.isArray(sh)) {
+          histories[id] = sh;
+          try { localStorage.setItem(cacheKey + id, JSON.stringify({ ts: Date.now(), season_history: sh })); }
+          catch (e) { /* quota — silent */ }
+        }
+      });
+    } catch (e) { /* network/server error — chart degrades gracefully below */ }
+  }
   const yourHist = histories[AppState.userId] || [];
   if (!yourHist.length) {
     svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" class="axis-text">${currentLocale==='no'?'Ikke nok data':'Not enough data'}</text>`;
@@ -9998,15 +10108,53 @@ async function openPlayerModal(playerId) {
       </div>`;
     }).join('');
 
+    // Set-piece badges (order=1 primary, 2 secondary, etc.) — sjekker både snake_case og camelCase
+    const setPieces = [];
+    const pkOrder = p.penalties_order || p.penaltiesOrder || 0;
+    const fkOrder = p.direct_freekicks_order || p.directFreekicksOrder || 0;
+    const ckOrder = p.corners_order || p.cornersOrder || 0;
+    const orderLabel = (n) => n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`;
+    const spBadge = (label, n) => n > 0 && n <= 3
+      ? `<span style="background:${n===1?'var(--brand-primary)':'var(--bg-subtle)'};color:${n===1?'var(--text-on-brand)':'var(--text-strong)'};border:1px solid var(--border-default);border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:600;">${label} ${orderLabel(n)}</span>`
+      : '';
+    if (pkOrder) setPieces.push(spBadge(currentLocale==='no'?'PK':'Pen', pkOrder));
+    if (fkOrder) setPieces.push(spBadge('FK', fkOrder));
+    if (ckOrder) setPieces.push(spBadge(currentLocale==='no'?'Hjørne':'Corner', ckOrder));
+    const setPiecesHtml = setPieces.filter(Boolean).join(' ');
+    const rotRisk = bd.rotation_risk || 0;
+    const rotBadge = rotRisk > 0.4
+      ? `<span style="background:rgba(255,82,82,0.15);color:var(--danger);border:1px solid rgba(255,82,82,0.3);border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:600;" title="${currentLocale==='no'?'Forhøyet rotasjonsrisiko':'Elevated rotation risk'}">${currentLocale==='no'?'Rotasjon':'Rotation'} ${Math.round(rotRisk*100)}%</span>`
+      : '';
+
+    // ep_next is FPL's official next-GW projection
+    const epNext = parseFloat(p.ep_next || 0);
+    const epPanel = epNext > 0 ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.8rem;">
+        <div style="background:linear-gradient(135deg,var(--brand-primary)15,transparent);border:1px solid var(--brand-primary);border-radius:8px;padding:0.6rem;text-align:center;">
+          <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${currentLocale==='no'?'Neste GW (FPL)':'Next GW (FPL)'}</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--brand-primary);font-family:var(--font-mono);">${epNext.toFixed(1)}</div>
+        </div>
+        <div style="background:var(--bg-canvas);border:1px solid var(--border-default);border-radius:8px;padding:0.6rem;text-align:center;">
+          <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${currentLocale==='no'?'Egen modell (5 GW)':'Own model (5 GW)'}</div>
+          <div style="font-size:1.4rem;font-weight:700;font-family:var(--font-mono);">${(p.expected_points || p.composite_score || 0).toFixed(1)}</div>
+        </div>
+      </div>` : '';
+
     content.innerHTML = `
       <div class="pm-header">
         <div class="pm-photo">${kit || photoHtml}</div>
-        <div>
+        <div style="flex:1;min-width:0;">
           <div class="pm-name">${p.name}</div>
           <div class="pm-meta">${data.team_name} &middot; ${p.position_name} &middot; ${p.cost.toFixed(1)}M</div>
+          ${(setPiecesHtml || rotBadge) ? `<div style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-top:0.4rem;">${setPiecesHtml}${rotBadge}</div>` : ''}
         </div>
+        <button onclick="openCompareModal(${p.id})" title="${currentLocale==='no'?'Sammenlign med …':'Compare with …'}"
+          style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.35rem 0.65rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;white-space:nowrap;">
+          ⇄ ${currentLocale==='no'?'Sammenlign':'Compare'}
+        </button>
       </div>
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;font-weight:600;">Upcoming Fixtures</div>
+      ${epPanel}
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;font-weight:600;">${currentLocale==='no'?'Kommende kamper':'Upcoming Fixtures'}</div>
       <div class="pm-fixtures">${fixturesHtml || '<span style="color:#555">No fixture data</span>'}</div>
       <div class="pm-stats">
         <div class="pm-stat"><div class="label">Total Pts</div><div class="value score">${p.total_points}</div></div>
@@ -10019,23 +10167,28 @@ async function openPlayerModal(playerId) {
         <div class="pm-stat"><div class="label">Proj Min</div><div class="value">${bd.projected_minutes}</div></div>
       </div>
       ${p.news ? `<div style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:8px;padding:0.4rem 0.6rem;font-size:0.78rem;color:#FFAAAA;margin-bottom:0.8rem;">${p.news}</div>` : ''}
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;font-weight:600;">Score Breakdown</div>
-      <div class="pm-breakdown">${breakdownRows}</div>
       <div style="margin-top:0.8rem;display:flex;gap:0.3rem;flex-wrap:wrap;font-size:0.72rem;">
-        <span style="color:var(--text-muted)">Price change:</span>
+        <span style="color:var(--text-muted)">${currentLocale==='no'?'Prisendring':'Price change'}:</span>
         <span style="color:${p.cost_change_event > 0 ? 'var(--brand-primary)' : p.cost_change_event < 0 ? 'var(--danger)' : 'var(--text-muted)'}">${p.cost_change_event > 0 ? '+' : ''}${(p.cost_change_event / 10).toFixed(1)}M</span>
-        <span style="color:var(--text-muted);margin-left:0.5rem;">Transfers:</span>
+        <span style="color:var(--text-muted);margin-left:0.5rem;">${currentLocale==='no'?'Overganger':'Transfers'}:</span>
         <span class="in">+${p.transfers_in_event.toLocaleString()}</span>
         <span class="out">-${p.transfers_out_event.toLocaleString()}</span>
       </div>
       <div class="pm-tabs" style="margin-top:1rem;">
-        <div class="pm-tab active" onclick="pmSwitchTab(this,'pm-tab-breakdown')">Breakdown</div>
+        <div class="pm-tab active" onclick="pmSwitchTab(this,'pm-tab-breakdown')">${currentLocale==='no'?'Score':'Breakdown'}</div>
         <div class="pm-tab" onclick="pmSwitchTab(this,'pm-tab-form');loadPlayerFormChart(${playerId})">Form</div>
+        <div class="pm-tab" onclick="pmSwitchTab(this,'pm-tab-advanced')">${currentLocale==='no'?'Avansert':'Advanced'}</div>
       </div>
-      <div id="pm-tab-breakdown"></div>
+      <div id="pm-tab-breakdown">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin:0.4rem 0 0.3rem;font-weight:600;">${currentLocale==='no'?'Score-bidrag':'Score Breakdown'}</div>
+        <div class="pm-breakdown">${breakdownRows}</div>
+      </div>
       <div id="pm-tab-form" class="hidden">
         <canvas id="pm-form-canvas" width="420" height="180" style="width:100%;max-width:420px;"></canvas>
         <div id="pm-form-table-wrap" style="max-height:200px;overflow-y:auto;margin-top:0.5rem;"></div>
+      </div>
+      <div id="pm-tab-advanced" class="hidden">
+        ${renderPmAdvancedTab(p)}
       </div>
     `;
   } catch(e) {
@@ -10046,10 +10199,43 @@ async function openPlayerModal(playerId) {
 function pmSwitchTab(el, tabId) {
   el.parentElement.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  ['pm-tab-breakdown','pm-tab-form'].forEach(id => {
+  ['pm-tab-breakdown','pm-tab-form','pm-tab-advanced'].forEach(id => {
     const el2 = $(id);
     if (el2) el2.classList.toggle('hidden', id !== tabId);
   });
+}
+
+// Advanced/Opta tab — surfaces per-90 metrics + ICT components + risk markers
+function renderPmAdvancedTab(p) {
+  const row = (label, value, hint) => `
+    <div style="display:flex;justify-content:space-between;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:0.82rem;">
+      <span style="color:var(--text-muted);font-family:var(--font-body);${hint?'cursor:help;border-bottom:1px dotted var(--text-faint);" title="'+hint:''}">${label}</span>
+      <span style="color:var(--text-strong);font-weight:600;">${value}</span>
+    </div>`;
+  const fmt = (v, dp=2) => (v == null || v === '' || isNaN(parseFloat(v))) ? '—' : parseFloat(v).toFixed(dp);
+  const sec = (title, body) => `<div style="margin-top:0.6rem;"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;font-weight:600;">${title}</div>${body}</div>`;
+
+  const per90 = sec(currentLocale==='no'?'Per 90 minutter':'Per 90 minutes',
+    row('xG', fmt(p.xG_per90), 'Expected Goals per 90 min — sjansekvalitet')
+    + row('xA', fmt(p.xA_per90), 'Expected Assists per 90 min — kvalitet på målgivende pasninger')
+    + row('xGI', fmt(p.xGI_per90), 'Expected Goal Involvements per 90 — xG + xA')
+    + row('xGC', fmt(p.xGC_per90), 'Expected Goals Conceded per 90 (kun GK/DEF)')
+  );
+  const ict = sec('ICT Index',
+    row('Influence', fmt(p.influence, 1))
+    + row('Creativity', fmt(p.creativity, 1))
+    + row('Threat', fmt(p.threat, 1))
+    + row('ICT Total', fmt(p.ict_index, 1))
+  );
+  const bps = sec('BPS / Risk',
+    row('BPS', p.bps != null ? p.bps : '—')
+    + row(currentLocale==='no'?'Starter (sesongen)':'Starts (season)', p.starts != null ? p.starts : '—')
+    + row(currentLocale==='no'?'Gule kort':'Yellow cards', p.yellow_cards != null ? p.yellow_cards : '—')
+    + row(currentLocale==='no'?'Røde kort':'Red cards', p.red_cards != null ? p.red_cards : '—')
+    + (p.position === 1 ? row(currentLocale==='no'?'Redninger':'Saves', p.saves != null ? p.saves : '—') : '')
+    + (p.position === 1 ? row(currentLocale==='no'?'Straffer reddet':'Penalties saved', p.penalties_saved || 0) : row(currentLocale==='no'?'Straffer bommet':'Penalties missed', p.penalties_missed || 0))
+  );
+  return per90 + ict + bps;
 }
 
 async function loadPlayerFormChart(playerId) {
@@ -10167,7 +10353,134 @@ function closePlayerModal() {
   $('player-modal-overlay').classList.add('hidden');
   $('player-modal-content').innerHTML = '';
 }
+
+// ==================== UNIVERSAL COMPARE MODAL ====================
+// Reuses the captain-style stat board, but works anywhere in the app.
+// Call openCompareModal(idA, idB) to compare directly, or openCompareModal(idA)
+// to open with a search picker for the second player.
+let CompareState = { aId: null, bId: null, players: [] };
+
+async function openCompareModal(idA, idB) {
+  const overlay = $('compare-modal-overlay');
+  const content = $('compare-modal-content');
+  overlay.classList.remove('hidden');
+  // Close player modal if open (we replace it with the compare board)
+  $('player-modal-overlay').classList.add('hidden');
+  CompareState.aId = idA || null;
+  CompareState.bId = idB || null;
+  content.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner active" style="display:inline-block;"></div></div>';
+  // Lazy-load player roster for picker (cached on window)
+  if (!CompareState.players.length) {
+    try {
+      const r = await fetch('/api/players').then(r => r.ok ? r.json() : null);
+      CompareState.players = (r && (r.players || r)) || [];
+    } catch (e) { CompareState.players = []; }
+  }
+  await renderCompareModal();
+}
+
+async function renderCompareModal() {
+  const content = $('compare-modal-content');
+  const { aId, bId } = CompareState;
+  if (!aId) { closeCompareModal(); return; }
+  // Always need A; B is optional (picker shown if missing)
+  let a = null, b = null;
+  try {
+    const fetches = [fetch(`/api/player/${aId}`).then(r => r.ok ? r.json() : null)];
+    if (bId) fetches.push(fetch(`/api/player/${bId}`).then(r => r.ok ? r.json() : null));
+    const results = await Promise.all(fetches);
+    a = results[0] && results[0].player ? results[0] : null;
+    b = bId && results[1] && results[1].player ? results[1] : null;
+  } catch (e) { /* fall through */ }
+  if (!a) {
+    content.innerHTML = `<div style="color:var(--danger);padding:1rem;">${currentLocale==='no'?'Kunne ikke hente spiller.':'Could not load player.'}</div>`;
+    return;
+  }
+
+  const headerOf = pl => {
+    const p = pl.player;
+    const kit = pl.team_code ? `<img src="${KIT_BASE}${pl.team_code}${p.position === 1 ? '_1' : ''}-110.webp" style="width:36px;" onerror="this.style.display='none'">` : '';
+    return `<div style="display:flex;gap:0.5rem;align-items:center;">
+      <div class="pm-photo" style="width:40px;height:40px;flex-shrink:0;">${kit || (p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'">` : '&#9917;')}</div>
+      <div style="min-width:0;">
+        <div class="pm-name" style="font-size:0.95rem;">${p.name}</div>
+        <div class="pm-meta" style="font-size:0.72rem;">${pl.team_name} · ${p.position_name} · £${p.cost.toFixed(1)}m</div>
+      </div>
+    </div>`;
+  };
+
+  const stats = [
+    { l: currentLocale==='no'?'xPts (5 GW)':'xPts (5 GW)', v: pl => pl.player.expected_points || pl.player.score || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: 'Form', v: pl => parseFloat(pl.player.form) || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: 'PPG', v: pl => parseFloat(pl.player.points_per_game) || 0, fmt: v => v.toFixed(1), bigger: true },
+    { l: 'xG', v: pl => pl.player.xG || 0, fmt: v => v.toFixed(2), bigger: true },
+    { l: 'xA', v: pl => pl.player.xA || 0, fmt: v => v.toFixed(2), bigger: true },
+    { l: 'ICT', v: pl => parseFloat(pl.player.ict_index) || 0, fmt: v => v.toFixed(0), bigger: true },
+    { l: currentLocale==='no'?'Pris':'Price', v: pl => pl.player.cost || 0, fmt: v => `£${v.toFixed(1)}m`, bigger: false },
+    { l: currentLocale==='no'?'Eierskap':'Ownership', v: pl => parseFloat(pl.player.selected_by_percent) || 0, fmt: v => `${v.toFixed(1)}%`, bigger: false },
+    { l: currentLocale==='no'?'Proj. min':'Proj. min', v: pl => (pl.composite_breakdown && pl.composite_breakdown.projected_minutes) || 0, fmt: v => v.toFixed(0), bigger: true },
+    { l: currentLocale==='no'?'Rotasjonsrisiko':'Rotation risk', v: pl => (pl.composite_breakdown && pl.composite_breakdown.rotation_risk) || 0, fmt: v => v.toFixed(2), bigger: false },
+  ];
+
+  const pickerB = !b ? `
+    <div style="border:1px dashed var(--border-default);border-radius:8px;padding:1rem;text-align:center;">
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem;">${currentLocale==='no'?'Velg motstander':'Pick opponent'}</div>
+      <input id="cmp-search" type="text" oninput="cmpFilterPickerB(this.value)" placeholder="${currentLocale==='no'?'Søk spiller …':'Search player …'}"
+        style="width:100%;padding:0.5rem;background:var(--bg-canvas);border:1px solid var(--border-default);border-radius:6px;color:var(--text);">
+      <div id="cmp-picker-results" style="max-height:200px;overflow-y:auto;margin-top:0.5rem;text-align:left;"></div>
+    </div>` : '';
+
+  let board = '';
+  if (b) {
+    const sideA = `<div class="cmp-side">${headerOf(a)}` + stats.map(s => {
+      const av = s.v(a), bv = s.v(b);
+      const winA = s.bigger ? av > bv : av < bv;
+      return `<div class="cmp-stat ${winA?'win':''}"><span class="lab">${s.l}</span><span>${s.fmt(av)}</span></div>`;
+    }).join('') + '</div>';
+    const sideB = `<div class="cmp-side">${headerOf(b)}` + stats.map(s => {
+      const av = s.v(a), bv = s.v(b);
+      const winB = s.bigger ? bv > av : bv < av;
+      return `<div class="cmp-stat ${winB?'win':''}"><span class="lab">${s.l}</span><span>${s.fmt(bv)}</span></div>`;
+    }).join('') + '</div>';
+    board = `<div class="compare-board">${sideA}<div class="cmp-stat-label">vs</div>${sideB}</div>`;
+  } else {
+    board = `<div style="margin-bottom:1rem;">${headerOf(a)}</div>${pickerB}`;
+  }
+
+  const swapBtn = b ? `<button onclick="openCompareModal(${b.player.id}, ${a.player.id})" style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.3rem 0.6rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">⇄ ${currentLocale==='no'?'Bytt':'Swap'}</button>` : '';
+  const clearBtn = b ? `<button onclick="openCompareModal(${a.player.id})" style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.3rem 0.6rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">${currentLocale==='no'?'Bytt motstander':'Change opponent'}</button>` : '';
+
+  content.innerHTML = `
+    <h3 style="margin:0 0 1rem 0;font-family:var(--font-display);font-size:1.25rem;">${currentLocale==='no'?'Sammenlign spillere':'Compare players'}</h3>
+    ${board}
+    <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;">${swapBtn}${clearBtn}</div>
+  `;
+  if (!b) cmpFilterPickerB('');
+}
+
+function cmpFilterPickerB(q) {
+  const wrap = $('cmp-picker-results');
+  if (!wrap) return;
+  const query = (q || '').trim().toLowerCase();
+  const aId = CompareState.aId;
+  let list = CompareState.players.filter(p => p.id !== aId);
+  if (query) list = list.filter(p => (p.name || p.web_name || '').toLowerCase().includes(query));
+  list = list.slice(0, 25);
+  if (!list.length) { wrap.innerHTML = `<div style="color:var(--text-muted);font-size:0.78rem;padding:0.5rem;">${currentLocale==='no'?'Ingen treff.':'No matches.'}</div>`; return; }
+  wrap.innerHTML = list.map(p => `
+    <div onclick="openCompareModal(${aId}, ${p.id})" style="padding:0.4rem 0.5rem;cursor:pointer;border-radius:4px;display:flex;justify-content:space-between;font-size:0.82rem;" onmouseover="this.style.background='var(--bg-subtle)'" onmouseout="this.style.background=''">
+      <span>${p.name || p.web_name || ''}</span>
+      <span style="color:var(--text-muted);font-size:0.72rem;">${p.team_short || ''} · ${p.position_name || ''} · £${Number(p.cost||p.price||0).toFixed(1)}m</span>
+    </div>
+  `).join('');
+}
+
+function closeCompareModal() {
+  $('compare-modal-overlay').classList.add('hidden');
+  $('compare-modal-content').innerHTML = '';
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayerModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCompareModal(); });
 
 let autoDetectTimer = null;
 function autoDetectFplId(input) {
@@ -12507,6 +12820,14 @@ document.addEventListener('keydown', e => {
   <div class="player-modal" onclick="event.stopPropagation()">
     <button class="modal-close" onclick="closePlayerModal()">&times;</button>
     <div id="player-modal-content"></div>
+  </div>
+</div>
+
+<!-- Universal compare modal — invocable from anywhere via openCompareModal(idA, idB?) -->
+<div class="player-modal-overlay hidden" id="compare-modal-overlay" onclick="closeCompareModal()">
+  <div class="player-modal" onclick="event.stopPropagation()" style="max-width:640px;">
+    <button class="modal-close" onclick="closeCompareModal()">&times;</button>
+    <div id="compare-modal-content"></div>
   </div>
 </div>
 
