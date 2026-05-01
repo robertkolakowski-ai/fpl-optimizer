@@ -211,7 +211,10 @@
 
   /* Main content area */
   .main-content { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; background: var(--bg-page); }
-  .container { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+  /* Container venstre-justert med margin-right:auto — på brede skjermer
+     vokser innholdet til max-width 1180px og legger overskuddet på høyre side
+     i stedet for å sentrere og lage tomrom mellom sidebar og content (2026-05). */
+  .container { max-width: 1180px; margin: 0 auto 0 0; padding: 1.5rem 1.5rem 3rem 2rem; }
 
   /* Fixture Ticker */
   .fixture-ticker { background: var(--bg-canvas); border-bottom: 1px solid var(--border-subtle); padding: 0.55rem 0; overflow: hidden; position: sticky; top: 0; z-index: 100; }
