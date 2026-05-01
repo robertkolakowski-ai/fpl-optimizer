@@ -139,23 +139,24 @@ Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinte
 
 ## Park / Deferred
 
-### Hosting & domene — KLAR FOR AKTIVERING
-Status: kode + cron-workflow er på plass. Gjenstår beslutning + DNS.
-Anbefalt sti: Render Starter ($7/mnd, ingen cold-start) + custom domain
-`fpl.kolakowski.no`.
+### Hosting & domene — AKTIVERT (2026-05-01)
 
-Steg for aktivering:
-1. Render dashboard → tjenesten → Settings → Instance Type → **Starter**
-2. Settings → Custom Domains → legg til `fpl.kolakowski.no` → Render gir
-   en CNAME-verdi
-3. DNS hos kolakowski.no-registrar: CNAME `fpl` → den onrender.com-verdien
-4. GitHub repo → Settings → Secrets → Actions → ny secret `APP_URL` =
-   `https://fpl.kolakowski.no` (kreves for predictions-snapshot cron)
-5. Verifisering: `curl -X POST https://fpl.kolakowski.no/api/predictions/snapshot`
-   skal returnere `{"ok": true, ...}`
+`https://fpl.kolakowski.no` er live med gyldig Let's Encrypt SSL.
 
-Alternativ: Fly.io Hobby (krever Dockerfile + Fly CLI) eller bli på Render
-Free (cold start på første besøk).
+Oppsett:
+- **Render-tjeneste:** `fpl-optimizer-e8js.onrender.com` (Free-tier)
+- **Custom domain:** `fpl.kolakowski.no` (CNAME hos Loopia/Domeneshop)
+- **Keep-alive:** UptimeRobot pinger `/health` hvert 5. min — appen sover aldri,
+  så Free-tier oppleves som Starter.
+
+Hikker underveis (lærdom for fremtiden):
+- Loopia opprettet parkerings-A-records (194.9.94.86/85) ved siden av CNAME-en
+  fra "Ingen innstillinger > Parkert"-defaulten. Per DNS-spec ulovlig — løst
+  ved å slette og gjenopprette subdomenet med DNS direkte.
+
+Gjenstår (ikke kritisk):
+- GitHub Actions secret `APP_URL` bør oppdateres til `https://fpl.kolakowski.no`
+  (predictions-snapshot cron treffer fortsatt onrender.com-URL hvis ikke endret)
 
 ### Web Push (server-side)
 Send faktisk varsel mandag morgen via cron + Push-API. Bare opt-in-flow
