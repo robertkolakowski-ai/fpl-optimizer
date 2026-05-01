@@ -14,6 +14,36 @@
   },
   "entries": [
     {
+      "date": "2026-05-01",
+      "category": "polish",
+      "title_no": "Designløft etter ekstern vurdering — 9 punkter på Hjem og navigasjon",
+      "title_en": "Design lift after external review — 9 points on Home and nav",
+      "body_no": "Førstegangsbesøkende får nå auto-aktivert demo-modus i stedet for tomme tabeller med '—' og 'Loading…'. Hjem har én tydelig H1 ('Ukens beslutning') med en TLDR-setning som syntetiserer kapteinsforslag og transfer i ett menneskeleselig råd. Bunn-nav på mobil peker nå på de 5 IA-destinasjonene (Hjem · Plan · Kaptein · Liga · Arkiv) i stedet for legacy-snarveier. Skeleton-states med shimmer-animasjon (motion-aware) erstattet 'Loading…'-tekst på 6 dashboard-widgets. Logo-bug fikset (FPL …ptimizer → FPL Optimizer). Type-skala formalisert til 10 trinn uten mellomverdier, farge-tokens dokumentert med bruksregler i CSS. Ny uiIcon()-helper med Lucide-stil SVG erstatter UI-chrome-emoji (🛡️🚀⚖️ → SVG). Norsk språk-pass på empty-states og More-meny.",
+      "body_en": "First-time visitors now get demo mode auto-activated instead of empty tables with '—' and 'Loading…'. Home has a single clear H1 ('Ukens beslutning') with a TLDR sentence synthesizing captain pick and transfer into one human-readable call. Mobile bottom-nav now points to the 5 IA destinations (Home · Plan · Captain · League · Archive) instead of legacy shortcuts. Skeleton states with shimmer animation (motion-aware) replaced 'Loading…' text on 6 dashboard widgets. Logo bug fixed. Type scale formalized to 10 steps with no in-between values, color tokens documented with usage rules in CSS. New uiIcon() helper with Lucide-style SVG replaces UI chrome emoji.",
+      "tags": ["hjem", "design", "demo", "skeleton", "ikoner", "tokens"],
+      "commits": ["78dd6b3"]
+    },
+    {
+      "date": "2026-05-01",
+      "category": "platform",
+      "title_no": "Best-practice-løft: backtest, usikkerhet, chip-DP, rang-EV — fra MVP til ekte modeller",
+      "title_en": "Best-practice lift: backtest, uncertainty, chip DP, rank-EV — from MVP to real models",
+      "body_no": "Backtest-motoren kjører nå live score_players() på rekonstruerte snapshots — ingen parallell forenklet replay-formel. Resultatet er ærlige tall (capture rate 37.5% over GW32-34 betyr at modellen fanger 37.5% av maks mulige captain-poeng). Bayesiansk usikkerhet (#4) vekter bootstrap-prøver mot kommende fixtures (samme motstander-tier, hjemme/borte) og skalerer ned/utvider intervallet for skadeflagg. Chip-strategi (#8) bruker nå dynamic programming over (used_chips, gw)-tilstand med korrekte FPL 2024+-regler (WC1 i GW≤19, WC2 i GW≥20). Liga-intel (#7) kjører rang-EV-simulering: 300 sample-baner sammenligner rang-fordeling med vs uten en kandidattransfer. Predictions har Dixon-Coles-korrigering (rho=-0.18) — fikser at independent Poisson underestimerte 0-0/1-1 og overestimerte narrow scorelinjer (draws går 26%→31%, matcher empirisk PL-data). Transfer-modul har nytt plan_transfers() som velger optimalt blant 0/1/2-transfer-planer med ekte hit-cost-math. Ny SQLite WAL-backet shared cache med ETag-støtte overlever restarts og deles mellom workers.",
+      "body_en": "The backtest engine now runs the live score_players() on reconstructed snapshots — no parallel simplified replay formula. The result is honest numbers (37.5% capture rate over GW32-34 means the model captures 37.5% of max possible captain points). Bayesian uncertainty (#4) weights bootstrap samples toward upcoming fixtures (same opponent tier, home/away) and scales down / widens the interval on injury flags. Chip strategy (#8) now uses dynamic programming over (used_chips, gw) state with correct FPL 2024+ rules (WC1 in GW≤19, WC2 in GW≥20). League intel (#7) runs rank-EV simulation: 300 sample paths compare rank distribution with vs without a candidate transfer. Predictions has Dixon-Coles correction (rho=-0.18) — fixes that independent Poisson underestimated 0-0/1-1 and overestimated narrow scorelines (draws go 26%→31%, matches empirical PL data). Transfers module has a new plan_transfers() that picks optimally among 0/1/2-transfer plans with real hit-cost math. New SQLite WAL-backed shared cache with ETag support survives restarts and is shared between workers.",
+      "tags": ["backtest", "usikkerhet", "chip", "rang-ev", "dixon-coles", "cache"],
+      "commits": ["78dd6b3"]
+    },
+    {
+      "date": "2026-05-01",
+      "category": "feature",
+      "title_no": "10 nye produktfunksjoner: persistent score-historikk, ML-baseline, live BPS, brukerprefs +6",
+      "title_en": "10 new product features: persistent score history, ML baseline, live BPS, user prefs +6",
+      "body_no": "Persistent score-historikk lagrer topp-50 spillere per GW slik at vi kan sammenligne modellens prediksjon med faktiske poeng over tid. Backtest-motor med kaptein-replay og top-N-overlap. Forklarbarhet i player-modal: 'Hvorfor denne spilleren?' viser topp-3 score-bidrag (form, xG, fixture-letthet osv.) med pct-andel og råverdi. Bayesiansk usikkerhet med klikkbar risk-mode-toggle på kapteinkort (Trygg / Balansert / Offensiv). Brukerprefs lagret i SQLite per FPL team-ID — synker risk-mode og 'fulgte spillere' mellom enheter. Live BPS-strip øverst på siden mens kamper pågår, poller hvert 60. sek med 🥇🥈🥉 per fixture. Liga-rang-simulering: median-rang, P(seier), P(topp-3) basert på 200 sample-baner over resten av sesongen. Monte Carlo chip-strategi med sannsynlighets-graf per GW. ML-baseline (ridge regression, RMSE 3.8) vist ved siden av FPL ep_next i player-modal. Score-overrides per spiller i optimizer (#9 — sett-din-egen-prior).",
+      "body_en": "Persistent score history stores top-50 players per GW so we can compare model predictions to actual points over time. Backtest engine with captain replay and top-N overlap. Explainability in player modal: 'Why this player?' shows top-3 score contributions (form, xG, fixture ease etc.) with pct share and raw value. Bayesian uncertainty with click-cycling risk mode toggle on captain card (Safe / Balanced / Aggressive). User prefs stored in SQLite per FPL team ID — syncs risk mode and watched players across devices. Live BPS strip at top of page while matches play, polls every 60s with 🥇🥈🥉 per fixture. League rank simulation: median rank, P(win), P(top-3) based on 200 sample paths over rest of season. Monte Carlo chip strategy with probability graph per GW. ML baseline (ridge regression, RMSE 3.8) shown next to FPL ep_next in player modal. Per-player score overrides in optimizer (set your own prior).",
+      "tags": ["score-historikk", "backtest", "forklarbarhet", "live-bps", "ml", "brukerprefs", "rang-ev", "chip-mc"],
+      "commits": ["78dd6b3"]
+    },
+    {
       "date": "2026-04-25",
       "category": "fix",
       "title_no": "Page-audit-runde 1: lyse paneler, ekte data, drepte popup-tour",
