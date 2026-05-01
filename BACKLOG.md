@@ -139,6 +139,41 @@ Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinte
 
 ## Park / Deferred
 
+### Feilsøking 2026-05-02 — pågående
+
+`fpl.kolakowski.no` er live, team-tilkobling fungerer (Nicholas 2006459 lastet
+inn med 12 ligaer). Bugs avdekket og fikset:
+
+- **JS-syntaksfeil**: `'This week\\'s call'` brøt template literal → hele
+  scriptet feilet å parse → wizardSubmitId og autoDetectFplId ble aldri
+  globale. Browser-konsollen var "ReferenceError" overalt. Fix commit `2d3dee9`.
+- **1-klikks team-tilkobling**: 3-stegs wizard (Hent → Bekreft → Gå) kollapset
+  til ett klikk. Fix commit `ff53926`.
+- **404 på /api/leagues og /api/transfer-suggestions**: frontend kalte
+  endepunkter som ikke fantes med de navnene. La til backend-aliaser som
+  mapper til /api/user (leagues) og suggest_transfers (suggestions).
+  Fix commit `56d2ee9`.
+- **Rå SVG-tekst i risk-mode-toggle**: `_riskModeLabel` returnerer SVG-string,
+  men `labelEl.textContent =` escapet det. Bytter til `innerHTML`. Fix `56d2ee9`.
+- **Captain-projection viste 0.8 pts**: leste composite_score (0-1 normalisert)
+  i stedet for ekte EP. Bytter til captain_ev / ep_next×2. Fix `56d2ee9`.
+- **Tomrom mellom sidebar og innhold på bred skjerm**: `.container { margin: 0 auto }`
+  sentrerte i tilgjengelig plass. Bytter til venstre-justert. Fix `aa6cca0`.
+- **Roterende "Avansert"-tekst på Plan**: en global CSS-regel i wizardens
+  "Vis meg hvordan"-details (`details[open] > summary > span:first-child {
+  transform: rotate(90deg) !important }`) lekket til ALLE details-elementer,
+  inkludert Plan-sidens "Avansert: kjør optimizer fra bunn"-summary. Scoper
+  til .wiz-howto. Fix `b641551`.
+- **£0.0 i transfer-kort**: backend-aliaset returnerer player.to_dict() med
+  `cost`-felt, mens frontend leste `price`. Legger til fallback. Fix `b641551`.
+
+Gjenstår å feilsøke (neste sesjon):
+- Verifisere at deploy `b641551` faktisk fjerner roterende tekst og
+  £0.0-bug etter cache-flush
+- Se om Hjem-siden renderer riktig nå med Nicholas' data (kaptein, transfer,
+  liga-kort)
+- Test alle 5 IA-destinasjoner end-to-end
+
 ### Hosting & domene — AKTIVERT (2026-05-01)
 
 `https://fpl.kolakowski.no` er live med gyldig Let's Encrypt SSL og GH Actions
