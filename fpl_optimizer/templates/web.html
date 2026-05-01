@@ -1791,10 +1791,12 @@
     background: linear-gradient(135deg, var(--brand-primary-tint) 0%, var(--brand-accent-tint) 100%);
     border: 1px solid color-mix(in oklab, var(--brand-primary) 18%, transparent);
     border-radius: var(--r-lg);
-    padding: var(--sp-8) var(--sp-6);
-    margin-bottom: var(--sp-6);
+    padding: var(--sp-10) var(--sp-8);
+    margin: var(--sp-6) auto var(--sp-4);
+    max-width: 720px;     /* matcher onboarding-wizardens proporsjoner */
     position: relative;
     overflow: hidden;
+    text-align: left;
   }
   .hero-usp::after {
     content: ''; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px;
