@@ -363,6 +363,12 @@
   .chip-badge.available { background: rgba(0,230,118,0.12); color: var(--brand-primary); border: 1px solid rgba(0,230,118,0.3); }
   .chip-badge.used { background: rgba(136,136,136,0.12); color: var(--text-subtle); border: 1px solid rgba(255,255,255,0.1); text-decoration: line-through; }
 
+  /* Empty-state cleanup (2026-05): when no team is connected, hide widgets that
+     would otherwise show "—" or empty values. Keeps onboarding focused. */
+  body.not-connected #dash-stats { display: none !important; }
+  body.not-connected #fixture-ticker { display: none !important; }
+  body.not-connected .hjem-page-head { display: none !important; }
+
   /* Leagues */
   .leagues-section { display: none; margin-top: 0.8rem; }
   .leagues-section.active { display: block; }
@@ -7754,20 +7760,12 @@ renderRecentUsers();
       }
     }, 100);
   } else {
-    // No saved user — auto-activate demo mode so the dashboard shows real
-    // populated data (captain picks, optimal squad, leagues) instead of empty
-    // tables and "—" placeholders. The connect-CTA stays visible so the user
-    // can swap to their own team. (P0 fix from 2026-05 design audit)
+    // No saved user — show focused onboarding (hero + wizard). Empty
+    // stat cards / fixture ticker / page head are hidden via body.not-connected
+    // CSS to keep the flate ren og fokusert. User can click "Hopp over — bruk
+    // demodata" in the wizard to activate demo, or paste their team-ID.
     document.body.classList.add('not-connected');
-    setTimeout(async () => {
-      await loadMetadata();
-      try {
-        await activateDemo();
-      } catch (e) {
-        // Fallback to onboarding gate if demo fails
-      }
-      switchNav('nav-dashboard');
-    }, 50);
+    setTimeout(() => switchNav('nav-dashboard'), 50);
     if (window.innerWidth <= 768) {
       const stickyConnect = $('sticky-connect-cta');
       if (stickyConnect) stickyConnect.classList.add('visible');
