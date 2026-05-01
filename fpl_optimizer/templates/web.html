@@ -2893,13 +2893,15 @@
               <div class="dash-onboard-error" id="wizard-error" style="color:var(--danger);font-size:var(--fs-small);margin-top:8px;"></div>
               <div class="wizard-fpl-hint">
                 <span data-i18n="wiz.s1.hint">Finn ID-en din: gå til <code>fantasy.premierleague.com</code> → <span class="hl">Points</span>. URL-en blir <code>/entry/<span class="hl">123456</span>/event/29</code> — det fete tallet er ID-en din.</span>
-                <details style="margin-top:8px;">
+                <details class="wiz-howto" style="margin-top:8px;">
                   <summary style="cursor:pointer;color:var(--brand-primary);font-size:var(--fs-small);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:4px;">
-                    <span style="display:inline-block;transform:rotate(0);transition:transform 0.15s;">▸</span>
+                    <span class="wiz-howto-arrow" style="display:inline-block;transform:rotate(0);transition:transform 0.15s;">▸</span>
                     <span data-i18n="wiz.s1.howto">Vis meg hvordan, steg for steg</span>
                   </summary>
                   <style>
-                    details[open] > summary > span:first-child { transform: rotate(90deg) !important; }
+                    /* Scoped to .wiz-howto for å unngå at globalrullert tekst lekker
+                       til andre <details> (f.eks. Plan-sidens 'Avansert'-toggle). */
+                    details.wiz-howto[open] > summary > .wiz-howto-arrow { transform: rotate(90deg); }
                     .wiz-step-card { background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--r-md); padding: var(--sp-3); margin-top: var(--sp-2); }
                     .wiz-step-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand-primary); color: var(--text-on-brand); font-weight: 700; font-size: 12px; margin-right: 8px; }
                     .wiz-step-title { font-weight: 600; color: var(--text-strong); display: inline; }
@@ -5490,8 +5492,9 @@ function renderSuggestCard(t, idx, marginal) {
       ? (currentLocale==='no'?'Differensial':'Differential')
       : (currentLocale==='no'?`Forslag ${idx+1}`:`Option ${idx+1}`));
 
-  const outPrice = Number(out.price || 0);
-  const innPrice = Number(inn.price || 0);
+  // /api/transfer-suggestions returnerer player.to_dict() som har 'cost', ikke 'price'
+  const outPrice = Number(out.price != null ? out.price : (out.cost || 0));
+  const innPrice = Number(inn.price != null ? inn.price : (inn.cost || 0));
   const costDelta = innPrice - outPrice;
   const hit = t.hit_cost || (idx > 0 ? 4 : 0);
   const netGain = gain - hit;
