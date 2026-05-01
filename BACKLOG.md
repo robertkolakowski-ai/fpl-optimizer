@@ -141,22 +141,27 @@ Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinte
 
 ### Hosting & domene — AKTIVERT (2026-05-01)
 
-`https://fpl.kolakowski.no` er live med gyldig Let's Encrypt SSL.
+`https://fpl.kolakowski.no` er live med gyldig Let's Encrypt SSL og GH Actions
+cron som treffer riktig URL.
 
 Oppsett:
 - **Render-tjeneste:** `fpl-optimizer-e8js.onrender.com` (Free-tier)
 - **Custom domain:** `fpl.kolakowski.no` (CNAME hos Loopia/Domeneshop)
 - **Keep-alive:** UptimeRobot pinger `/health` hvert 5. min — appen sover aldri,
   så Free-tier oppleves som Starter.
+- **GH Actions secret `APP_URL`:** satt til `https://fpl.kolakowski.no`,
+  predictions-snapshot cron verifisert grønn (manuell run #2 → success 16s).
 
 Hikker underveis (lærdom for fremtiden):
 - Loopia opprettet parkerings-A-records (194.9.94.86/85) ved siden av CNAME-en
   fra "Ingen innstillinger > Parkert"-defaulten. Per DNS-spec ulovlig — løst
   ved å slette og gjenopprette subdomenet med DNS direkte.
-
-Gjenstår (ikke kritisk):
-- GitHub Actions secret `APP_URL` bør oppdateres til `https://fpl.kolakowski.no`
-  (predictions-snapshot cron treffer fortsatt onrender.com-URL hvis ikke endret)
+- Førsteinntrykk på `fpl.kolakowski.no` viste empty-state-bug: 'Loading fixtures...'
+  + 4 tomme stat-kort + duplisert hero/wizard. Fix-pakke (commits 5a5cf3d, 2ee7245,
+  e3c6848): `body.not-connected`-klasse satt som default, fjernes kun ved
+  bekreftet `loadUser()`-success. Skjuler `#dash-stats`, `#fixture-ticker`,
+  `.hjem-page-head` til team-ID er koblet. Hero-card sentrert med 720px max-width
+  for å matche wizardens akse.
 
 ### Web Push (server-side)
 Send faktisk varsel mandag morgen via cron + Push-API. Bare opt-in-flow
