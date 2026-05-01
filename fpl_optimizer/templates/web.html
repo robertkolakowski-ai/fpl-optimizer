@@ -7828,15 +7828,31 @@ function startCacheAgePolling() {
 
 // ==================== FIXTURE TICKER ====================
 async function loadTicker() {
+  const track = $('ticker-track');
+  const isNo = (typeof currentLocale !== 'undefined' ? currentLocale : 'no') === 'no';
+  // Show skeleton bars on cold cache instead of "Loading fixtures..." text
+  if (track && track.querySelector('span') && track.querySelector('span').textContent.startsWith('Loading')) {
+    track.innerHTML = `<div class="skel skel-line" style="width:60px;height:10px;"></div><div class="skel skel-line" style="width:120px;height:10px;"></div><div class="skel skel-line" style="width:120px;height:10px;"></div><div class="skel skel-line" style="width:120px;height:10px;"></div>`;
+  }
   try {
-    const resp = await fetch('/api/fixtures');
+    // Timeout after 20s — Render cold-start can take 30s but we'd rather show
+    // a friendly message than spin forever.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    const resp = await fetch('/api/fixtures', { signal: ctrl.signal });
+    clearTimeout(timer);
     const data = await resp.json();
-    if (data.error || !data.gameweeks) return;
+    if (data.error || !data.gameweeks) {
+      track.innerHTML = `<span style="color:var(--text-muted);font-size:0.75rem;">${isNo?'Kampprogram utilgjengelig akkurat nå.':'Fixtures unavailable right now.'}</span>`;
+      return;
+    }
 
     const gw = data.gameweeks.find(g => g.is_current) || data.gameweeks.find(g => g.is_next);
-    if (!gw) return;
+    if (!gw) {
+      track.innerHTML = `<span style="color:var(--text-muted);font-size:0.75rem;">${isNo?'Ingen aktiv runde.':'No active gameweek.'}</span>`;
+      return;
+    }
 
-    const track = $('ticker-track');
     let html = `<span class="ticker-gw">${gw.name}</span>`;
     gw.fixtures.forEach(f => {
       let middle;
@@ -7855,7 +7871,10 @@ async function loadTicker() {
       html += `<div class="ticker-item"><span class="team-abbr">${f.home_team_name}</span>${middle}<span class="team-abbr">${f.away_team_name}</span></div>`;
     });
     track.innerHTML = html;
-  } catch (e) { /* silent */ }
+  } catch (e) {
+    // Surface the failure instead of silently showing "Loading…" forever
+    track.innerHTML = `<span style="color:var(--text-muted);font-size:0.75rem;">${isNo?'Kampprogram tregt — prøver igjen om 60 sek.':'Fixtures slow — retrying in 60s.'}</span>`;
+  }
 }
 loadTicker();
 setInterval(loadTicker, 60000);
