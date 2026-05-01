@@ -1,3 +1,11 @@
+# Local caches and runtime state — regenerated automatically
+data/cache.db
+data/cache.db-wal
+data/cache.db-shm
+data/user_prefs.db
+data/element_summary_cache.json
+.claude/scheduled_tasks.lock
+
 __pycache__/
 *.pyc
 *.pyo

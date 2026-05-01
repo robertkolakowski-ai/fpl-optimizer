@@ -26,6 +26,7 @@ def plan_transfers(
     horizon: int = 6,
     free_transfers: int = 1,
     risk_profile: str = "balanced",
+    uncertainty_map: dict[int, dict] | None = None,
 ) -> list[dict]:
     """Plan transfers across multiple gameweeks using greedy approach.
 
@@ -37,6 +38,11 @@ def plan_transfers(
                           when net gain is positive.
             - aggressive: accepts hits eagerly (-4 ok if gain > 1.0). Lower
                           threshold (0.2 xPts) for free transfers.
+        uncertainty_map: Optional {player_id: uncertainty_dict} from
+            uncertainty.estimate_player_uncertainty(). When provided, gain is
+            computed in real EP units (mean of fixture-weighted bootstrap)
+            instead of composite_score deltas — far more accurate for
+            hit-vs-no-hit decisions.
 
     Returns a list of dicts, one per GW in the horizon.
     """
@@ -110,7 +116,16 @@ def plan_transfers(
                 if candidate.team != out_p.team and cand_team_count >= 3:
                     continue
 
-                gain = candidate.composite_score - (pm.get(out_id) or out_p).composite_score
+                # Best practice (when uncertainty_map provided): use real EP
+                # gain from fixture-weighted bootstrap mean. Falls back to
+                # composite_score delta otherwise.
+                if uncertainty_map and candidate.id in uncertainty_map and out_id in uncertainty_map:
+                    gain = (
+                        uncertainty_map[candidate.id].get("mean", 0)
+                        - uncertainty_map[out_id].get("mean", 0)
+                    )
+                else:
+                    gain = candidate.composite_score - (pm.get(out_id) or out_p).composite_score
                 if gain > best_gain:
                     best_gain = gain
                     best_out_id = out_id

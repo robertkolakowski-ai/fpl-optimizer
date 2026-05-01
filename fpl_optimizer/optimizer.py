@@ -58,14 +58,27 @@ def select_squad(
     players: list[Player],
     budget: float = 100.0,
     risk_mode: str = "balanced",
+    score_overrides: dict[int, float] | None = None,
 ) -> Squad:
+    """Select an optimal 15-man squad.
+
+    Args:
+        score_overrides: Optional {player_id: multiplier} dict. The player's
+            objective contribution is multiplied by this factor — lets users
+            express "I think Salah will outperform by 20%" via 1.2, or
+            "I'm fading Haaland" via 0.8. Default 1.0 if not specified. (#9)
+    """
     prob = LpProblem("FPL_Squad", LpMaximize)
+    overrides = score_overrides or {}
 
     # Binary variable per player
     x = {p.id: LpVariable(f"x_{p.id}", cat="Binary") for p in players}
 
-    # Objective: maximize risk-adjusted score
-    prob += lpSum(_compute_player_score(p, risk_mode) * x[p.id] for p in players)
+    # Objective: maximize risk-adjusted score (with per-player multiplier overrides)
+    prob += lpSum(
+        _compute_player_score(p, risk_mode) * overrides.get(p.id, 1.0) * x[p.id]
+        for p in players
+    )
 
     # Squad size = 15
     prob += lpSum(x[p.id] for p in players) == SQUAD_SIZE

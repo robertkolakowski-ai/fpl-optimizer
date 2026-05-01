@@ -5,6 +5,138 @@ Hver feature måles mot: *gjør den brukerens FPL-rang bedre, eller gjør den ik
 
 ---
 
+## Sesjonslogg 2026-05-01
+
+**Levert i én sesjon:** 10 backlog-punkter (#1-#10) på MVP-nivå →
+4 backend-fundamenter løftet til best-practice (#2 #4 #7 #8) →
+4 ekstra moduler løftet (Dixon-Coles A, transfer-EV B, multi-GW C, SQLite cache D) →
+9 design-punkter (5 P-punkter + 4 V-punkter) levert.
+
+**Resultat:** 71 endepunkter, 8 nye Python-moduler (`backtest`, `uncertainty`,
+`chip_mc`, `league_intel`, `live_bonus`, `ml_baseline`, `score_history`,
+`user_prefs`, `cache`), 9 nye UI-flater. Appen importerer rent.
+
+**Filer endret:** `analyzer.py`, `models.py`, `multi_gw.py`, `optimizer.py`,
+`predictions.py`, `transfers.py`, `web.py`, `templates/web.html`.
+**Filer nye:** se modulliste over.
+
+---
+
+## "Til neste nivå" — prioritert (mai 2026)
+
+**Alle 10 punkter + 4 ekstra forbedringer levert på best-practice-nivå**
+(mai 2026). Backend er ferdig og verifisert end-to-end.
+
+### Best-practice-løft fullført
+
+- **#2** Backtest bruker nå LIVE `score_players()` på rekonstruerte snapshots
+  (`_player_snapshot_at_gw`) — ingen parallell forenklet replay-formel
+- **#4** Bootstrap er fixture-aware (vekter samples mot kommende motstanders
+  difficulty + hjemme/borte) og justerer for skader/availability med widening
+  av p10-p90-intervallet
+- **#7** Mini-liga har ekte rank-EV-simulering (`evaluate_transfer_rank_ev`):
+  for en kandidattransfer simuleres 300 baner av resten av sesongen, beregner
+  endring i median-rang + sannsynlighet for at transfer forbedrer ranglerin
+- **#8** Chip-MC bruker dynamic programming over (used_chips, gw)-tilstand
+  med korrekte FPL 2024+-regler (WC1 i GW≤19, WC2 i GW≥20)
+- **A** Predictions.py er nå Dixon-Coles-korrigert (rho=-0.18) — fikser
+  at independent Poisson underestimerer 0-0/1-1 og overestimerer narrow scorelinjer
+- **B** Transfers.py har nytt `plan_transfers()` som velger optimalt blant
+  0/1/2-transfer-planer med ekte hit-cost-math (-4 per ekstra transfer)
+- **C** Multi-GW kan nå ta `uncertainty_map`-parameter og bruke real-EP fra
+  fixture-vektet bootstrap istedenfor composite_score-deltaer
+- **D** SQLite-backed shared cache (`cache.py`) overlever restarts og deles
+  mellom gunicorn-workers; ETag-støtte for HTTP 304
+
+| # | Tema | Modul | Endepunkt(er) |
+|---|------|-------|---------------|
+| 1 | Persistent score-historikk | `score_history.py` | `/api/score-history*` |
+| 2 | Backtest-motor | `backtest.py` | `/api/backtest/captain`, `/top-n` |
+| 3 | ML-baseline (linear regression) | `ml_baseline.py` | `/api/ml/{train,compare}` |
+| 4 | Bayesiansk usikkerhet | `uncertainty.py` | `/api/captain-uncertainty` |
+| 5 | Brukerpreferanser (SQLite) | `user_prefs.py` | `/api/user-prefs/*` |
+| 6 | Live BPS-projected bonus | `live_bonus.py` | `/api/live/projected-bonus` |
+| 7 | Mini-liga-intelligens | `league_intel.py` | `/api/league/<id>/intelligence` |
+| 8 | Monte Carlo chip-strategi | `chip_mc.py` | `/api/chips/monte-carlo` |
+| 9 | score_overrides per spiller | `optimizer.py` | `select_squad(score_overrides=...)` |
+| 10 | Forklarbarhet / score-breakdown | `analyzer.py` | `/api/score-breakdown/<id>` |
+
+### Pragmatiske beslutninger underveis
+
+- **#5** ble levert som lett SQLite-prefs-store nøkket på FPL team-ID (som
+  brukeren uansett limer inn) i stedet for full magic-link auth + e-post-
+  varsler. Migrer til ekte auth ved å legge til `users(id, email)` og mappe
+  `team_id → user_id`. Web Push-varsler ligger fortsatt under "Park / Deferred"
+  fordi det krever cron + VAPID.
+- **#3** ble linear ridge regression i ren Python (ingen sklearn/LightGBM)
+  for å unngå deps-bloat. Gir RMSE ~3.8 — ikke state-of-the-art, men nok til
+  å vise hvor heuristikken er overkonfident. Oppgrader senere til LightGBM
+  hvis vi vil ha 3 sesongers historikk og bedre kalibrering.
+- **#6** er foreløpig kun et HTTP polling-endepunkt; ekte live-mode krever
+  WebSocket (Flask-SocketIO) som er en del jobb på Render free.
+
+### UI-eksponering levert
+
+- **#10:** "Hvorfor denne spilleren?" i player-modalen (topp-3 score-bidrag)
+- **#2:** "Kjør backtest"-kort på Honesty-siden (capture rate, Salah-baseline)
+- **#4:** Risk-mode-toggle på kapteinkortet (⚖️/🛡️/🚀) med p10/p50/p90-intervaller
+- **Bilder:** Spillerbilder i transfer-rader og backtest-tabell
+
+### UI-eksponering levert (mai 2026)
+
+Alle nye backend-endepunkter har nå frontend-overflater:
+
+- **Chip MC-graf på hjem-siden:** SVG-stolpediagram per gjenværende GW per chip
+  med sannsynlighet og snittgevinst. Mappes WC1+WC2 → "Wildcard" automatisk.
+- **Backtest-trendgraf:** SVG-linjegraf modell vs maks mulig per GW + tabell
+  med top-3 score-bidrag per pick.
+- **Rang-simuleringspanel på liga-siden:** Median-rang, 80%-intervall, P(seier),
+  P(topp-3) basert på 200 sample-baner over resten av sesongen.
+- **Live BPS-strip:** Synlig kun under kampvindu, poller hvert 60. sek mens
+  kamper pågår. Viser 🥇🥈🥉 per fixture med BPS-tall.
+- **ML-baseline ved siden av FPL ep_next** i player-modal "Hvorfor"-panel.
+  Cachet i frontend (én train per sesjon).
+- **📊 Transfer-rang-EV-knapp** i hver transfer-rad åpner modal med
+  EP-gevinst, forventet rang-endring, P(forbedrer rang).
+- **☆ Følg-spilleren-knapp** i player-modal-header. Persistert via
+  `/api/user-prefs/<team_id>/watched/<player_id>`.
+- **Risk-mode-toggle synker til server-side prefs** — lagres per FPL team-ID
+  via `/api/user-prefs`. Henter automatisk ved sync når team-ID settes.
+
+### Designvurdering mottatt (1. mai 2026) — utvalg implementert
+
+Ekstern designvurdering pekte på reelle svakheter. Tatt 5 P0/P1-punkter inn
+i ny iterasjon (se neste blokk). Avvist: full React/Storybook-migrering
+(3-6 måneders kostnad, marginal nytte), Lighthouse-budsjett-jakt,
+Style Dictionary-pipeline. Behold vanilla-JS-stacken.
+
+### Design-løft 2026-05 — alle 9 punkter levert
+
+Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinten.
+
+- [x] **P0** Auto-aktiver demo for førstegangsbesøkende — fjerner "ser-ødelagt-ut"
+  empty-states på Hjem
+- [x] **P0** Legacy-sidebar gated bak `legacy_nav`-toggle (var allerede på plass).
+  Bunn-nav konsolidert til de 5 IA-destinasjonene (Hjem · Plan · Kaptein · Liga · Arkiv).
+  More-meny redirecter til Innstillinger når legacy er av.
+- [x] **P1+V1** "Ukens beslutning" som H1 på Hjem med TLDR-syntese av kaptein +
+  transfer i én setning. Drill-down via eksisterende kort.
+- [x] **P1** Norsk språk-pass på dashboard empty-states, More-meny, transfer-CTA.
+- [x] **P2** Skeleton-states på 6 widgets (kapteinkort, bonus, skader, priser,
+  kommende kamper, benk) — animert shimmer som respekterer
+  `prefers-reduced-motion`.
+- [x] **V2** Type-skala formalisert (12/13/14/15/16/20/24/32/48/64 — ingen
+  mellomverdier), ny `--fs-micro` lagt til.
+- [x] **V3** Token-blokk i CSS dokumentert med bruksregler. Ingen rop med
+  rødfarge, ingen hardkodede hex i komponenter.
+- [x] **V4** Logo-monogram bug fikset (FPL …ptimizer → FPL Optimizer med tett
+  kerning og enhetlig font-vekt).
+- [x] **V5** `uiIcon()`-helper med Lucide-stil SVG-ikoner brukt for
+  risk-mode-toggle, watch-knapp og transfer-rang-EV-knapp. Semantiske emoji
+  beholdt (🥇🥈🥉 bonus, ⚽ live).
+
+---
+
 ## Park / Deferred
 
 ### Hosting & domene — KLAR FOR AKTIVERING

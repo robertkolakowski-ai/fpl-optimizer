@@ -24,6 +24,22 @@ from .optimizer import select_squad
 from .football_data import get_fd_team_id, get_match_referee, get_referee_data, get_team_stats, fetch_season_matches
 from .predictions import generate_predictions, predict_cards, predict_corners, predict_shots, get_player_card_risks, predict_other_markets
 from . import predictions_log
+from . import score_history
+from . import backtest as backtest_mod
+from . import uncertainty as uncertainty_mod
+from . import user_prefs
+from . import live_bonus
+from . import league_intel
+from . import chip_mc
+from . import ml_baseline
+from .cache import (
+    etag_for,
+    sqlite_cache_get,
+    sqlite_cache_get_with_etag,
+    sqlite_cache_invalidate,
+    sqlite_cache_set,
+    sqlite_cache_stats,
+)
 from .transfers import suggest_transfers
 
 app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
@@ -291,6 +307,383 @@ SORT_FIELDS = {
 @app.route("/")
 def index():
     return render_template("web.html")
+
+
+@app.route("/health")
+def health():
+    return {"ok": True}, 200
+
+
+# ------------------------------------------------------------------ #
+# Cache stats (D — best-practice shared cache)
+# ------------------------------------------------------------------ #
+@app.route("/api/cache/stats")
+def api_cache_stats():
+    return jsonify(sqlite_cache_stats())
+
+
+@app.route("/api/cache/invalidate", methods=["POST"])
+def api_cache_invalidate():
+    """Drop cache entries matching an optional key prefix."""
+    data = request.get_json(silent=True) or {}
+    prefix = data.get("prefix", "")
+    deleted = sqlite_cache_invalidate(prefix)
+    return jsonify({"ok": True, "deleted": deleted})
+
+
+# ------------------------------------------------------------------ #
+# Explainability — per-player score breakdown (#10)
+# ------------------------------------------------------------------ #
+@app.route("/api/score-breakdown/<int:player_id>")
+def api_score_breakdown(player_id):
+    """Return the model's reasoning for a single player's composite score.
+
+    Each component shows raw value, normalized (0-1), weight, and pct of
+    total — so the UI can answer "why did the model rank this player here?".
+    """
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        p = next((pl for pl in players if pl.id == player_id), None)
+        if not p:
+            return jsonify({"error": "Player not found"}), 404
+        return jsonify({
+            "id": p.id,
+            "name": p.name,
+            "position": p.position_name,
+            "team": teams[p.team].short_name if p.team in teams else "???",
+            "composite_score": round(p.composite_score, 4),
+            "breakdown": p.score_breakdown,
+            "context": {
+                "form": p.form,
+                "ep_next": p.ep_next,
+                "fixture_difficulty": round(p.fixture_difficulty, 3),
+                "rotation_risk": round(p.rotation_risk, 3),
+                "set_pieces": {
+                    "penalties": p.penalties_order,
+                    "freekicks": p.direct_freekicks_order,
+                    "corners": p.corners_order,
+                },
+            },
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Score History — persistent snapshots per GW (#1)
+# ------------------------------------------------------------------ #
+@app.route("/api/score-history")
+def api_score_history():
+    """Return the full score-history state — list of GW snapshots with top-N players."""
+    return jsonify(score_history.get_state())
+
+
+@app.route("/api/score-history/<int:gw>")
+def api_score_history_gw(gw):
+    snap = score_history.get_snapshot(gw)
+    if not snap:
+        return jsonify({"error": f"No snapshot for GW{gw}"}), 404
+    return jsonify(snap)
+
+
+@app.route("/api/score-history/snapshot", methods=["POST"])
+def api_score_history_snapshot():
+    """Snapshot top-N composite scores for a GW. Idempotent on gw."""
+    try:
+        data = request.get_json(silent=True) or {}
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        gw = data.get("gw")
+        if not gw:
+            current_gw = next((g for g in gameweeks if g.is_next), None) or next((g for g in gameweeks if g.is_current), None)
+            if not current_gw:
+                return jsonify({"error": "No active GW"}), 400
+            gw = current_gw.id
+        from datetime import datetime, timezone
+        count = score_history.record_snapshot(
+            gw, players,
+            snapshot_at=datetime.now(timezone.utc).isoformat(),
+            top_n=data.get("top_n", 50),
+        )
+        return jsonify({"ok": True, "gw": gw, "players_recorded": count})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/score-history/refresh-actuals", methods=["POST"])
+def api_score_history_refresh_actuals():
+    """For each finished GW with a snapshot, fill in actual points from FPL live API."""
+    try:
+        _players, _teams, gameweeks, _fixtures = _get_cached_data()
+        snap_gws = score_history.list_gameweeks()
+        finished = {g.id for g in gameweeks if g.finished}
+        total = 0
+        with httpx.Client(timeout=20) as client:
+            for gw in snap_gws:
+                if gw not in finished:
+                    continue
+                try:
+                    live = fetch_live_gameweek(client, gw)
+                except Exception:
+                    continue
+                elements = (live or {}).get("elements", [])
+                actuals = {e["id"]: (e.get("stats") or {}).get("total_points", 0) for e in elements}
+                total += score_history.update_actuals(gw, actuals)
+        return jsonify({"ok": True, "updates": total})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Backtest — replay model against finished GWs (#2)
+# ------------------------------------------------------------------ #
+@app.route("/api/backtest/captain")
+def api_backtest_captain():
+    """Backtest the model's captain pick across finished GWs of the current season.
+
+    Query params:
+        top_pool: int (default 80) — how many of the model's top-scored players
+                  to include as captain candidates.
+        max_gws: int (optional) — limit to last N finished GWs to keep it fast.
+    """
+    try:
+        top_pool = int(request.args.get("top_pool", 80))
+        max_gws = request.args.get("max_gws", type=int)
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        finished = sorted([g.id for g in gameweeks if g.finished])
+        if max_gws:
+            finished = finished[-max_gws:]
+        result = backtest_mod.backtest_captain(
+            players, finished, fixtures, gameweeks, teams=teams, top_pool=top_pool
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Bayesian uncertainty — captain recommendations with risk profiles (#4)
+# ------------------------------------------------------------------ #
+@app.route("/api/captain-uncertainty")
+def api_captain_uncertainty():
+    """Return captain recommendations with bootstrapped p10/p50/p90 intervals.
+
+    Query params:
+        mode: "safe" | "balanced" (default) | "aggressive"
+        top_pool: int (default 80) — how many candidates to evaluate
+        top_n: int (default 10) — how many recommendations to return
+    """
+    try:
+        mode = request.args.get("mode", "balanced")
+        top_pool = int(request.args.get("top_pool", 80))
+        top_n = int(request.args.get("top_n", 10))
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        recs = uncertainty_mod.captain_recommendations(
+            players, fixtures, gameweeks,
+            risk_mode=mode, top_pool=top_pool, top_n_results=top_n,
+        )
+        return jsonify({
+            "mode": mode,
+            "recommendations": recs,
+            "teams": {tid: t.to_dict() for tid, t in teams.items()},
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# User preferences (#5 — lightweight, keyed by FPL team_id)
+# ------------------------------------------------------------------ #
+@app.route("/api/user-prefs/<int:team_id>", methods=["GET"])
+def api_user_prefs_get(team_id):
+    return jsonify({
+        "team_id": team_id,
+        "prefs": user_prefs.get_prefs(team_id),
+        "watched": user_prefs.get_watched(team_id),
+    })
+
+
+@app.route("/api/user-prefs/<int:team_id>", methods=["POST"])
+def api_user_prefs_set(team_id):
+    data = request.get_json(silent=True) or {}
+    if "prefs" in data and isinstance(data["prefs"], dict):
+        user_prefs.set_prefs(team_id, data["prefs"])
+    return jsonify({"ok": True, "prefs": user_prefs.get_prefs(team_id)})
+
+
+@app.route("/api/user-prefs/<int:team_id>/watched/<int:player_id>", methods=["POST"])
+def api_user_prefs_watch(team_id, player_id):
+    user_prefs.add_watched(team_id, player_id)
+    return jsonify({"ok": True, "watched": user_prefs.get_watched(team_id)})
+
+
+@app.route("/api/user-prefs/<int:team_id>/watched/<int:player_id>", methods=["DELETE"])
+def api_user_prefs_unwatch(team_id, player_id):
+    user_prefs.remove_watched(team_id, player_id)
+    return jsonify({"ok": True, "watched": user_prefs.get_watched(team_id)})
+
+
+# ------------------------------------------------------------------ #
+# Live BPS-projected bonus (#6)
+# ------------------------------------------------------------------ #
+@app.route("/api/live/projected-bonus")
+def api_live_projected_bonus():
+    """For the current/next GW, project bonus point allocation per fixture."""
+    try:
+        _players, _teams, gameweeks, fixtures = _get_cached_data()
+        gw = request.args.get("gw", type=int)
+        if not gw:
+            current = next((g for g in gameweeks if g.is_current), None)
+            if not current:
+                return jsonify({"error": "No current GW"}), 400
+            gw = current.id
+        return jsonify({
+            "gw": gw,
+            "fixtures": live_bonus.project_bonus(gw, fixtures),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Mini-league intelligence (#7)
+# ------------------------------------------------------------------ #
+@app.route("/api/league/<int:league_id>/intelligence")
+def api_league_intelligence(league_id):
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        gw = request.args.get("gw", type=int)
+        if not gw:
+            current = next((g for g in gameweeks if g.is_current), None) or next(
+                (g for g in gameweeks if g.is_next), None
+            )
+            if not current:
+                return jsonify({"error": "No active GW"}), 400
+            gw = current.id
+        team_id = request.args.get("team_id", type=int)
+        max_members = int(request.args.get("max_members", 50))
+        simulate = request.args.get("simulate_rank_ev", "1") == "1"
+        return jsonify(
+            league_intel.league_intelligence(
+                league_id, gw, fixtures, gameweeks, players,
+                your_team_id=team_id, max_members=max_members,
+                simulate_rank_ev=simulate,
+            )
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/league/<int:league_id>/transfer-ev")
+def api_league_transfer_ev(league_id):
+    """Evaluate a candidate transfer's effect on YOUR rank distribution in this league.
+
+    Query params (all required):
+        team_id: int — your FPL team id
+        out: int — player_id to sell
+        in: int — player_id to buy
+        n_paths: int (default 300)
+    """
+    try:
+        team_id = request.args.get("team_id", type=int)
+        out_id = request.args.get("out", type=int)
+        in_id = request.args.get("in", type=int)
+        n_paths = int(request.args.get("n_paths", 300))
+        if not (team_id and out_id and in_id):
+            return jsonify({"error": "team_id, out and in are required"}), 400
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        result = league_intel.evaluate_transfer_rank_ev(
+            league_id, team_id, out_id, in_id,
+            fixtures, gameweeks, players, n_paths=n_paths,
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# Monte Carlo chip strategy (#8)
+# ------------------------------------------------------------------ #
+@app.route("/api/chips/monte-carlo")
+def api_chips_monte_carlo():
+    try:
+        n_sims = int(request.args.get("n", 500))
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        remaining = [g.id for g in gameweeks if not g.finished]
+        if not remaining:
+            return jsonify({"error": "No remaining GWs"}), 400
+        result = chip_mc.simulate_chips(
+            players, remaining, fixtures, gameweeks, n_simulations=n_sims
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
+# ML baseline — linear regression vs heuristic (#3)
+# ------------------------------------------------------------------ #
+_ml_model_cache: dict = {}
+
+@app.route("/api/ml/train", methods=["POST"])
+def api_ml_train():
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        model = ml_baseline.train_baseline(players)
+        if "error" in model:
+            return jsonify(model), 400
+        _ml_model_cache["model"] = model
+        return jsonify({"ok": True, "model": model})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/ml/compare")
+def api_ml_compare():
+    """Show heuristic vs ML predictions side-by-side for top players."""
+    try:
+        model = _ml_model_cache.get("model")
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        if not model:
+            model = ml_baseline.train_baseline(players)
+            if "error" not in model:
+                _ml_model_cache["model"] = model
+        if "error" in model:
+            return jsonify(model), 400
+        top_n = int(request.args.get("top_n", 20))
+        comparison = ml_baseline.compare_to_heuristic(players, model, top_n=top_n)
+        return jsonify({"model": model, "comparison": comparison})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/backtest/top-n")
+def api_backtest_top_n():
+    """Backtest model's top-N picks vs actual top-N each finished GW."""
+    try:
+        top_n = int(request.args.get("top_n", 15))
+        top_pool = int(request.args.get("top_pool", 80))
+        max_gws = request.args.get("max_gws", type=int)
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams, lookahead=5)
+        finished = sorted([g.id for g in gameweeks if g.finished])
+        if max_gws:
+            finished = finished[-max_gws:]
+        result = backtest_mod.backtest_top_n_overlap(
+            players, finished, fixtures, gameweeks, teams=teams,
+            top_n=top_n, top_pool=top_pool,
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/changelog.json")

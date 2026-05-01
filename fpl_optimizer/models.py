@@ -97,6 +97,9 @@ class Player:
     rotation_risk: float = 0.0
     projected_minutes: float = 0.0
     selling_price: float = 0.0  # FPL selling price (0 = not set, use cost)
+    # Per-component score breakdown (form, ppg, xG, xA, clean_sheets, bonus, ict, fixture_ease)
+    # Each entry: {"label": str, "raw": float, "normalized": float, "weight": float, "contribution": float}
+    score_breakdown: list = field(default_factory=list)
 
     @property
     def sell_value(self) -> float:

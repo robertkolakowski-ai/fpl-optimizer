@@ -10,6 +10,17 @@ POSITION_WEIGHTS = {
     4: (0.15, 0.15, 0.30, 0.10, 0.00, 0.10, 0.10, 0.10),  # FWD
 }
 
+SCORE_COMPONENT_LABELS = (
+    ("form", "Form"),
+    ("ppg", "Poeng/kamp"),
+    ("xG", "Forventede mål (xG)"),
+    ("xA", "Forventede assists (xA)"),
+    ("clean_sheets", "Clean sheets"),
+    ("bonus", "Bonuspoeng"),
+    ("ict", "ICT-indeks"),
+    ("fixture_ease", "Kampprogram"),
+)
+
 
 def _normalize(values: list[float]) -> list[float]:
     if not values:
@@ -196,6 +207,20 @@ def score_players(
         normalized = [_normalize(stat) for stat in raw_stats]
 
         for i, p in enumerate(group):
-            p.composite_score = sum(
-                w * normalized[j][i] for j, w in enumerate(weights)
-            )
+            contributions = [w * normalized[j][i] for j, w in enumerate(weights)]
+            p.composite_score = sum(contributions)
+            p.score_breakdown = [
+                {
+                    "key": SCORE_COMPONENT_LABELS[j][0],
+                    "label": SCORE_COMPONENT_LABELS[j][1],
+                    "raw": round(raw_stats[j][i], 3),
+                    "normalized": round(normalized[j][i], 3),
+                    "weight": weights[j],
+                    "contribution": round(contributions[j], 4),
+                    "pct_of_score": (
+                        round(100 * contributions[j] / p.composite_score, 1)
+                        if p.composite_score > 0 else 0.0
+                    ),
+                }
+                for j in range(len(weights))
+            ]

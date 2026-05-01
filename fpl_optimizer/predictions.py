@@ -101,12 +101,55 @@ def _poisson_pmf(k: int, lam: float) -> float:
     return (lam ** k) * math.exp(-lam) / math.factorial(k)
 
 
-def _build_scoreline_matrix(home_xg: float, away_xg: float, max_goals: int = 6) -> list[list[float]]:
-    """6x6 matrix of P(home=i, away=j)."""
-    return [
+# Dixon-Coles dependence parameter. Empirically -0.18 fits Premier League well —
+# it corrects independent Poisson's overprediction of 0-0/1-1 and underprediction
+# of 0-1/1-0 finishes that real football data shows.
+DIXON_COLES_RHO = -0.18
+
+
+def _dixon_coles_tau(home: int, away: int, lam: float, mu: float, rho: float = DIXON_COLES_RHO) -> float:
+    """DC correction factor for low-scoring correlated outcomes.
+
+    Reference: Dixon & Coles (1997) "Modelling Association Football Scores".
+    Only adjusts cells where home, away ∈ {0, 1}. All others get τ=1.
+    """
+    if home == 0 and away == 0:
+        return 1 - lam * mu * rho
+    if home == 0 and away == 1:
+        return 1 + lam * rho
+    if home == 1 and away == 0:
+        return 1 + mu * rho
+    if home == 1 and away == 1:
+        return 1 - rho
+    return 1.0
+
+
+def _build_scoreline_matrix(
+    home_xg: float,
+    away_xg: float,
+    max_goals: int = 6,
+    use_dixon_coles: bool = True,
+) -> list[list[float]]:
+    """Build 6x6 matrix of P(home=i, away=j).
+
+    By default applies the Dixon-Coles correction (best practice). Set
+    ``use_dixon_coles=False`` to fall back to independent Poisson.
+    """
+    matrix = [
         [_poisson_pmf(i, home_xg) * _poisson_pmf(j, away_xg) for j in range(max_goals)]
         for i in range(max_goals)
     ]
+    if use_dixon_coles:
+        for i in range(max_goals):
+            for j in range(max_goals):
+                matrix[i][j] *= _dixon_coles_tau(i, j, home_xg, away_xg)
+        # Normalise — DC correction can make the matrix sum slightly ≠ 1
+        total = sum(sum(row) for row in matrix)
+        if total > 0:
+            for i in range(max_goals):
+                for j in range(max_goals):
+                    matrix[i][j] /= total
+    return matrix
 
 
 def _derive_probabilities(matrix: list[list[float]]) -> dict:

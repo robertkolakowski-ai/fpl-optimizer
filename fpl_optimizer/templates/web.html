@@ -8,9 +8,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ==================== DESIGN TOKENS (Phase 4a) ==================== */
-  /* Concept brief identity: Amber primary, Ink text, Paper canvas.
-     Display = Fraunces (serif), UI = Inter Tight, Numbers = JetBrains Mono. */
+  /* ==================== DESIGN TOKENS (Phase 4a — formalisert mai 2026) ==================== */
+  /*
+    Token-bruk:
+      - Farge:    --bg-*, --border-*, --text-*, --brand-*, --ok / --warn / --danger / --info
+      - Posisjon: --pos-gk / --pos-def / --pos-mid / --pos-fwd
+      - Typografi:--font-display / --font-body / --font-mono, --fs-* (12-64 skala)
+      - Geometri: --r-sm/md/lg/xl, --shadow-1/2/3, --sp-1..--sp-12
+
+    Regler (V3, designvurdering 2026-05):
+      - ALDRI hardkode hex-farger i komponenter — bruk semantiske tokens.
+      - ALDRI bruk rgba(255,255,255,X) for surfaces — bruk --bg-canvas / --bg-subtle
+        med opacity hvis transparens trengs.
+      - ALDRI rop med farge: rød er for "tap av poeng", ikke dekorasjon.
+      - Type-skala: kun token-verdiene (12/13/14/15/16/20/24/32/48/64). Ingen mellomverdier.
+      - Spacing: kun --sp-* (4/8/12/16/20/24/32/40/48). Ingen 7px / 11px.
+
+    Concept brief: Amber primary, Ink text, Paper canvas.
+    Display = Fraunces (serif), UI = Inter Tight, Numbers = JetBrains Mono.
+  */
   :root {
     /* Surfaces — warm Paper background, white card, ink-tinted depths */
     --bg-page:        #F6F2EB;          /* Paper — warm, non-blinding reading surface */
@@ -60,15 +76,17 @@
     --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
     --font-body:    'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono:    'JetBrains Mono', ui-monospace, monospace;
-    --fs-display-lg: 64px;
-    --fs-display:    48px;
-    --fs-h1:         32px;
-    --fs-h2:         24px;
-    --fs-h3:         20px;
-    --fs-body-lg:    16px;
-    --fs-body:       15px;
-    --fs-small:      14px;
-    --fs-label:      13px;       /* hard floor */
+    /* Type scale (V2): 12/13/14/15/16/20/24/32/48/64 only. No in-between values. */
+    --fs-display-lg: 64px;       /* hero numbers (overall rang, total poeng) */
+    --fs-display:    48px;       /* hero headlines */
+    --fs-h1:         32px;       /* page title */
+    --fs-h2:         24px;       /* section heading */
+    --fs-h3:         20px;       /* widget heading */
+    --fs-body-lg:    16px;       /* primary body, important stat values */
+    --fs-body:       15px;       /* default body */
+    --fs-small:      14px;       /* secondary text, metadata */
+    --fs-label:      13px;       /* labels, eyebrows, helper */
+    --fs-micro:      12px;       /* badges, captions, hard floor */
 
     /* Radii & shadows */
     --r-sm: 6px;  --r-md: 10px;  --r-lg: 14px;  --r-xl: 20px;
@@ -83,6 +101,34 @@
     --sidebar-w: 248px;
     --topbar-h: 56px;
     --bottomnav-h: 64px;          /* mobile bottom nav */
+  }
+
+  /* ==================== SKELETON STATES (P2, 2026-05) ==================== */
+  /* Replaces "—" / "Loading…" with animated grey blocks. Use as:
+       <div class="skel skel-line"></div>            (one line)
+       <div class="skel skel-line short"></div>      (60% width)
+       <div class="skel skel-block" style="height:60px"></div>
+     The shimmer respects prefers-reduced-motion. */
+  @keyframes skel-shimmer {
+    0%   { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+  }
+  .skel {
+    background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-muted) 50%, var(--bg-subtle) 75%);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    border-radius: var(--r-sm);
+    display: block;
+    animation: skel-shimmer 1.4s linear infinite;
+  }
+  .skel-line { height: 12px; margin: 6px 0; width: 100%; }
+  .skel-line.short { width: 60%; }
+  .skel-line.tiny  { width: 35%; height: 10px; }
+  .skel-block { width: 100%; }
+  .skel-circle { border-radius: 50%; }
+  .skel-stack > * + * { margin-top: 8px; }
+  @media (prefers-reduced-motion: reduce) {
+    .skel { animation: none; background: var(--bg-subtle); }
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -130,12 +176,16 @@
   .sidebar-brand .subtitle { color: var(--text-faint); font-size: var(--fs-label); }
 
   /* ==================== LOGO MONOGRAM ==================== */
-  .logo-monogram { display: flex; align-items: center; gap: 0.15rem; }
-  .logo-fpl { font-family: var(--font-display); font-weight: 700; color: var(--text-strong); font-size: 1.45rem; letter-spacing: -0.5px; line-height: 1; }
-  .logo-o { width: 32px; height: 32px; flex-shrink: 0; }
-  .logo-sub { font-family: var(--font-display); font-weight: 500; color: var(--text-muted); font-size: 1.1rem; letter-spacing: -0.3px; line-height: 1; margin-left: -0.1rem; }
-  .mobile-topbar .logo-monogram { gap: 0.1rem; }
-  .mobile-topbar .logo-fpl { font-size: 1.15rem; }
+  /* Logo monogram: "FPL" + decorative SVG O + "ptimizer" rendered as a single wordmark.
+     Fix V4 (2026-05): tighten gaps so it reads as "FPL Optimizer", not "FPL …ptimizer". */
+  .logo-monogram { display: flex; align-items: center; gap: 0; }
+  .logo-fpl { font-family: var(--font-display); font-weight: 700; color: var(--text-strong); font-size: 1.45rem; letter-spacing: -0.5px; line-height: 1; margin-right: 0.32rem; }
+  .logo-o { width: 32px; height: 32px; flex-shrink: 0; margin-right: -0.18rem; }
+  .logo-sub { font-family: var(--font-display); font-weight: 600; color: var(--text-strong); font-size: 1.45rem; letter-spacing: -0.5px; line-height: 1; }
+  .mobile-topbar .logo-monogram { gap: 0; }
+  .mobile-topbar .logo-fpl { font-size: 1.15rem; margin-right: 0.25rem; }
+  .mobile-topbar .logo-sub { font-size: 1.15rem; }
+  .mobile-topbar .logo-o { width: 26px; height: 26px; }
   .mobile-topbar .logo-o { width: 24px; height: 24px; }
   .mobile-topbar .logo-sub { font-size: 0.95rem; }
 
@@ -2930,23 +2980,30 @@
 
               <!-- Captain highlight -->
               <div class="dash-section">
-                <div class="dash-section-title">Captain <span class="ds-link" onclick="switchNav('nav-news-captain')">Captain picks &#8250;</span></div>
+                <div class="dash-section-title">Kaptein <span class="ds-link" onclick="switchNav('nav-news-captain')">Kapteinsforslag &#8250;</span></div>
                 <div id="dash-captain-slot">
-                  <div style="color:#555;font-size:0.82rem;">No captain data yet</div>
+                  <div class="skel-stack" aria-busy="true" aria-label="Henter kapteinsdata">
+                    <div class="skel skel-line short"></div>
+                    <div class="skel skel-line tiny"></div>
+                    <div class="skel skel-line"></div>
+                  </div>
                 </div>
               </div>
 
               <!-- Starting XI mini pitch -->
               <div class="dash-section">
-                <div class="dash-section-title">Starting XI <span class="ds-link" onclick="switchNav('nav-team-live')">Full view &#8250;</span></div>
+                <div class="dash-section-title">Startoppstilling <span class="ds-link" onclick="switchNav('nav-team-live')">Full visning &#8250;</span></div>
                 <div class="dash-pitch" id="dash-pitch-slot"></div>
               </div>
 
               <!-- Bonus tracking -->
               <div class="dash-section">
-                <div class="dash-section-title">Bonus Points</div>
+                <div class="dash-section-title">Bonuspoeng</div>
                 <div class="dash-bonus" id="dash-bonus-slot">
-                  <div style="color:#555;font-size:0.82rem;">No bonus data yet</div>
+                  <div class="skel-stack" aria-busy="true" aria-label="Henter bonusdata">
+                    <div class="skel skel-line"></div>
+                    <div class="skel skel-line short"></div>
+                  </div>
                 </div>
               </div>
 
@@ -2957,17 +3014,24 @@
 
               <!-- Injuries / Suspensions -->
               <div class="dash-section">
-                <div class="dash-section-title" style="color:var(--danger);">Injuries &amp; News</div>
+                <div class="dash-section-title" style="color:var(--danger);">Skader og laguttak</div>
                 <div class="dash-rail-list" id="dash-injuries-slot">
-                  <div style="color:#555;font-size:0.82rem;">Loading...</div>
+                  <div class="skel-stack" aria-busy="true" aria-label="Henter skader og laguttak">
+                    <div class="skel skel-line"></div>
+                    <div class="skel skel-line short"></div>
+                    <div class="skel skel-line tiny"></div>
+                  </div>
                 </div>
               </div>
 
               <!-- Price changes -->
               <div class="dash-section">
-                <div class="dash-section-title" style="color:var(--ok);">Price Changes <span class="ds-link" onclick="switchNav('nav-news-prices')">All &#8250;</span></div>
+                <div class="dash-section-title" style="color:var(--ok);">Prisendringer <span class="ds-link" onclick="switchNav('nav-news-prices')">Alle &#8250;</span></div>
                 <div class="dash-rail-list" id="dash-prices-slot">
-                  <div style="color:#555;font-size:0.82rem;">Loading...</div>
+                  <div class="skel-stack" aria-busy="true" aria-label="Henter prisendringer">
+                    <div class="skel skel-line"></div>
+                    <div class="skel skel-line short"></div>
+                  </div>
                 </div>
               </div>
 
@@ -2977,15 +3041,22 @@
           <!-- Bottom: bench + fixtures -->
           <div class="dash-bottom">
             <div class="dash-section">
-              <div class="dash-section-title">Bench</div>
+              <div class="dash-section-title">Benk</div>
               <div class="dash-bench" id="dash-bench-slot">
-                <div style="color:#555;font-size:0.82rem;">No bench data</div>
+                <div class="skel-stack" aria-busy="true" aria-label="Henter benk">
+                  <div class="skel skel-line short"></div>
+                  <div class="skel skel-line tiny"></div>
+                </div>
               </div>
             </div>
             <div class="dash-section">
-              <div class="dash-section-title">Upcoming Fixtures <span class="ds-link" onclick="switchNav('nav-fixtures-list')">All &#8250;</span></div>
+              <div class="dash-section-title">Kommende kamper <span class="ds-link" onclick="switchNav('nav-fixtures-list')">Alle &#8250;</span></div>
               <div id="dash-fixtures-slot">
-                <div style="color:#555;font-size:0.82rem;">Loading...</div>
+                <div class="skel-stack" aria-busy="true" aria-label="Henter kommende kamper">
+                  <div class="skel skel-line"></div>
+                  <div class="skel skel-line short"></div>
+                  <div class="skel skel-line"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -3022,7 +3093,7 @@
       <div class="nav-panel" id="nav-team-myteam">
         <div id="myteam-no-data">
           <div class="section">
-            <p style="color:var(--text-muted);font-size:0.85rem;">Run the <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:var(--info)">Squad Optimizer</a> with your FPL ID loaded to see your team here.</p>
+            <p style="color:var(--text-muted);font-size:0.85rem;">Kjør <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:var(--info)">Squad Optimizer</a> med FPL-IDen din lastet for å se laget her.</p>
           </div>
         </div>
         <div id="myteam-content" class="hidden">
@@ -3162,7 +3233,7 @@
       <div class="nav-panel" id="nav-transfers-suggestions">
         <div id="suggestions-no-data">
           <div class="section">
-            <p style="color:var(--text-muted);font-size:0.85rem;">Run the <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:var(--info)">Squad Optimizer</a> with your FPL ID to see transfer suggestions.</p>
+            <p style="color:var(--text-muted);font-size:0.85rem;">Kjør <a href="#" onclick="switchNav('nav-transfers-optimizer');return false" style="color:var(--info)">Squad Optimizer</a> med FPL-IDen din for å se transfer-forslag.</p>
           </div>
         </div>
         <div id="suggestions-content" class="hidden">
@@ -4569,6 +4640,21 @@ async function renderHomeBrief() {
   const gwLabel = gw ? `· GW ${gw.id}` : '';
 
   wrap.innerHTML = `
+    <header class="hjem-page-head" style="margin-bottom:var(--sp-4);">
+      <h1 style="font-family:var(--font-display);font-variation-settings:'opsz' 32;font-weight:600;font-size:var(--fs-h1);color:var(--text-strong);margin:0;letter-spacing:-0.01em;">
+        ${currentLocale==='no'?'Ukens beslutning':'This week\\'s call'}
+        ${gwLabel ? `<span style="color:var(--text-muted);font-weight:500;font-size:var(--fs-h3);"> ${gwLabel}</span>` : ''}
+      </h1>
+      <div id="hjem-tldr" style="font-size:var(--fs-body-lg);color:var(--text-default);margin-top:var(--sp-2);line-height:1.45;max-width:640px;">
+        <span style="color:var(--text-muted);">${currentLocale==='no'?'Henter modellens anbefaling …':'Loading model recommendation …'}</span>
+      </div>
+    </header>
+
+    <div class="live-bonus-strip" id="live-bonus-strip" hidden style="background:linear-gradient(90deg,rgba(81,207,102,0.12),rgba(81,207,102,0.04));border:1px solid rgba(81,207,102,0.3);border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:var(--sp-2);font-size:0.78rem;display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+      <span style="font-weight:600;color:var(--ok);text-transform:uppercase;letter-spacing:0.05em;font-size:0.7rem;">⚽ ${currentLocale==='no'?'Live BPS':'Live BPS'}</span>
+      <span id="live-bonus-items" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></span>
+    </div>
+
     <div class="team-news-strip" id="team-news-strip" hidden>
       <span class="tn-label">${L.teamNews}</span>
       <span id="team-news-items"></span>
@@ -4583,6 +4669,11 @@ async function renderHomeBrief() {
           <span class="hcc-pts" id="hcc-pts">—</span>
           <span class="hcc-delta" id="hcc-delta"></span>
           <span class="hcc-label" id="hcc-label">${currentLocale==='no'?'Projekert m/ kapteinsbinde':'Projected with armband'}</span>
+        </div>
+        <div id="hcc-uncertainty" style="font-size:0.74rem;color:var(--text-muted);margin-top:0.4rem;line-height:1.4;display:none;" onclick="event.stopPropagation();cycleRiskMode()">
+          <span style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" id="hcc-risk-mode-label"></span>
+          &middot;
+          <span id="hcc-uncertainty-text"></span>
         </div>
         <div class="hcc-because">
           <div class="hcc-because-label">${L.because}</div>
@@ -4667,6 +4758,7 @@ async function renderHomeBrief() {
       cb.classList.add(cbLevel);
       $('hcc-conf-text').textContent = cbLabel;
       $('hcc-vc').textContent = capSecond ? (capSecond.name || capSecond.web_name || '—') : '—';
+      loadCaptainUncertainty();
     } else {
       $('hcc-name').textContent = '—';
     }
@@ -4684,6 +4776,30 @@ async function renderHomeBrief() {
       $('hjem-transfer-h').textContent = L.noTransfer;
       $('hjem-transfer-pts').textContent = '';
       $('hjem-transfer-why').textContent = L.noTransferWhy;
+    }
+
+    // ---- TL;DR ("Ukens beslutning") — synthesizes captain + transfer into one line ----
+    const tldrEl = $('hjem-tldr');
+    if (tldrEl) {
+      const isNo = currentLocale === 'no';
+      const parts = [];
+      if (capPick) {
+        const capName = capPick.name || capPick.web_name || '—';
+        const capPts = capPick.expected_points != null ? capPick.expected_points : (capPick.score || capPick.composite_score);
+        parts.push(`${isNo?'Sett':'Captain'} <strong>${capName}</strong>${capPts != null ? ` (${Number(capPts).toFixed(1)} pts ${isNo?'forventet':'projected'})` : ''}`);
+      }
+      if (tCard) {
+        const out = tCard.out || tCard.sell || {};
+        const inn = tCard.in || tCard.buy || {};
+        const gain = tCard.points_gain || tCard.points_5gw || tCard.gain;
+        parts.push(`${isNo?'bytt':'transfer'} <strong>${out.name || '—'} → ${inn.name || '—'}</strong>${gain != null ? ` (+${Number(gain).toFixed(1)} pts)` : ''}`);
+      } else {
+        parts.push(`${isNo?'hold på FT':'save your FT'}`);
+      }
+      const summary = parts.length
+        ? (isNo ? `Modellen sier: ${parts.join(', ')}.` : `The model says: ${parts.join(', ')}.`)
+        : (isNo ? 'Ingen anbefaling akkurat nå.' : 'No recommendation right now.');
+      tldrEl.innerHTML = summary;
     }
 
     // ---- Mini-league side card ----
@@ -4721,6 +4837,7 @@ async function renderHomeBrief() {
 
     // ---- Team news strip — only show if we have news or it's Thu-Sat ----
     renderTeamNews();
+    loadLiveBonus();
 
   } catch (e) {
     console.warn('home brief fill failed', e);
@@ -4763,6 +4880,94 @@ function renderChipTimeline() {
     if (remaining.includes('freehit')) tips.push(currentLocale==='no' ? '<strong>Free Hit</strong> er gull i blank-GW.' : '<strong>Free Hit</strong> shines in a blank GW.');
     narEl.innerHTML = glossifyText(tips.slice(0, 3).join(' '));
   }
+  // Best-practice augment: real Monte Carlo chip-timing probabilities
+  loadChipMonteCarlo(remaining, used);
+}
+
+async function loadChipMonteCarlo(remainingChips, usedChips) {
+  if (!remainingChips || !remainingChips.length) return;
+  const trackEl = document.getElementById('chip-track');
+  if (!trackEl) return;
+  let mcEl = document.getElementById('chip-mc-results');
+  if (!mcEl) {
+    mcEl = document.createElement('div');
+    mcEl.id = 'chip-mc-results';
+    mcEl.style.cssText = 'margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);';
+    trackEl.parentElement.appendChild(mcEl);
+  }
+  const isNo = currentLocale === 'no';
+  mcEl.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);">${isNo?'Kjører Monte Carlo (300 baner) ...':'Running Monte Carlo (300 paths) ...'}</div>`;
+  try {
+    const data = await fetch('/api/chips/monte-carlo?n=300').then(r => r.json());
+    if (data.error || !data.chips) {
+      mcEl.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);">${data.error || 'No data'}</div>`;
+      return;
+    }
+    // Map MC chip names back to FPL chip names — WC1+WC2 → wildcard
+    const mcChipMap = { wildcard: ['WC1','WC2'], bboost: ['BB'], '3xc': ['TC'], freehit: ['FH'] };
+    const labels = { wildcard: 'Wildcard', bboost: 'Bench Boost', '3xc': 'Triple Captain', freehit: 'Free Hit' };
+    // Build a probability bar chart per chip across remaining_gws
+    const remainingGws = data.remaining_gws || [];
+    const cards = remainingChips.map(chipName => {
+      const mcKeys = mcChipMap[chipName] || [];
+      let best = null;
+      // Aggregate probabilities across WC1/WC2 → wildcard
+      const probByGw = {};
+      const gainByGw = {};
+      for (const k of mcKeys) {
+        const c = data.chips[k];
+        if (!c) continue;
+        for (const r of (c.ranked || [])) {
+          probByGw[r.gw] = (probByGw[r.gw] || 0) + r.play_probability;
+          if (r.avg_gain_when_played > 0) gainByGw[r.gw] = r.avg_gain_when_played;
+        }
+        if (c.best_gw && (!best || c.best_gw_probability > best.prob)) {
+          best = { gw: c.best_gw, prob: c.best_gw_probability, gain: c.ranked[0]?.avg_gain_when_played };
+        }
+      }
+      if (!best) return '';
+      const maxProb = Math.max(...Object.values(probByGw), 1);
+      // Render bars for each remaining GW
+      const barW = 14, barGap = 3;
+      const W = (barW + barGap) * remainingGws.length + 30;
+      const H = 60;
+      const bars = remainingGws.map((gw, i) => {
+        const prob = probByGw[gw] || 0;
+        const h = (prob / maxProb) * (H - 24);
+        const x = 25 + i * (barW + barGap);
+        const y = H - 18 - h;
+        const isBest = gw === best.gw;
+        return `<g>
+          <rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${isBest?'var(--brand-primary)':'rgba(81,207,102,0.35)'}" rx="2">
+            <title>GW${gw}: ${prob.toFixed(1)}%${gainByGw[gw]?` · +${gainByGw[gw].toFixed(1)} pts`:''}</title>
+          </rect>
+          ${prob >= 5 ? `<text x="${x + barW/2}" y="${y - 2}" text-anchor="middle" font-size="8" fill="var(--text-muted)">${prob.toFixed(0)}</text>` : ''}
+          ${i % 2 === 0 ? `<text x="${x + barW/2}" y="${H - 4}" text-anchor="middle" font-size="8" fill="var(--text-muted)">${gw}</text>` : ''}
+        </g>`;
+      }).join('');
+      const chart = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:${H}px;">
+        <text x="20" y="14" text-anchor="end" font-size="8" fill="var(--text-muted)">${maxProb.toFixed(0)}%</text>
+        <line x1="22" y1="${H - 18}" x2="${W}" y2="${H - 18}" stroke="var(--border-subtle)"/>
+        ${bars}
+      </svg>`;
+      return `
+        <div style="padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;margin-bottom:2px;">
+            <strong>${labels[chipName]}</strong>
+            <span style="font-family:var(--font-mono);">GW${best.gw} <span style="color:var(--ok);">${best.prob}%</span></span>
+          </div>
+          ${chart}
+          ${best.gain ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">${isNo?'Snitt-gevinst på beste GW':'Avg gain at best GW'}: +${best.gain.toFixed(1)} pts</div>` : ''}
+        </div>`;
+    }).join('');
+    mcEl.innerHTML = `
+      <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:var(--sp-2);">
+        ${isNo?'Monte Carlo (n=' + data.n_simulations + ', forventet +' + data.expected_extra_points + ' poeng)':'Monte Carlo (n=' + data.n_simulations + ', expected +' + data.expected_extra_points + ' pts)'}
+      </div>
+      ${cards}`;
+  } catch (e) {
+    mcEl.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);">${e.message}</div>`;
+  }
 }
 
 async function renderTeamNews() {
@@ -4792,6 +4997,64 @@ async function renderTeamNews() {
     const text = p.news ? `${p.name}: ${p.news}` : `${p.name}: ${c}% ${currentLocale==='no'?'klar':'fit'}`;
     return `<span class="tn-item ${tone}">${text}</span>`;
   }).join('');
+}
+
+// Live BPS bonus strip — polls every 60s while matches are in progress
+let _liveBonusInterval = null;
+async function loadLiveBonus() {
+  const strip = document.getElementById('live-bonus-strip');
+  const items = document.getElementById('live-bonus-items');
+  if (!strip || !items) return;
+  try {
+    const data = await fetch('/api/live/projected-bonus').then(r => r.json());
+    if (data.error || !data.fixtures) { strip.hidden = true; _stopLiveBonusPolling(); return; }
+    // Show only fixtures that have started but not finished, with BPS data
+    const live = data.fixtures.filter(f => f.started && !f.finished && (f.bonus_projection || []).length);
+    if (!live.length) { strip.hidden = true; _stopLiveBonusPolling(); return; }
+    // Schedule auto-refresh while live
+    if (!_liveBonusInterval) {
+      _liveBonusInterval = setInterval(() => loadLiveBonus(), 60000);
+    }
+
+    // Need player + team mapping
+    const meta = AppState.teamData;
+    const teamMap = {};
+    if (meta && meta.teams) meta.teams.forEach(t => teamMap[t.id] = t.short_name);
+    let playerMap = {};
+    try {
+      const pdata = await fetch('/api/players').then(r => r.json());
+      if (pdata && pdata.players) pdata.players.forEach(p => { playerMap[p.id] = p; });
+    } catch(e) { /* silent */ }
+
+    const isNo = currentLocale === 'no';
+    const cards = live.flatMap(f => {
+      const homeTeam = teamMap[f.home_team] || '?';
+      const awayTeam = teamMap[f.away_team] || '?';
+      const score = (f.home_score != null) ? `${f.home_score}-${f.away_score}` : '';
+      // Top 3 BPS earners in this fixture
+      return f.bonus_projection
+        .filter(b => b.projected_bonus > 0)
+        .slice(0, 3)
+        .map(b => {
+          const p = playerMap[b.player_id];
+          const name = p ? p.name : `#${b.player_id}`;
+          const bonusBadge = b.projected_bonus === 3 ? '🥇' : b.projected_bonus === 2 ? '🥈' : '🥉';
+          return `<span style="background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);border-radius:4px;padding:2px 6px;font-family:var(--font-mono);">${bonusBadge} ${name} <span style="color:var(--text-muted);font-size:0.7rem;">(${b.bps} BPS)</span></span>`;
+        });
+    });
+    if (!cards.length) { strip.hidden = true; return; }
+    items.innerHTML = cards.slice(0, 8).join('');
+    strip.hidden = false;
+  } catch (e) {
+    strip.hidden = true;
+  }
+}
+
+function _stopLiveBonusPolling() {
+  if (_liveBonusInterval) {
+    clearInterval(_liveBonusInterval);
+    _liveBonusInterval = null;
+  }
 }
 
 function openMondayReport() {
@@ -6014,7 +6277,116 @@ async function renderModelAccuracy(hist) {
         ? 'Ekte tall fra anbefalings-loggen. Vi viser kun metrics som har minst én ferdig GW — ingen ekstrapolering.'
         : 'Real numbers from the recommendations log. Only metrics with at least one completed GW are shown — no extrapolation.'}
     </p>
-    <div class="ma-grid" style="margin-top:var(--sp-3);">${blocks.join('')}</div>`;
+    <div class="ma-grid" style="margin-top:var(--sp-3);">${blocks.join('')}</div>
+    <div id="backtest-card" style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);"></div>`;
+  renderBacktestCard();
+}
+
+async function renderBacktestCard() {
+  const target = document.getElementById('backtest-card');
+  if (!target) return;
+  const isNo = currentLocale === 'no';
+  target.innerHTML = `
+    <h4 style="font-size:var(--fs-small);margin:0 0 var(--sp-2);color:var(--text-strong);">
+      ${isNo ? 'Backtest: kaptein-modell mot ferdige GW' : 'Backtest: captain model vs finished GWs'}
+    </h4>
+    <button id="run-backtest-btn" class="btn btn-secondary" style="font-size:0.78rem;padding:0.4rem 0.7rem;">
+      ${isNo ? 'Kjør backtest' : 'Run backtest'}
+    </button>
+    <div id="backtest-result" style="margin-top:var(--sp-2);"></div>`;
+  const btn = document.getElementById('run-backtest-btn');
+  btn.onclick = async () => {
+    const result = document.getElementById('backtest-result');
+    btn.disabled = true;
+    btn.textContent = isNo ? 'Henter element-summary…' : 'Fetching element-summary…';
+    result.innerHTML = `<div style="color:var(--text-muted);font-size:0.75rem;">${isNo?'Første kjøring kan ta 30-60 sek (~80 API-kall, deretter cachet).':'First run takes 30-60 sec (~80 API calls, then cached).'}</div>`;
+    try {
+      const data = await fetch('/api/backtest/captain?max_gws=10').then(r => r.json());
+      if (data.error || !data.summary || !data.summary.gws_evaluated) {
+        result.innerHTML = `<div style="color:var(--text-muted);font-size:0.78rem;">${isNo?'Ingen GW evaluert ennå.':'No GWs evaluated.'}</div>`;
+        return;
+      }
+      const s = data.summary;
+      const captureColor = s.model_capture_rate >= 0.8 ? 'var(--ok)' : s.model_capture_rate >= 0.6 ? 'var(--warn)' : 'var(--danger)';
+      const thumb = (photo) => photo ? `<img src="${PHOTO_BASE}${photo}.png" style="width:18px;height:23px;border-radius:2px;object-fit:cover;object-position:top;vertical-align:middle;margin-right:5px;" onerror="this.style.display='none'">` : '';
+      // Build SVG line chart: model_actual vs best_possible across GWs
+      const allGws = data.gameweeks;
+      const chartSvg = (() => {
+        if (allGws.length < 2) return '';
+        const W = 420, H = 140, PAD = 30;
+        const xs = allGws.map(g => g.gw);
+        const xMin = Math.min(...xs), xMax = Math.max(...xs);
+        const yMax = Math.max(...allGws.map(g => Math.max(g.model_actual, g.best_possible))) || 30;
+        const xPos = (gw) => PAD + (gw - xMin) / Math.max(1, xMax - xMin) * (W - 2 * PAD);
+        const yPos = (v) => H - PAD - (v / yMax) * (H - 2 * PAD);
+        const line = (key, color) => allGws.map((g, i) => `${i === 0 ? 'M' : 'L'} ${xPos(g.gw).toFixed(1)} ${yPos(g[key]).toFixed(1)}`).join(' ');
+        const dots = (key, color) => allGws.map(g => `<circle cx="${xPos(g.gw).toFixed(1)}" cy="${yPos(g[key]).toFixed(1)}" r="2.5" fill="${color}"/>`).join('');
+        const ticksX = allGws.length <= 12 ? allGws : allGws.filter((_, i) => i % 2 === 0);
+        const labelsX = ticksX.map(g => `<text x="${xPos(g.gw).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9" fill="var(--text-muted)">GW${g.gw}</text>`).join('');
+        return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;margin:0.4rem 0;">
+          <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="var(--border-subtle)" stroke-width="1"/>
+          <line x1="${PAD}" y1="${PAD}" x2="${PAD}" y2="${H - PAD}" stroke="var(--border-subtle)" stroke-width="1"/>
+          <text x="${PAD - 4}" y="${PAD + 4}" text-anchor="end" font-size="9" fill="var(--text-muted)">${yMax.toFixed(0)}</text>
+          <text x="${PAD - 4}" y="${H - PAD + 3}" text-anchor="end" font-size="9" fill="var(--text-muted)">0</text>
+          <path d="${line('best_possible')}" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>
+          <path d="${line('model_actual')}" stroke="var(--brand-primary)" stroke-width="2" fill="none"/>
+          ${dots('best_possible', 'var(--text-muted)')}
+          ${dots('model_actual', 'var(--brand-primary)')}
+          ${labelsX}
+        </svg>`;
+      })();
+      const rows = data.gameweeks.slice(-8).map(g => `
+        <tr>
+          <td style="padding:3px 6px;color:var(--text-muted);">GW${g.gw}</td>
+          <td style="padding:3px 6px;">${thumb(g.model_pick_photo)}${g.model_pick}</td>
+          <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);">${g.model_actual}</td>
+          <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);color:var(--text-muted);">${g.best_possible}</td>
+          <td style="padding:3px 6px;text-align:right;font-family:var(--font-mono);color:${g.delta_vs_best===0?'var(--ok)':'var(--danger)'};">${g.delta_vs_best>0?'+':''}${g.delta_vs_best}</td>
+        </tr>`).join('');
+      result.innerHTML = `
+        <div class="ma-grid" style="margin-bottom:var(--sp-2);">
+          <div class="ma-stat">
+            <div class="v">${s.model_avg_pts.toFixed(1)}</div>
+            <div class="l">${isNo?'Modell ø·snitt':'Model avg'}</div>
+          </div>
+          <div class="ma-stat">
+            <div class="v" style="color:var(--text-muted);">${s.best_possible_avg.toFixed(1)}</div>
+            <div class="l">${isNo?'Maks mulig':'Best possible'}</div>
+          </div>
+          <div class="ma-stat">
+            <div class="v" style="color:${captureColor};">${(s.model_capture_rate*100).toFixed(0)}%</div>
+            <div class="l">${isNo?'Capture rate':'Capture rate'}</div>
+          </div>
+          ${s.salah_avg_pts != null ? `<div class="ma-stat">
+            <div class="v">${s.salah_avg_pts.toFixed(1)}</div>
+            <div class="l">${isNo?'Salah baseline':'Salah baseline'}</div>
+          </div>` : ''}
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:var(--sp-2);">
+          ${isNo?`n=${s.gws_evaluated} GW. Capture rate = modell ÷ maks mulig. 100% = perfekt valg hver GW.`:`n=${s.gws_evaluated} GWs. Capture rate = model ÷ best possible. 100% = perfect pick each GW.`}
+        </div>
+        ${chartSvg}
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:var(--sp-2);display:flex;gap:var(--sp-3);">
+          <span><span style="display:inline-block;width:14px;height:2px;background:var(--brand-primary);vertical-align:middle;margin-right:3px;"></span>${isNo?'Modell':'Model'}</span>
+          <span><span style="display:inline-block;width:14px;border-top:2px dashed var(--text-muted);vertical-align:middle;margin-right:3px;"></span>${isNo?'Maks mulig':'Best possible'}</span>
+        </div>
+        <table style="width:100%;font-size:0.78rem;border-collapse:collapse;">
+          <thead><tr style="text-align:left;color:var(--text-muted);font-size:0.7rem;">
+            <th style="padding:3px 6px;">GW</th>
+            <th style="padding:3px 6px;">${isNo?'Modell valgte':'Model picked'}</th>
+            <th style="padding:3px 6px;text-align:right;">${isNo?'Pts':'Pts'}</th>
+            <th style="padding:3px 6px;text-align:right;">${isNo?'Maks':'Best'}</th>
+            <th style="padding:3px 6px;text-align:right;">Δ</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } catch (e) {
+      result.innerHTML = `<div style="color:var(--danger);font-size:0.78rem;">Error: ${e.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = isNo ? 'Kjør på nytt' : 'Re-run';
+    }
+  };
 }
 
 function renderRecommendationLog(hist) {
@@ -6832,6 +7204,13 @@ function toggleSidebar() {
 }
 
 function toggleMoreMenu() {
+  // P0 (2026-05): More-menu is part of the legacy nav surface area. If
+  // legacy_nav is off (default), redirect users to Settings instead of
+  // exposing the full legacy tool list.
+  if (typeof isFeatureEnabled === 'function' && !isFeatureEnabled('legacy_nav')) {
+    switchNav('nav-settings');
+    return;
+  }
   const menu = $('more-menu');
   const overlay = $('more-menu-overlay');
   const btn = $('bn-more-btn');
@@ -7375,11 +7754,20 @@ renderRecentUsers();
       }
     }, 100);
   } else {
-    // No saved user — show onboarding gate. Do NOT auto-activate demo.
-    // User must explicitly paste Team ID or click "try demo" on the dashboard.
+    // No saved user — auto-activate demo mode so the dashboard shows real
+    // populated data (captain picks, optimal squad, leagues) instead of empty
+    // tables and "—" placeholders. The connect-CTA stays visible so the user
+    // can swap to their own team. (P0 fix from 2026-05 design audit)
     document.body.classList.add('not-connected');
-    // Force dashboard panel so onboarding card is visible
-    setTimeout(() => switchNav('nav-dashboard'), 50);
+    setTimeout(async () => {
+      await loadMetadata();
+      try {
+        await activateDemo();
+      } catch (e) {
+        // Fallback to onboarding gate if demo fails
+      }
+      switchNav('nav-dashboard');
+    }, 50);
     if (window.innerWidth <= 768) {
       const stickyConnect = $('sticky-connect-cta');
       if (stickyConnect) stickyConnect.classList.add('visible');
@@ -7501,6 +7889,7 @@ async function loadUser() {
     AppState.userId = uid;
     AppState.userData = data; // Cache user data centrally
     AppState._loaded.dash = false; // Reset so dashboard reloads with new user
+    syncUserPrefs(); // Pull saved prefs (risk mode, watched players) from server
     if (!AppState.isDemoMode) {
       localStorage.setItem('fpl_user_id', String(uid));
       saveRecentUser(uid, data.manager_name, data.team_name);
@@ -7678,10 +8067,60 @@ async function loadLeague(leagueId, chipEl) {
     </tr>`).join('');
     tableEl.classList.remove('hidden');
     applyCardLabels(tableEl);
+    // Best practice: rank-EV simulation panel
+    loadRankSimulation(leagueId);
   } catch (err) {
     $('league-title-text').textContent = 'Network error';
   } finally {
     spinnerEl.classList.remove('active');
+  }
+}
+
+async function loadRankSimulation(leagueId) {
+  if (!AppState.userId) return;
+  let panel = document.getElementById('league-rank-sim');
+  const tableCard = document.querySelector('.liga-table-card');
+  if (!tableCard) return;
+  if (!panel) {
+    panel = document.createElement('article');
+    panel.id = 'league-rank-sim';
+    panel.className = 'liga-table-card';
+    panel.style.cssText = 'margin-top:var(--sp-3);';
+    tableCard.parentElement.insertBefore(panel, tableCard.nextSibling);
+  }
+  const isNo = currentLocale === 'no';
+  panel.innerHTML = `<h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering for resten av sesongen':'Rank simulation for rest of season'}</h3>
+    <div style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);">${isNo?'Simulerer 200 baner basert på fixture-vektet usikkerhet ...':'Simulating 200 paths from fixture-weighted uncertainty ...'}</div>`;
+  try {
+    const data = await fetch(`/api/league/${leagueId}/intelligence?team_id=${AppState.userId}&simulate_rank_ev=1`).then(r => r.json());
+    if (data.error) {
+      panel.innerHTML = `<h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering':'Rank simulation'}</h3>
+        <div style="color:var(--text-muted);font-size:var(--fs-small);">${data.error}</div>`;
+      return;
+    }
+    const sim = data.rank_simulation;
+    if (!sim) {
+      panel.innerHTML = `<h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering':'Rank simulation'}</h3>
+        <div style="color:var(--text-muted);font-size:var(--fs-small);">${isNo?'Ingen GW igjen å simulere — sesongen er over.':'No GWs left — season finished.'}</div>`;
+      return;
+    }
+    const winColor = sim.win_probability >= 30 ? 'var(--ok)' : sim.win_probability >= 10 ? 'var(--warn)' : 'var(--text-muted)';
+    panel.innerHTML = `
+      <h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering for resten av sesongen':'Rank simulation for rest of season'}</h3>
+      <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);line-height:1.5;">
+        ${isNo
+          ? `Basert på ${sim.n_paths} sample-baner over ${sim.n_remaining_gws} gjenværende GW. Andre lag antas å beholde nåværende squad.`
+          : `Based on ${sim.n_paths} sampled paths over ${sim.n_remaining_gws} remaining GWs. Other members assumed to keep their current squad.`}
+      </p>
+      <div class="ma-grid" style="margin-top:var(--sp-3);">
+        <div class="ma-stat"><div class="v">${sim.median_rank}</div><div class="l">${isNo?'Median-rang':'Median rank'}</div></div>
+        <div class="ma-stat"><div class="v" style="color:var(--text-muted);">${sim.p10_rank} – ${sim.p90_rank}</div><div class="l">${isNo?'80% intervall':'80% interval'}</div></div>
+        <div class="ma-stat"><div class="v" style="color:${winColor};">${sim.win_probability}%</div><div class="l">${isNo?'P(seier)':'P(win)'}</div></div>
+        <div class="ma-stat"><div class="v">${sim.top3_probability}%</div><div class="l">${isNo?'P(topp 3)':'P(top 3)'}</div></div>
+      </div>`;
+  } catch (e) {
+    panel.innerHTML = `<h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering':'Rank simulation'}</h3>
+      <div style="color:var(--danger);font-size:0.78rem;">${e.message}</div>`;
   }
 }
 
@@ -9198,10 +9637,67 @@ function playerRow(p, full) {
   return `<tr><td class="pos">${p.position_name}</td><td>${playerLink(p)}</td><td>${teamName(p.team)}</td><td class="right cost">${p.cost.toFixed(1)}</td><td class="right score">${p.composite_score.toFixed(3)}</td></tr>`;
 }
 
+function playerThumb(p) {
+  if (!p || !p.photo) return '';
+  return `<img src="${PHOTO_BASE}${p.photo}.png" style="width:22px;height:28px;border-radius:3px;object-fit:cover;object-position:top;vertical-align:middle;margin-right:6px;" onerror="this.style.display='none'">`;
+}
+
 function transferRow(t, i) {
   const epGain = t.pts_gain != null ? t.pts_gain : 0;
   const epColor = epGain > 0 ? 'var(--brand-primary)' : epGain < 0 ? 'var(--danger)' : 'var(--text-muted)';
-  return `<tr><td>${i+1}</td><td class="out">${playerLink(t.player_out)} (${t.player_out.cost.toFixed(1)})</td><td class="in">${playerLink(t.player_in)} (${t.player_in.cost.toFixed(1)})</td><td class="right score">+${t.score_gain.toFixed(3)}</td><td class="right" style="color:${epColor}" title="Expected points gain next GW">${epGain > 0 ? '+' : ''}${epGain.toFixed(1)} EP</td><td class="right">${t.cost_change >= 0 ? '+' : ''}${t.cost_change.toFixed(1)}</td></tr>`;
+  const outId = t.player_out.id;
+  const inId = t.player_in.id;
+  const rankBtn = `<button onclick="showTransferRankEv(${outId}, ${inId}, '${t.player_out.name.replace(/'/g, "\\'")}', '${t.player_in.name.replace(/'/g, "\\'")}', event)" style="background:none;border:1px solid var(--border-default);border-radius:4px;padding:2px 6px;font-size:0.7rem;cursor:pointer;color:var(--text-muted);display:inline-flex;align-items:center;" title="${currentLocale==='no'?'Rang-EV i ligaen':'League rank impact'}">${uiIcon('chart')}</button>`;
+  return `<tr><td>${i+1}</td><td class="out">${playerThumb(t.player_out)}${playerLink(t.player_out)} (${t.player_out.cost.toFixed(1)})</td><td class="in">${playerThumb(t.player_in)}${playerLink(t.player_in)} (${t.player_in.cost.toFixed(1)})</td><td class="right score">+${t.score_gain.toFixed(3)}</td><td class="right" style="color:${epColor}" title="Expected points gain next GW">${epGain > 0 ? '+' : ''}${epGain.toFixed(1)} EP</td><td class="right">${t.cost_change >= 0 ? '+' : ''}${t.cost_change.toFixed(1)}</td><td class="right">${rankBtn}</td></tr>`;
+}
+
+async function showTransferRankEv(outId, inId, outName, inName, event) {
+  if (event) event.stopPropagation();
+  const leagueId = localStorage.getItem('fpl_league_id');
+  const teamId = AppState.userId;
+  const isNo = currentLocale === 'no';
+  if (!leagueId || !teamId) {
+    alert(isNo ? 'Velg en liga først (Liga-fanen) for å beregne rang-effekt.' : 'Pick a league first to compute rank impact.');
+    return;
+  }
+  // Reuse the player modal overlay as a generic dialog
+  const overlay = $('player-modal-overlay');
+  const content = $('player-modal-content');
+  if (!overlay || !content) return;
+  overlay.classList.remove('hidden');
+  content.innerHTML = `<div style="padding:1rem;">
+    <h3 style="margin:0 0 0.6rem;font-size:1rem;">${isNo?'Rang-effekt av transfer':'Transfer rank impact'}</h3>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;">${outName} → ${inName}</div>
+    <div style="font-size:0.78rem;color:var(--text-muted);">${isNo?'Simulerer 300 baner ...':'Simulating 300 paths ...'}</div>
+  </div>`;
+  try {
+    const url = `/api/league/${leagueId}/transfer-ev?team_id=${teamId}&out=${outId}&in=${inId}&n_paths=300`;
+    const data = await fetch(url).then(r => r.json());
+    if (data.error) {
+      content.innerHTML += `<div style="color:var(--danger);font-size:0.78rem;padding:1rem;">${data.error}</div>`;
+      return;
+    }
+    const rankColor = data.avg_rank_change < 0 ? 'var(--ok)' : data.avg_rank_change > 0 ? 'var(--danger)' : 'var(--text-muted)';
+    const rankSign = data.avg_rank_change < 0 ? '↑' : data.avg_rank_change > 0 ? '↓' : '=';
+    content.innerHTML = `<div style="padding:1rem;">
+      <h3 style="margin:0 0 0.6rem;font-size:1rem;">${isNo?'Rang-effekt av transfer':'Transfer rank impact'}</h3>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.8rem;">${outName} → ${inName}</div>
+      <div class="ma-grid">
+        <div class="ma-stat"><div class="v">+${data.ep_delta}</div><div class="l">${isNo?'EP-gevinst':'EP gain'}</div></div>
+        <div class="ma-stat"><div class="v" style="color:${rankColor};">${rankSign} ${Math.abs(data.avg_rank_change).toFixed(2)}</div><div class="l">${isNo?'Snitt rang-endring':'Avg rank change'}</div></div>
+        <div class="ma-stat"><div class="v" style="color:var(--ok);">${data.rank_improves_pct}%</div><div class="l">${isNo?'Forbedrer rang':'Improves rank'}</div></div>
+        <div class="ma-stat"><div class="v" style="color:var(--danger);">${data.rank_worsens_pct}%</div><div class="l">${isNo?'Forverrer rang':'Worsens rank'}</div></div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.8rem;">
+        ${isNo
+          ? `Median-rang ${data.median_rank_without} → ${data.median_rank_with} basert på ${data.n_paths} sample-baner over ${data.n_remaining_gws} gjenværende GW.`
+          : `Median rank ${data.median_rank_without} → ${data.median_rank_with} based on ${data.n_paths} sampled paths over ${data.n_remaining_gws} remaining GWs.`}
+      </div>
+      <button onclick="closePlayerModal()" style="margin-top:0.8rem;background:var(--bg-subtle);border:1px solid var(--border-default);color:var(--text-strong);padding:0.4rem 0.8rem;border-radius:6px;cursor:pointer;font-size:0.82rem;">${isNo?'Lukk':'Close'}</button>
+    </div>`;
+  } catch (e) {
+    content.innerHTML += `<div style="color:var(--danger);font-size:0.78rem;padding:1rem;">${e.message}</div>`;
+  }
 }
 
 function renderSummary(el, sq) {
@@ -10343,6 +10839,12 @@ async function openPlayerModal(playerId) {
           style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.35rem 0.65rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;white-space:nowrap;">
           ⇄ ${currentLocale==='no'?'Sammenlign':'Compare'}
         </button>
+        <button onclick="toggleWatchPlayer(${p.id}, this)" title="${currentLocale==='no'?'Følg spilleren':'Watch this player'}"
+          style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.35rem 0.65rem;font-size:0.78rem;cursor:pointer;white-space:nowrap;color:${(window._watchedPlayers && window._watchedPlayers.has(p.id))?'var(--brand-primary)':'var(--text-muted)'};">
+          ${(window._watchedPlayers && window._watchedPlayers.has(p.id))
+            ? `${uiIcon('star-filled')} ${currentLocale==='no'?'Fulgt':'Watching'}`
+            : `${uiIcon('star')} ${currentLocale==='no'?'Følg':'Watch'}`}
+        </button>
       </div>
       ${epPanel}
       <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;font-weight:600;">${currentLocale==='no'?'Kommende kamper':'Upcoming Fixtures'}</div>
@@ -10373,6 +10875,10 @@ async function openPlayerModal(playerId) {
       <div id="pm-tab-breakdown">
         <div style="font-size:0.75rem;color:var(--text-muted);margin:0.4rem 0 0.3rem;font-weight:600;">${currentLocale==='no'?'Score-bidrag':'Score Breakdown'}</div>
         <div class="pm-breakdown">${breakdownRows}</div>
+        <div style="margin-top:0.8rem;font-size:0.75rem;color:var(--text-muted);font-weight:600;">${currentLocale==='no'?'Hvorfor denne spilleren?':'Why this player?'}</div>
+        <div id="pm-why-${playerId}" style="font-size:0.78rem;color:var(--text-default);margin-top:0.3rem;">
+          <span style="color:var(--text-muted);">${currentLocale==='no'?'Henter forklaring…':'Loading explanation…'}</span>
+        </div>
       </div>
       <div id="pm-tab-form" class="hidden">
         <canvas id="pm-form-canvas" width="420" height="180" style="width:100%;max-width:420px;"></canvas>
@@ -10382,9 +10888,196 @@ async function openPlayerModal(playerId) {
         ${renderPmAdvancedTab(p)}
       </div>
     `;
+    loadScoreExplanation(playerId);
   } catch(e) {
     content.innerHTML = `<div class="error-msg">${e.message}</div>`;
   }
+}
+
+// V5 (2026-05): Lucide-style inline SVG icons for UI chrome.
+// Use this helper instead of emoji for navigation/controls. Emoji is reserved
+// for semantic content (🥇🥈🥉 ranks, ⚽ live, 🥷 differential pick, etc).
+function uiIcon(name, size = 14) {
+  const stroke = 'currentColor';
+  const sw = 1.75;
+  const wrap = (paths) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0;" aria-hidden="true">${paths}</svg>`;
+  const icons = {
+    'star':         '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    'star-filled':  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor"/>',
+    'shield':       '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    'rocket':       '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+    'scale':        '<path d="M12 3v18"/><path d="M5 21h14"/><path d="M3 9l3-6 3 6"/><path d="M15 9l3-6 3 6"/><path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3"/><path d="M15 9c0 1.66 1.34 3 3 3s3-1.34 3-3"/>',
+    'chart':        '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  };
+  return wrap(icons[name] || '');
+}
+
+// Captain uncertainty (Bayesian bootstrap p10/p50/p90)
+const RISK_MODES = ['balanced', 'safe', 'aggressive'];
+function _riskModeLabel(mode) {
+  const isNo = currentLocale === 'no';
+  if (mode === 'safe') return `${uiIcon('shield')} ${isNo ? 'Trygg' : 'Safe'}`;
+  if (mode === 'aggressive') return `${uiIcon('rocket')} ${isNo ? 'Offensiv' : 'Aggressive'}`;
+  return `${uiIcon('scale')} ${isNo ? 'Balansert' : 'Balanced'}`;
+}
+function _currentRiskMode() {
+  return localStorage.getItem('fpl_risk_mode') || 'balanced';
+}
+function cycleRiskMode() {
+  const cur = _currentRiskMode();
+  const next = RISK_MODES[(RISK_MODES.indexOf(cur) + 1) % RISK_MODES.length];
+  localStorage.setItem('fpl_risk_mode', next);
+  // Best practice: sync to server-side prefs if logged in
+  if (AppState.userId) {
+    fetch(`/api/user-prefs/${AppState.userId}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prefs: {risk_mode: next}}),
+    }).catch(() => {});
+  }
+  loadCaptainUncertainty();
+}
+
+// Hydrate localStorage from server-side prefs on first user load
+async function syncUserPrefs() {
+  if (!AppState.userId) return;
+  try {
+    const data = await fetch(`/api/user-prefs/${AppState.userId}`).then(r => r.json());
+    if (data && data.prefs) {
+      if (data.prefs.risk_mode) localStorage.setItem('fpl_risk_mode', data.prefs.risk_mode);
+      if (data.prefs.language) currentLocale = data.prefs.language;
+      window._watchedPlayers = new Set(data.watched || []);
+    }
+  } catch (e) { /* silent */ }
+}
+
+async function toggleWatchPlayer(playerId, btnEl) {
+  if (!AppState.userId) {
+    alert(currentLocale==='no' ? 'Lim inn FPL team-ID først (Innstillinger).' : 'Enter FPL team ID first (Settings).');
+    return;
+  }
+  window._watchedPlayers = window._watchedPlayers || new Set();
+  const isWatched = window._watchedPlayers.has(playerId);
+  const method = isWatched ? 'DELETE' : 'POST';
+  try {
+    const data = await fetch(`/api/user-prefs/${AppState.userId}/watched/${playerId}`, {method}).then(r => r.json());
+    if (data && Array.isArray(data.watched)) {
+      window._watchedPlayers = new Set(data.watched);
+      const isNo = currentLocale === 'no';
+      const nowWatched = window._watchedPlayers.has(playerId);
+      if (btnEl) {
+        const icon = nowWatched ? uiIcon('star-filled') : uiIcon('star');
+        const label = nowWatched ? (isNo?'Fulgt':'Watching') : (isNo?'Følg':'Watch');
+        btnEl.innerHTML = `${icon} ${label}`;
+        btnEl.style.color = nowWatched ? 'var(--brand-primary)' : 'var(--text-muted)';
+      }
+    }
+  } catch (e) { /* silent */ }
+}
+async function loadCaptainUncertainty() {
+  const wrap = document.getElementById('hcc-uncertainty');
+  if (!wrap) return;
+  const mode = _currentRiskMode();
+  const labelEl = document.getElementById('hcc-risk-mode-label');
+  const textEl = document.getElementById('hcc-uncertainty-text');
+  if (labelEl) labelEl.textContent = _riskModeLabel(mode);
+  if (textEl) textEl.textContent = currentLocale === 'no' ? 'Henter intervaller …' : 'Loading intervals …';
+  wrap.style.display = 'block';
+  try {
+    const data = await fetch(`/api/captain-uncertainty?mode=${mode}&top_n=3`).then(r => r.json());
+    if (!data.recommendations || !data.recommendations.length) {
+      wrap.style.display = 'none';
+      return;
+    }
+    const top = data.recommendations[0];
+    const u = top.uncertainty || {};
+    const isNo = currentLocale === 'no';
+    const ranked = data.recommendations.slice(0, 3).map(r => {
+      const ru = r.uncertainty || {};
+      return `${r.name} <span style="font-family:var(--font-mono);">[${ru.p10}-${ru.p50}-${ru.p90}]</span>`;
+    }).join(' · ');
+    textEl.innerHTML = `<strong>${top.name}</strong> ${isNo?'p10/p50/p90':'p10/p50/p90'}: <span style="font-family:var(--font-mono);color:var(--text-strong);">${u.p10}–${u.p50}–${u.p90}</span> (n=${u.n}). ${isNo?'Top 3':'Top 3'}: ${ranked}`;
+  } catch (e) {
+    wrap.style.display = 'none';
+  }
+}
+
+async function loadScoreExplanation(playerId) {
+  const target = document.getElementById(`pm-why-${playerId}`);
+  if (!target) return;
+  try {
+    const resp = await fetch(`/api/score-breakdown/${playerId}`);
+    const data = await resp.json();
+    if (data.error || !data.breakdown) {
+      target.innerHTML = `<span style="color:var(--text-muted);">${currentLocale==='no'?'Forklaring utilgjengelig':'Explanation unavailable'}</span>`;
+      return;
+    }
+    // Top 3 contributing components
+    const top = [...data.breakdown].sort((a, b) => b.contribution - a.contribution).slice(0, 3);
+    const ctx = data.context || {};
+    const fdrPct = Math.round((ctx.fixture_difficulty || 0) * 100);
+    const rotPct = Math.round((ctx.rotation_risk || 0) * 100);
+    const sp = ctx.set_pieces || {};
+    const spParts = [];
+    if (sp.penalties === 1) spParts.push(currentLocale==='no'?'1.-valg straffe':'1st-choice penalties');
+    if (sp.freekicks === 1) spParts.push(currentLocale==='no'?'1.-valg frispark':'1st-choice freekicks');
+    if (sp.corners === 1) spParts.push(currentLocale==='no'?'1.-valg hjørne':'1st-choice corners');
+
+    const lines = top.map(c => {
+      const pct = c.pct_of_score.toFixed(0);
+      return `<li style="margin:0.15rem 0;"><strong>${c.label}</strong> (${pct}% av score) — råverdi ${c.raw}</li>`;
+    }).join('');
+
+    const extras = [];
+    extras.push(`${currentLocale==='no'?'Kampprogram-letthet':'Fixture ease'}: ${fdrPct}%`);
+    if (rotPct >= 30) extras.push(`<span style="color:var(--danger);">${currentLocale==='no'?'Rotasjonsrisiko':'Rotation risk'}: ${rotPct}%</span>`);
+    if (spParts.length) extras.push(spParts.join(' · '));
+
+    target.innerHTML = `
+      <ul style="margin:0;padding-left:1.1rem;font-size:0.78rem;line-height:1.5;">${lines}</ul>
+      <div style="margin-top:0.4rem;font-size:0.72rem;color:var(--text-muted);">${extras.join(' · ')}</div>
+      <div id="pm-ml-${playerId}" style="margin-top:0.4rem;font-size:0.72rem;color:var(--text-muted);"></div>
+    `;
+    loadMlComparison(playerId);
+  } catch (e) {
+    target.innerHTML = `<span style="color:var(--text-muted);">${currentLocale==='no'?'Kunne ikke hente forklaring':'Could not load explanation'}</span>`;
+  }
+}
+
+// Load ML baseline prediction for the same player and compare to heuristic.
+// Cached aggressively so we don't retrain on every modal open.
+let _mlComparisonCache = null;
+let _mlComparisonPromise = null;
+async function _getMlComparison() {
+  if (_mlComparisonCache) return _mlComparisonCache;
+  if (_mlComparisonPromise) return _mlComparisonPromise;
+  _mlComparisonPromise = fetch('/api/ml/compare?top_n=80').then(r => r.json()).then(d => {
+    _mlComparisonCache = d;
+    return d;
+  }).catch(e => null);
+  return _mlComparisonPromise;
+}
+
+async function loadMlComparison(playerId) {
+  const target = document.getElementById(`pm-ml-${playerId}`);
+  if (!target) return;
+  const data = await _getMlComparison();
+  if (!data || !data.comparison) return;
+  const entry = data.comparison.find(c => c.id === playerId);
+  if (!entry || entry.ml_baseline_pred == null) return;
+  const isNo = currentLocale === 'no';
+  const heur = entry.ep_next_fpl;
+  const ml = entry.ml_baseline_pred;
+  const delta = ml - (heur || 0);
+  const sign = delta > 0 ? '+' : '';
+  const tone = Math.abs(delta) >= 1.5 ? 'color:var(--warn);' : 'color:var(--text-muted);';
+  target.innerHTML = `
+    <span style="${tone}">
+      <strong>ML-baseline:</strong> ${ml.toFixed(1)} pts
+      ${heur ? `(<span style="${tone}">${sign}${delta.toFixed(1)} vs FPL ${heur.toFixed(1)}</span>)` : ''}
+    </span>
+    <span style="font-size:0.65rem;margin-left:0.3rem;">${isNo?'(ridge regression, n='+data.model.n_samples+', RMSE '+data.model.rmse+')':'(ridge regression, n='+data.model.n_samples+', RMSE '+data.model.rmse+')'}</span>
+  `;
 }
 
 function pmSwitchTab(el, tabId) {
@@ -13006,60 +13699,62 @@ document.addEventListener('keydown', e => {
   <button class="btn" onclick="runOptimizer()">Optimize Squad</button>
 </div>
 
+<!-- Bottom-nav matches the 5 primary IA destinations: Hjem · Plan · Kaptein · Liga · Arkiv.
+     Stripped of legacy "Transfers/Fixtures/Stats/More" surfaces (P0, 2026-05). -->
 <nav class="bottom-nav" id="bottom-nav">
   <button class="active" data-nav="nav-dashboard" onclick="switchNav('nav-dashboard')">
-    <span class="bn-icon">&#9733;</span><span class="bn-label">Home</span>
+    <span class="bn-icon">&#9733;</span><span class="bn-label">Hjem</span>
   </button>
-  <button data-nav="nav-transfers-planner" onclick="switchNav('nav-transfers-planner')">
-    <span class="bn-icon">&#8644;</span><span class="bn-label">Transfers</span>
+  <button data-nav="nav-transfers-optimizer" onclick="switchNav('nav-transfers-optimizer')">
+    <span class="bn-icon">&#8644;</span><span class="bn-label">Plan</span>
   </button>
-  <button data-nav="nav-fixtures-fdr" onclick="switchNav('nav-fixtures-fdr')">
-    <span class="bn-icon">&#128197;</span><span class="bn-label">Fixtures</span>
+  <button data-nav="nav-news-captain" onclick="switchNav('nav-news-captain')">
+    <span class="bn-icon">&#9818;</span><span class="bn-label">Kaptein</span>
   </button>
-  <button data-nav="nav-playerstats-table" onclick="switchNav('nav-playerstats-table')">
-    <span class="bn-icon">&#128202;</span><span class="bn-label">Stats</span>
+  <button data-nav="nav-leagues-standings" onclick="switchNav('nav-leagues-standings')">
+    <span class="bn-icon">&#127942;</span><span class="bn-label">Liga</span>
   </button>
-  <button id="bn-more-btn" onclick="toggleMoreMenu()">
-    <span class="bn-icon">&#8943;</span><span class="bn-label">More</span>
+  <button data-nav="nav-season-history" onclick="switchNav('nav-season-history')">
+    <span class="bn-icon">&#128218;</span><span class="bn-label">Arkiv</span>
   </button>
 </nav>
 
 <div class="more-menu-overlay" id="more-menu-overlay" onclick="toggleMoreMenu()"></div>
 <div class="more-menu-mobile" id="more-menu">
   <div class="mm-header">
-    <span>More</span>
+    <span>Mer</span>
     <button class="mm-close" onclick="toggleMoreMenu()">&times;</button>
   </div>
 
-  <div class="mm-group-title">My Team</div>
-  <div class="mm-item" onclick="switchNav('nav-team-myteam')"><span class="mm-icon">&#9917;</span> My Team</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Transfer Suggestions</div>
-  <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> League Standings</div>
-  <div class="mm-item" onclick="switchNav('nav-leagues-rival')"><span class="mm-icon">&#9876;</span> Rival Comparison</div>
-  <div class="mm-item" onclick="switchNav('nav-season-history')"><span class="mm-icon">&#128200;</span> Season History</div>
-  <div class="mm-item" onclick="switchNav('nav-league-diff')"><span class="mm-icon">&#128101;</span> League Differentials</div>
+  <div class="mm-group-title">Mitt lag</div>
+  <div class="mm-item" onclick="switchNav('nav-team-myteam')"><span class="mm-icon">&#9917;</span> Mitt lag</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-suggestions')"><span class="mm-icon">&#128161;</span> Transfer-forslag</div>
+  <div class="mm-item" onclick="switchNav('nav-leagues-standings')"><span class="mm-icon">&#127942;</span> Liga-tabell</div>
+  <div class="mm-item" onclick="switchNav('nav-leagues-rival')"><span class="mm-icon">&#9876;</span> Rivaliseringer</div>
+  <div class="mm-item" onclick="switchNav('nav-season-history')"><span class="mm-icon">&#128200;</span> Sesonghistorikk</div>
+  <div class="mm-item" onclick="switchNav('nav-league-diff')"><span class="mm-icon">&#128101;</span> Liga-differensialer</div>
   <div class="mm-divider"></div>
 
-  <div class="mm-group-title">Analysis</div>
-  <div class="mm-item" onclick="switchNav('nav-playerstats-opta')"><span class="mm-icon">&#128202;</span> Opta Stats & BPS</div>
-  <div class="mm-item" onclick="switchNav('nav-playerstats-compare')"><span class="mm-icon">&#8596;</span> Compare Players</div>
-  <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Fixture Schedule</div>
-  <div class="mm-item" onclick="switchNav('nav-fixtures-list')"><span class="mm-icon">&#128203;</span> Fixture List</div>
-  <div class="mm-item" onclick="switchNav('nav-fixtures-swing')"><span class="mm-icon">&#128260;</span> Swing & Rotation</div>
-  <div class="mm-item" onclick="switchNav('nav-set-pieces')"><span class="mm-icon">&#9918;</span> Set Pieces</div>
-  <div class="mm-item" onclick="switchNav('nav-lineup-predictor')"><span class="mm-icon">&#128101;</span> Lineup Predictor</div>
+  <div class="mm-group-title">Analyse</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-opta')"><span class="mm-icon">&#128202;</span> Opta-stat og BPS</div>
+  <div class="mm-item" onclick="switchNav('nav-playerstats-compare')"><span class="mm-icon">&#8596;</span> Sammenlign spillere</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-schedule')"><span class="mm-icon">&#128197;</span> Kampprogram</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-list')"><span class="mm-icon">&#128203;</span> Kampliste</div>
+  <div class="mm-item" onclick="switchNav('nav-fixtures-swing')"><span class="mm-icon">&#128260;</span> Swing og rotasjon</div>
+  <div class="mm-item" onclick="switchNav('nav-set-pieces')"><span class="mm-icon">&#9918;</span> Dødballer</div>
+  <div class="mm-item" onclick="switchNav('nav-lineup-predictor')"><span class="mm-icon">&#128101;</span> Laguttaks-prediksjon</div>
   <div class="mm-divider"></div>
 
-  <div class="mm-group-title">Planning</div>
+  <div class="mm-group-title">Planlegging</div>
   <div class="mm-item" onclick="switchNav('nav-transfers-optimizer')"><span class="mm-icon">&#128736;</span> Squad Optimizer</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-multigw')"><span class="mm-icon">&#128197;</span> Multi-GW Planner</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-chips')"><span class="mm-icon">&#127183;</span> Chip Strategy</div>
-  <div class="mm-item" onclick="switchNav('nav-transfers-gain')"><span class="mm-icon">&#128200;</span> Gain vs Hit</div>
-  <div class="mm-item" onclick="switchNav('nav-news-prices')"><span class="mm-icon">&#128176;</span> Price Changes</div>
-  <div class="mm-item" onclick="switchNav('nav-news-differentials')"><span class="mm-icon">&#128142;</span> Differentials</div>
-  <div class="mm-item" onclick="switchNav('nav-news-rotation')"><span class="mm-icon">&#128260;</span> Rotation Risk</div>
-  <div class="mm-item" onclick="switchNav('nav-news-ownership')"><span class="mm-icon">&#128101;</span> Ownership & EO</div>
-  <div class="mm-item" onclick="switchNav('nav-news-ranksim')"><span class="mm-icon">&#128200;</span> Rank Simulator</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-multigw')"><span class="mm-icon">&#128197;</span> Multi-GW-planlegger</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-chips')"><span class="mm-icon">&#127183;</span> Chip-strategi</div>
+  <div class="mm-item" onclick="switchNav('nav-transfers-gain')"><span class="mm-icon">&#128200;</span> Gevinst vs hit</div>
+  <div class="mm-item" onclick="switchNav('nav-news-prices')"><span class="mm-icon">&#128176;</span> Prisendringer</div>
+  <div class="mm-item" onclick="switchNav('nav-news-differentials')"><span class="mm-icon">&#128142;</span> Differensialer</div>
+  <div class="mm-item" onclick="switchNav('nav-news-rotation')"><span class="mm-icon">&#128260;</span> Rotasjonsrisiko</div>
+  <div class="mm-item" onclick="switchNav('nav-news-ownership')"><span class="mm-icon">&#128101;</span> Eierskap og EO</div>
+  <div class="mm-item" onclick="switchNav('nav-news-ranksim')"><span class="mm-icon">&#128200;</span> Rang-simulator</div>
   <div class="mm-divider"></div>
 
   <div class="mm-group-title">Match Analysis</div>
