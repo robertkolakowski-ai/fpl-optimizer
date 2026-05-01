@@ -7721,6 +7721,10 @@ renderRecentUsers();
 
 // ==================== PERSIST USER ID ====================
 (function restoreUser() {
+  // Default: not-connected. Removed only when loadUser() actually succeeds.
+  // This prevents a stale localStorage entry (or slow load) from leaving
+  // the empty stat cards and "Loading fixtures..." visible.
+  document.body.classList.add('not-connected');
   const saved = localStorage.getItem('fpl_user_id');
   const cachedData = localStorage.getItem('fpl_user_data');
 
@@ -7908,6 +7912,8 @@ async function loadUser() {
     AppState.userId = uid;
     AppState.userData = data; // Cache user data centrally
     AppState._loaded.dash = false; // Reset so dashboard reloads with new user
+    // Connected — reveal stat cards / fixture ticker / page head
+    document.body.classList.remove('not-connected');
     syncUserPrefs(); // Pull saved prefs (risk mode, watched players) from server
     if (!AppState.isDemoMode) {
       localStorage.setItem('fpl_user_id', String(uid));
