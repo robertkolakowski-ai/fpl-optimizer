@@ -4561,27 +4561,40 @@ function wizardSubmitId() {
   errBox.textContent = '';
   const raw = (inp.value || '').trim();
   if (!raw) { errBox.textContent = currentLocale==='no' ? 'Lim inn FPL ID eller URL' : 'Paste FPL ID or URL'; return; }
-  // Reuse existing detection: copy detected id into hidden compat input
   const m = raw.match(/\b(\d{4,9})\b/);
   if (!m) { errBox.textContent = currentLocale==='no' ? 'Fant ingen ID i input' : 'Could not detect ID'; return; }
   const id = parseInt(m[1]);
   Wizard.pendingId = id;
-  // Use existing fetch path
   $('dash-fpl-input').value = String(id);
   const btn = document.querySelector('#onboard-wizard [data-pane="1"] .btn');
-  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  if (btn) { btn.disabled = true; btn.textContent = currentLocale==='no' ? 'Henter…' : 'Loading…'; }
   fetch(`/api/user/${id}`).then(r => r.json()).then(data => {
     if (!data || data.error) {
       errBox.textContent = currentLocale==='no' ? `Kunne ikke hente lag #${id}. Sjekk ID.` : `Could not fetch team #${id}. Check ID.`;
+      if (btn) { btn.disabled = false; btn.textContent = currentLocale==='no' ? 'Hent →' : 'Fetch →'; }
       return;
     }
+    // Direkte til Hjem — hopper over confirm-stegene (1-klikks-flyt, 2026-05).
+    // De gamle stegene 2 og 3 var unødvendig friksjon: brukeren har allerede
+    // skrevet ID-en, en bekreftelse legger ikke verdi.
     Wizard.pendingUserData = data;
-    $('wizard-team-name').textContent = data.team_name || data.entry_name || `Team #${id}`;
-    $('wizard-manager-name').textContent = (data.manager_name || data.player_name || '') + (data.overall_rank ? ` • ${currentLocale==='no'?'Rang':'Rank'} ${data.overall_rank.toLocaleString()}` : '');
-    Wizard.go(2);
+    localStorage.setItem('fpl_user_id', String(id));
+    $('user-id') && ($('user-id').value = String(id));
+    loadUser().then(() => {
+      document.body.classList.remove('not-connected');
+      const empty = $('dash-empty-state');
+      if (empty) empty.style.display = 'none';
+      const hero = $('hero-usp');
+      if (hero) hero.style.display = 'none';
+      const welcome = $('dash-welcome');
+      if (welcome) welcome.style.display = '';
+      renderHomeBrief();
+    }).catch(e => {
+      errBox.textContent = currentLocale==='no' ? 'Klarte ikke laste laget — prøv igjen.' : 'Failed to load team — try again.';
+      if (btn) { btn.disabled = false; btn.textContent = currentLocale==='no' ? 'Hent →' : 'Fetch →'; }
+    });
   }).catch(e => {
     errBox.textContent = currentLocale==='no' ? 'Nettverksfeil — prøv igjen' : 'Network error — try again';
-  }).finally(() => {
     if (btn) { btn.disabled = false; btn.textContent = currentLocale==='no' ? 'Hent →' : 'Fetch →'; }
   });
 }
