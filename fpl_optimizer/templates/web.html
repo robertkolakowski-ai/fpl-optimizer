@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FPL Optimizer</title>
+<!-- Inline SVG favicon — orange "O" pentagon mark fra logo-monogrammet, samme palett som hero-tinten. Ingen ekstra HTTP-request. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23FBEFD3' stroke='%23E5A23B' stroke-width='2.5'/%3E%3Cpolygon points='20,6.4 28.4,17.3 28.9,32.3 16.2,25.2 9.4,16.5' fill='none' stroke='%23E5A23B' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -4759,10 +4761,16 @@ async function renderHomeBrief() {
       const team = capPick.team_short || capPick.team_name || capPick.team || '';
       const price = capPick.price ? `£${parseFloat(capPick.price).toFixed(1)}m` : (capPick.now_cost ? `£${(capPick.now_cost/10).toFixed(1)}m` : '');
       $('hcc-meta').textContent = [team, pos, price].filter(Boolean).join(' · ');
-      const pts = capPick.expected_points != null ? capPick.expected_points : (capPick.score || capPick.composite_score);
+      // Captain-armbåndet dobler poengene — bruk captain_ev (real EV med dobling)
+      // eller ep_next×2 som fallback. composite_score er en 0-1 ranking, ikke poeng.
+      const pts = capPick.captain_ev != null ? capPick.captain_ev
+        : (capPick.expected_points != null ? capPick.expected_points
+        : (capPick.ep_next != null ? capPick.ep_next * 2 : null));
       $('hcc-pts').textContent = pts != null ? Number(pts).toFixed(1) : '—';
       if (capSecond && pts != null) {
-        const sPts = capSecond.expected_points != null ? capSecond.expected_points : (capSecond.score || capSecond.composite_score);
+        const sPts = capSecond.captain_ev != null ? capSecond.captain_ev
+          : (capSecond.expected_points != null ? capSecond.expected_points
+          : (capSecond.ep_next != null ? capSecond.ep_next * 2 : null));
         if (sPts != null) {
           const delta = pts - sPts;
           $('hcc-delta').textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} vs ${capSecond.name || capSecond.web_name || ''}`;
@@ -4771,7 +4779,8 @@ async function renderHomeBrief() {
       }
       $('hcc-because-text').innerHTML = glossifyText(explainCaptain(capPick));
       // Confidence: high if delta>1, med if 0.4-1, low if <0.4
-      const delta = (capSecond && pts != null) ? Math.abs(pts - (capSecond.expected_points || capSecond.score || 0)) : 0;
+      const _sPts = capSecond ? (capSecond.captain_ev != null ? capSecond.captain_ev : (capSecond.ep_next != null ? capSecond.ep_next * 2 : 0)) : 0;
+      const delta = (capSecond && pts != null) ? Math.abs(pts - _sPts) : 0;
       const cbLevel = delta >= 1 ? 'cb-high' : (delta >= 0.4 ? 'cb-med' : 'cb-low');
       const cbLabel = cbLevel === 'cb-high' ? (currentLocale==='no'?'Høy':'High') : cbLevel === 'cb-med' ? (currentLocale==='no'?'Medium':'Medium') : (currentLocale==='no'?'Lav':'Low');
       const cb = $('hcc-confidence');
@@ -11018,7 +11027,7 @@ async function loadCaptainUncertainty() {
   const mode = _currentRiskMode();
   const labelEl = document.getElementById('hcc-risk-mode-label');
   const textEl = document.getElementById('hcc-uncertainty-text');
-  if (labelEl) labelEl.textContent = _riskModeLabel(mode);
+  if (labelEl) labelEl.innerHTML = _riskModeLabel(mode);
   if (textEl) textEl.textContent = currentLocale === 'no' ? 'Henter intervaller …' : 'Loading intervals …';
   wrap.style.display = 'block';
   try {

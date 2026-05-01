@@ -315,6 +315,56 @@ def health():
 
 
 # ------------------------------------------------------------------ #
+# Frontend compat aliaser (2026-05) — Hjem-side renderHomeBrief() kaller
+# /api/transfer-suggestions/<id> og /api/leagues/<id> som ikke eksisterer
+# under de navnene. Gjenbruker /api/user/<id> for ligaer og bygger en enkel
+# transfer-suggestion fra optimizer-resultat.
+# ------------------------------------------------------------------ #
+@app.route("/api/leagues/<int:user_id>")
+def api_leagues_alias(user_id):
+    try:
+        with httpx.Client(timeout=15) as client:
+            entry = fetch_user_entry(client, user_id)
+        leagues = entry.get("leagues", {})
+        return jsonify({
+            "classic": leagues.get("classic", []),
+            "h2h": leagues.get("h2h", []),
+            "cup": leagues.get("cup", {}),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/transfer-suggestions/<int:user_id>")
+def api_transfer_suggestions_alias(user_id):
+    """Return top 1-2 transfer suggestions for the home brief card."""
+    try:
+        players, teams, gameweeks, fixtures = _get_cached_data()
+        score_players(players, fixtures, gameweeks, teams)
+        compute_rotation_risk(players)
+        compute_projected_minutes(players, gameweeks)
+        try:
+            user_players, _bank = load_user_team(user_id, players, gameweeks)
+        except Exception:
+            return jsonify({"suggestions": []})
+        from .models import Squad
+        sq = Squad(players=user_players)
+        suggestions = suggest_transfers(sq, players, max_suggestions=2)
+        out = []
+        for s in suggestions:
+            out.append({
+                "out": s.player_out.to_dict(),
+                "in": s.player_in.to_dict(),
+                "points_gain": round(getattr(s, "ep_gain_horizon", 0.0), 1),
+                "points_5gw": round(getattr(s, "ep_gain_horizon", 0.0), 1),
+                "score_gain": round(s.score_gain, 3),
+            })
+        return jsonify({"suggestions": out})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------------------------------------------------------ #
 # Cache stats (D — best-practice shared cache)
 # ------------------------------------------------------------------ #
 @app.route("/api/cache/stats")
