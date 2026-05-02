@@ -5016,6 +5016,19 @@ async function renderHomeBrief() {
       </div>
     </header>
 
+    <!-- Live mini-liga battle: vises kun under match-day, oppdateres automatisk hvert 30s -->
+    <div class="live-battle-card" id="live-battle-card" hidden style="background:linear-gradient(135deg, rgba(229,162,59,0.12), rgba(216,124,40,0.06));border:1px solid color-mix(in oklab, var(--brand-primary) 30%, transparent);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-3);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);flex-wrap:wrap;gap:var(--sp-2);">
+        <div style="display:flex;align-items:center;gap:var(--sp-2);">
+          <span style="display:inline-block;width:8px;height:8px;background:#FF3B30;border-radius:50%;animation:c-mark-pulse 1.4s infinite;"></span>
+          <strong style="font-size:var(--fs-body);">${currentLocale==='no'?'Live mini-liga':'Live mini-league'}</strong>
+          <span style="color:var(--text-muted);font-size:var(--fs-label);" id="live-battle-gw"></span>
+        </div>
+        <span id="live-battle-your-pts" style="font-family:var(--font-mono);font-weight:700;font-size:var(--fs-h3);color:var(--brand-primary);"></span>
+      </div>
+      <div id="live-battle-rivals" style="font-size:var(--fs-small);line-height:1.6;"></div>
+    </div>
+
     <div class="live-bonus-strip" id="live-bonus-strip" hidden style="background:linear-gradient(90deg,rgba(81,207,102,0.12),rgba(81,207,102,0.04));border:1px solid rgba(81,207,102,0.3);border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:var(--sp-2);font-size:0.78rem;display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
       <span style="font-weight:600;color:var(--ok);text-transform:uppercase;letter-spacing:0.05em;font-size:0.7rem;">⚽ ${currentLocale==='no'?'Live BPS':'Live BPS'}</span>
       <span id="live-bonus-items" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></span>
@@ -5244,6 +5257,7 @@ async function renderHomeBrief() {
     loadWeeklyLearning();
     loadStrategicAdvice();
     loadHjemTeamStrength();
+    loadLiveBattle();
 
   } catch (e) {
     console.warn('home brief fill failed', e);
@@ -5892,6 +5906,79 @@ async function loadWeeklyLearning() {
     sec.style.display = '';
   } catch (e) {
     sec.style.display = 'none';
+  }
+}
+
+// Live mini-liga-battle: viser sanntid-poeng for deg + 3 toppe rivaler.
+// Synlig kun under match-day (når current GW har started=true & finished=false).
+// Auto-poll hver 30. sek mens live.
+let _liveBattleInterval = null;
+async function loadLiveBattle() {
+  const card = document.getElementById('live-battle-card');
+  if (!card || !AppState.userId) return;
+  try {
+    // 1) Sjekk om vi er midt i en GW
+    const [gwsResp, leaguesResp] = await Promise.all([
+      fetch('/api/fixtures').then(r => r.ok ? r.json() : null),
+      fetch(`/api/leagues/${AppState.userId}`).then(r => r.ok ? r.json() : null),
+    ]);
+    if (!gwsResp || !gwsResp.gameweeks) { _stopLiveBattlePolling(); card.hidden = true; return; }
+    const currentGw = gwsResp.gameweeks.find(g => g.is_current);
+    if (!currentGw || !currentGw.fixtures) { _stopLiveBattlePolling(); card.hidden = true; return; }
+    // Live = minst én kamp er started men ikke alle finished
+    const started = currentGw.fixtures.filter(f => f.started || f.finished);
+    const allFinished = currentGw.fixtures.every(f => f.finished);
+    if (!started.length || allFinished) { _stopLiveBattlePolling(); card.hidden = true; return; }
+
+    // 2) Pick første private mini-liga
+    const list = (leaguesResp && (leaguesResp.classic || leaguesResp)) || [];
+    const myLeagues = Array.isArray(list) ? list.filter(l => l.id && l.name && !/overall|global/i.test(l.name)) : [];
+    if (!myLeagues.length) { card.hidden = true; return; }
+    const league = myLeagues[0];
+
+    // 3) Hent live standings for ligaen (top 5 inkl. deg)
+    const standings = await fetch(`/api/league/${league.id}`).then(r => r.ok ? r.json() : null);
+    if (!standings || !standings.standings) { card.hidden = true; return; }
+    const top = standings.standings.slice(0, 8);
+    const me = top.find(s => s.entry === AppState.userId);
+    if (!me) { card.hidden = true; return; }
+
+    // 4) Render
+    const isNo = currentLocale === 'no';
+    document.getElementById('live-battle-gw').textContent = `· ${currentGw.name} · ${league.name}`;
+    document.getElementById('live-battle-your-pts').textContent = `${me.gw_points || 0} pts`;
+    const rivals = top.filter(s => s.entry !== AppState.userId).slice(0, 4);
+    document.getElementById('live-battle-rivals').innerHTML = rivals.map(r => {
+      const delta = (me.gw_points || 0) - (r.gw_points || 0);
+      const ahead = delta > 0;
+      const tied = delta === 0;
+      const sign = ahead ? '+' : '';
+      const color = ahead ? 'var(--ok)' : tied ? 'var(--text-muted)' : 'var(--danger)';
+      const text = tied
+        ? (isNo ? 'likt' : 'tied')
+        : ahead
+          ? (isNo ? `leder med ${delta}` : `ahead by ${delta}`)
+          : (isNo ? `taper med ${Math.abs(delta)}` : `behind by ${Math.abs(delta)}`);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+        <span style="font-weight:500;">${r.manager_name}</span>
+        <span style="display:flex;gap:var(--sp-2);align-items:center;">
+          <span style="font-family:var(--font-mono);color:var(--text-muted);">${r.gw_points || 0} pts</span>
+          <span style="color:${color};font-weight:600;font-size:var(--fs-label);min-width:90px;text-align:right;">${sign}${tied ? '' : Math.abs(delta) + ' '}${text.replace(String(delta), '')}</span>
+        </span>
+      </div>`;
+    }).join('');
+
+    card.hidden = false;
+    if (!_liveBattleInterval) {
+      _liveBattleInterval = setInterval(() => loadLiveBattle(), 30000);
+    }
+  } catch (e) { card.hidden = true; }
+}
+
+function _stopLiveBattlePolling() {
+  if (_liveBattleInterval) {
+    clearInterval(_liveBattleInterval);
+    _liveBattleInterval = null;
   }
 }
 
