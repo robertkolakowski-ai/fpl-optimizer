@@ -12846,20 +12846,20 @@ function closePlayerModal() {
 
 // ==================== UNIVERSAL COMPARE MODAL ====================
 // Reuses the captain-style stat board, but works anywhere in the app.
-// Call openCompareModal(idA, idB) to compare directly, or openCompareModal(idA)
-// to open with a search picker for the second player.
-let CompareState = { aId: null, bId: null, players: [] };
+// Compare-modal støtter opptil 4 spillere. Gammel signatur (idA, idB) fortsatt
+// støttet — variadic via rest-args.
+let CompareState = { ids: [], players: [] };
 
-async function openCompareModal(idA, idB) {
+async function openCompareModal(...args) {
   const overlay = $('compare-modal-overlay');
   const content = $('compare-modal-content');
   overlay.classList.remove('hidden');
-  // Close player modal if open (we replace it with the compare board)
   $('player-modal-overlay').classList.add('hidden');
-  CompareState.aId = idA || null;
-  CompareState.bId = idB || null;
+  CompareState.ids = args.filter(Boolean).slice(0, 4);
+  // Backward compat alias for legacy call-sites
+  CompareState.aId = CompareState.ids[0] || null;
+  CompareState.bId = CompareState.ids[1] || null;
   content.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner active" style="display:inline-block;"></div></div>';
-  // Lazy-load player roster for picker (cached on window)
   if (!CompareState.players.length) {
     try {
       const r = await fetch('/api/players').then(r => r.ok ? r.json() : null);
@@ -12869,36 +12869,38 @@ async function openCompareModal(idA, idB) {
   await renderCompareModal();
 }
 
+function compareAddPlayer(playerId) {
+  if (CompareState.ids.length >= 4) return;
+  if (CompareState.ids.includes(playerId)) return;
+  CompareState.ids.push(playerId);
+  CompareState.bId = CompareState.ids[1] || null;
+  renderCompareModal();
+}
+function compareRemovePlayer(playerId) {
+  CompareState.ids = CompareState.ids.filter(id => id !== playerId);
+  CompareState.aId = CompareState.ids[0] || null;
+  CompareState.bId = CompareState.ids[1] || null;
+  if (!CompareState.ids.length) { closeCompareModal(); return; }
+  renderCompareModal();
+}
+
 async function renderCompareModal() {
   const content = $('compare-modal-content');
-  const { aId, bId } = CompareState;
-  if (!aId) { closeCompareModal(); return; }
-  // Always need A; B is optional (picker shown if missing)
-  let a = null, b = null;
+  const ids = CompareState.ids;
+  if (!ids.length) { closeCompareModal(); return; }
+  let loaded = [];
   try {
-    const fetches = [fetch(`/api/player/${aId}`).then(r => r.ok ? r.json() : null)];
-    if (bId) fetches.push(fetch(`/api/player/${bId}`).then(r => r.ok ? r.json() : null));
-    const results = await Promise.all(fetches);
-    a = results[0] && results[0].player ? results[0] : null;
-    b = bId && results[1] && results[1].player ? results[1] : null;
+    const results = await Promise.all(ids.map(id =>
+      fetch(`/api/player/${id}`).then(r => r.ok ? r.json() : null)
+    ));
+    loaded = results.filter(r => r && r.player);
   } catch (e) { /* fall through */ }
-  if (!a) {
-    content.innerHTML = `<div style="color:var(--danger);padding:1rem;">${currentLocale==='no'?'Kunne ikke hente spiller.':'Could not load player.'}</div>`;
+  if (!loaded.length) {
+    content.innerHTML = `<div style="color:var(--danger);padding:1rem;">${currentLocale==='no'?'Kunne ikke hente spillere.':'Could not load players.'}</div>`;
     return;
   }
 
-  const headerOf = pl => {
-    const p = pl.player;
-    const kit = pl.team_code ? `<img src="${KIT_BASE}${pl.team_code}${p.position === 1 ? '_1' : ''}-110.webp" style="width:36px;" onerror="this.style.display='none'">` : '';
-    return `<div style="display:flex;gap:0.5rem;align-items:center;">
-      <div class="pm-photo" style="width:40px;height:40px;flex-shrink:0;">${kit || (p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'">` : '&#9917;')}</div>
-      <div style="min-width:0;">
-        <div class="pm-name" style="font-size:0.95rem;">${p.name}</div>
-        <div class="pm-meta" style="font-size:0.72rem;">${pl.team_name} · ${p.position_name} · £${p.cost.toFixed(1)}m</div>
-      </div>
-    </div>`;
-  };
-
+  const isNo = currentLocale === 'no';
   const stats = [
     { l: plainLabel('xPts') + ' (5 GW)', v: pl => pl.player.expected_points || pl.player.score || 0, fmt: v => v.toFixed(1), bigger: true },
     { l: plainLabel('Form'), v: pl => parseFloat(pl.player.form) || 0, fmt: v => v.toFixed(1), bigger: true },
@@ -12906,64 +12908,98 @@ async function renderCompareModal() {
     { l: plainLabel('xG'), v: pl => pl.player.xG || 0, fmt: v => v.toFixed(2), bigger: true },
     { l: plainLabel('xA'), v: pl => pl.player.xA || 0, fmt: v => v.toFixed(2), bigger: true },
     { l: plainLabel('ICT'), v: pl => parseFloat(pl.player.ict_index) || 0, fmt: v => v.toFixed(0), bigger: true },
-    { l: currentLocale==='no'?'Pris':'Price', v: pl => pl.player.cost || 0, fmt: v => `£${v.toFixed(1)}m`, bigger: false },
+    { l: isNo?'Pris':'Price', v: pl => pl.player.cost || 0, fmt: v => `£${v.toFixed(1)}m`, bigger: false },
     { l: plainLabel('Own%'), v: pl => parseFloat(pl.player.selected_by_percent) || 0, fmt: v => `${v.toFixed(1)}%`, bigger: false },
     { l: plainLabel('Proj Min'), v: pl => (pl.composite_breakdown && pl.composite_breakdown.projected_minutes) || 0, fmt: v => v.toFixed(0), bigger: true },
-    { l: currentLocale==='no'?'Rotasjonsrisiko':'Rotation risk', v: pl => (pl.composite_breakdown && pl.composite_breakdown.rotation_risk) || 0, fmt: v => v.toFixed(2), bigger: false },
+    { l: isNo?'Rotasjonsrisiko':'Rotation risk', v: pl => (pl.composite_breakdown && pl.composite_breakdown.rotation_risk) || 0, fmt: v => v.toFixed(2), bigger: false },
   ];
 
-  const pickerB = !b ? `
-    <div style="border:1px dashed var(--border-default);border-radius:8px;padding:1rem;text-align:center;">
-      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem;">${currentLocale==='no'?'Velg motstander':'Pick opponent'}</div>
-      <input id="cmp-search" type="text" oninput="cmpFilterPickerB(this.value)" placeholder="${currentLocale==='no'?'Søk spiller …':'Search player …'}"
-        style="width:100%;padding:0.5rem;background:var(--bg-canvas);border:1px solid var(--border-default);border-radius:6px;color:var(--text);">
-      <div id="cmp-picker-results" style="max-height:200px;overflow-y:auto;margin-top:0.5rem;text-align:left;"></div>
+  // Vinner-verdier per stat-rad
+  const winners = stats.map(s => {
+    const vals = loaded.map(s.v);
+    return s.bigger ? Math.max(...vals) : Math.min(...vals);
+  });
+
+  const headerOf = (pl) => {
+    const p = pl.player;
+    const [primary] = teamColors(p.team);
+    const photo = p.photo
+      ? `<img src="${PHOTO_BASE}${p.photo}.png" style="width:48px;height:60px;object-fit:cover;object-position:top;border-radius:4px;border:2px solid ${primary};" onerror="this.style.display='none'">`
+      : `<span style="font-size:1.6rem;">⚽</span>`;
+    const removable = loaded.length > 1
+      ? `<button onclick="compareRemovePlayer(${p.id})" title="${isNo?'Fjern':'Remove'}" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--bg-canvas);border:1px solid var(--border-default);color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;">×</button>`
+      : '';
+    return `<div style="position:relative;text-align:center;padding:0 var(--sp-1);">
+      ${removable}${photo}
+      <div style="font-weight:700;font-size:0.9rem;margin-top:6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      <div style="color:var(--text-muted);font-size:0.7rem;">${pl.team_name} · ${p.position_name}</div>
+    </div>`;
+  };
+
+  const canAdd = loaded.length < 4;
+  const pickerHtml = canAdd ? `
+    <div style="margin-top:var(--sp-3);padding:var(--sp-3);background:var(--bg-subtle);border-radius:var(--r-sm);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);">
+        <span style="font-size:var(--fs-small);font-weight:600;color:var(--text-muted);">+ ${isNo?'Legg til spiller':'Add player'}</span>
+        <span style="font-size:var(--fs-label);color:var(--text-faint);">${loaded.length}/4</span>
+      </div>
+      <input id="cmp-search" type="text" oninput="cmpFilterPicker(this.value)" placeholder="${isNo?'Søk navn …':'Search name …'}"
+        style="width:100%;padding:0.5rem 0.7rem;background:var(--bg-canvas);border:1px solid var(--border-default);border-radius:6px;color:var(--text-default);font-size:var(--fs-small);">
+      <div id="cmp-picker-results" style="max-height:180px;overflow-y:auto;margin-top:var(--sp-2);"></div>
     </div>` : '';
 
-  let board = '';
-  if (b) {
-    const sideA = `<div class="cmp-side">${headerOf(a)}` + stats.map(s => {
-      const av = s.v(a), bv = s.v(b);
-      const winA = s.bigger ? av > bv : av < bv;
-      return `<div class="cmp-stat ${winA?'win':''}"><span class="lab">${s.l}</span><span>${s.fmt(av)}</span></div>`;
-    }).join('') + '</div>';
-    const sideB = `<div class="cmp-side">${headerOf(b)}` + stats.map(s => {
-      const av = s.v(a), bv = s.v(b);
-      const winB = s.bigger ? bv > av : bv < av;
-      return `<div class="cmp-stat ${winB?'win':''}"><span class="lab">${s.l}</span><span>${s.fmt(bv)}</span></div>`;
-    }).join('') + '</div>';
-    board = `<div class="compare-board">${sideA}<div class="cmp-stat-label">vs</div>${sideB}</div>`;
-  } else {
-    board = `<div style="margin-bottom:1rem;">${headerOf(a)}</div>${pickerB}`;
-  }
-
-  const swapBtn = b ? `<button onclick="openCompareModal(${b.player.id}, ${a.player.id})" style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.3rem 0.6rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">⇄ ${currentLocale==='no'?'Bytt':'Swap'}</button>` : '';
-  const clearBtn = b ? `<button onclick="openCompareModal(${a.player.id})" style="background:none;border:1px solid var(--border-default);border-radius:6px;padding:0.3rem 0.6rem;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">${currentLocale==='no'?'Bytt motstander':'Change opponent'}</button>` : '';
+  // Tabellrad-rendering
+  const headerCols = loaded.map(headerOf).join('<td></td>'); // gap mellom
+  const statRows = stats.map((s, i) => {
+    const cells = loaded.map(pl => {
+      const val = s.v(pl);
+      const isWinner = loaded.length > 1 && val === winners[i] && val !== 0;
+      const winStyle = isWinner ? 'color:var(--ok);font-weight:700;' : '';
+      return `<td style="padding:8px 6px;text-align:center;font-family:var(--font-mono);${winStyle}">${s.fmt(val)}</td>`;
+    }).join('');
+    return `<tr><td style="padding:8px 6px;font-size:var(--fs-small);color:var(--text-muted);font-weight:500;">${s.l}</td>${cells}</tr>`;
+  }).join('');
 
   content.innerHTML = `
-    <h3 style="margin:0 0 1rem 0;font-family:var(--font-display);font-size:1.25rem;">${currentLocale==='no'?'Sammenlign spillere':'Compare players'}</h3>
-    ${board}
-    <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;">${swapBtn}${clearBtn}</div>
+    <h3 style="margin:0 0 var(--sp-3) 0;font-family:var(--font-display);font-size:1.25rem;">
+      ${isNo?'Sammenlign spillere':'Compare players'}
+      <span style="color:var(--text-muted);font-weight:400;font-size:var(--fs-small);">· ${loaded.length} ${loaded.length === 1 ? (isNo?'spiller':'player') : (isNo?'spillere':'players')}</span>
+    </h3>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:${260 + loaded.length * 100}px;">
+        <thead>
+          <tr><th style="width:140px;"></th>${loaded.map(pl => `<th style="padding:0 8px var(--sp-3);">${headerOf(pl)}</th>`).join('')}</tr>
+        </thead>
+        <tbody>${statRows}</tbody>
+      </table>
+    </div>
+    ${pickerHtml}
+    <div style="display:flex;gap:0.5rem;margin-top:var(--sp-3);justify-content:flex-end;">
+      <button onclick="closeCompareModal()" class="btn btn-secondary" style="font-size:0.82rem;padding:0.4rem 0.8rem;">${isNo?'Lukk':'Close'}</button>
+    </div>
   `;
-  if (!b) cmpFilterPickerB('');
+  if (canAdd) cmpFilterPicker('');
 }
 
-function cmpFilterPickerB(q) {
+function cmpFilterPicker(q) {
   const wrap = $('cmp-picker-results');
   if (!wrap) return;
   const query = (q || '').trim().toLowerCase();
-  const aId = CompareState.aId;
-  let list = CompareState.players.filter(p => p.id !== aId);
+  const existingIds = new Set(CompareState.ids);
+  let list = CompareState.players.filter(p => !existingIds.has(p.id));
   if (query) list = list.filter(p => (p.name || p.web_name || '').toLowerCase().includes(query));
-  list = list.slice(0, 25);
-  if (!list.length) { wrap.innerHTML = `<div style="color:var(--text-muted);font-size:0.78rem;padding:0.5rem;">${currentLocale==='no'?'Ingen treff.':'No matches.'}</div>`; return; }
+  list = list.slice(0, 20);
+  const isNo = currentLocale === 'no';
+  if (!list.length) { wrap.innerHTML = `<div style="color:var(--text-muted);font-size:0.78rem;padding:0.5rem;">${isNo?'Ingen treff.':'No matches.'}</div>`; return; }
   wrap.innerHTML = list.map(p => `
-    <div onclick="openCompareModal(${aId}, ${p.id})" style="padding:0.4rem 0.5rem;cursor:pointer;border-radius:4px;display:flex;justify-content:space-between;font-size:0.82rem;" onmouseover="this.style.background='var(--bg-subtle)'" onmouseout="this.style.background=''">
-      <span>${p.name || p.web_name || ''}</span>
+    <div onclick="compareAddPlayer(${p.id})" style="padding:0.4rem 0.6rem;cursor:pointer;border-radius:4px;display:flex;justify-content:space-between;font-size:0.82rem;align-items:center;" onmouseover="this.style.background='var(--bg-canvas)'" onmouseout="this.style.background=''">
+      <span style="font-weight:500;">${p.name || p.web_name || ''}</span>
       <span style="color:var(--text-muted);font-size:0.72rem;">${p.team_short || ''} · ${p.position_name || ''} · £${Number(p.cost||p.price||0).toFixed(1)}m</span>
     </div>
   `).join('');
 }
+// Backward compat for legacy code som kaller cmpFilterPickerB
+function cmpFilterPickerB(q) { return cmpFilterPicker(q); }
 
 function closeCompareModal() {
   $('compare-modal-overlay').classList.add('hidden');
