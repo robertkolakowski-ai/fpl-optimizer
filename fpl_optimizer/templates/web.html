@@ -3657,7 +3657,14 @@
             <p class="liga-sub" data-i18n="liga.sub">Bryt mini-ligaen. Konkurranse om kollegene er viktigere enn global rang — her får du differensial-strategi for å hente inn rivalene over deg.</p>
           </header>
 
-          <div class="liga-leagues-bar" id="liga-leagues-bar"></div>
+          <div class="liga-leagues-bar" id="liga-leagues-bar">
+            <div class="skel-stack" aria-busy="true" aria-label="Henter mini-ligaer" style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+              <div class="skel" style="width:90px;height:32px;border-radius:6px;"></div>
+              <div class="skel" style="width:120px;height:32px;border-radius:6px;"></div>
+              <div class="skel" style="width:100px;height:32px;border-radius:6px;"></div>
+              <div class="skel" style="width:140px;height:32px;border-radius:6px;"></div>
+            </div>
+          </div>
 
           <div class="liga-empty" id="liga-empty" hidden>
             <p data-i18n="liga.empty">Koble til laget ditt for å se mini-ligaen.</p>
@@ -6619,8 +6626,11 @@ switchNav = function(panelId) {
   if (panelId === 'nav-news-captain' && !KapteinState.picks.length) {
     setTimeout(loadCaptainView, 100);
   }
-  if (panelId === 'nav-leagues-standings' && AppState.userId && !LigaState.leagues.length) {
-    setTimeout(loadLigaView, 100);
+  if (panelId === 'nav-leagues-standings' && AppState.userId) {
+    // Always refresh — Liga-data kan være stale, og hvis tidligere kjøring
+    // feilet stille har vi ingen chips. Kort timeout slik at sidebar-rendering
+    // ikke blokker.
+    setTimeout(loadLigaView, 50);
   }
   if (panelId === 'nav-season-history' && AppState.userId && !ArkivState.history) {
     setTimeout(loadArkivView, 100);
