@@ -105,6 +105,63 @@
     --bottomnav-h: 64px;          /* mobile bottom nav */
   }
 
+  /* ==================== ANIMATIONS (P1 2026-05) ==================== */
+  /* Best practice: bevegelse er formålsdrevet, ikke dekorativ. Sub-200ms ease-out
+     for små overganger, 320ms for større. Respekterer prefers-reduced-motion. */
+  :root {
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);   /* punchy out-easing */
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --duration-fast: 160ms;
+    --duration-base: 240ms;
+    --duration-slow: 320ms;
+  }
+  /* Globale page-fade ved nav-endring */
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .nav-panel.active {
+    animation: page-fade-in var(--duration-base) var(--ease-out);
+  }
+  /* Hover-lift på interaktive kort — subtilt løft + skygge */
+  .hjem-captain-card, .hjem-side-card, .liga-table-card,
+  .liga-chart-card, .liga-catchup-card, .liga-position-card,
+  .stat-card, .dash-section, .player-card, .catchup-card {
+    transition: transform var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .hjem-captain-card:hover, .liga-position-card:hover,
+  .player-card:hover, .catchup-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3);
+  }
+  /* Knappe-press feedback */
+  .btn { transition: transform var(--duration-fast) var(--ease-out),
+                     background-color var(--duration-fast),
+                     box-shadow var(--duration-fast); }
+  .btn:active { transform: scale(0.97); }
+  /* Tabellrad hover */
+  table tbody tr { transition: background-color var(--duration-fast); }
+  /* Tall som "teller opp" — markørklasse, JS legger til */
+  .num-animate { transition: color var(--duration-base); }
+  .num-animate.flash-up { color: var(--ok) !important; }
+  .num-animate.flash-down { color: var(--danger) !important; }
+  /* Captain-armbåndet pulserer subtilt — drar oppmerksomhet uten å være masete */
+  @keyframes c-mark-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .pp-tile .pp-c { animation: c-mark-pulse 2.4s ease-in-out infinite; }
+  /* Reduced motion-respekt — slå av all animasjon for brukere som har bedt om det */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* ==================== SKELETON STATES (P2, 2026-05) ==================== */
   /* Replaces "—" / "Loading…" with animated grey blocks. Use as:
        <div class="skel skel-line"></div>            (one line)
@@ -8636,9 +8693,13 @@ async function loadUser() {
     } else {
       $('uhb-name').textContent = data.manager_name;
     }
-    $('uhb-rank').textContent = data.overall_rank ? data.overall_rank.toLocaleString() : '-';
-    $('uhb-points').textContent = data.overall_points || '-';
-    $('uhb-gw-pts').textContent = data.gw_points || '-';
+    // Animert tall-oppdatering — gir levende inntrykk når data syncs
+    if (data.overall_rank) animateNumber($('uhb-rank'), data.overall_rank);
+    else $('uhb-rank').textContent = '-';
+    if (data.overall_points) animateNumber($('uhb-points'), data.overall_points);
+    else $('uhb-points').textContent = '-';
+    if (data.gw_points != null) animateNumber($('uhb-gw-pts'), data.gw_points);
+    else $('uhb-gw-pts').textContent = '-';
     $('uhb-value').textContent = data.team_value ? data.team_value + 'M' : '-';
     $('uhb-bank').textContent = data.bank ? data.bank + 'M' : '-';
     $('uhb-fts').textContent = data.free_transfers || '1';
@@ -8971,6 +9032,47 @@ const TEAM_COLORS = {
 function teamColors(teamId) {
   const code = teamCodeMap[teamId];
   return TEAM_COLORS[code] || ['#888', '#fff', '#444'];
+}
+
+/**
+ * Animer et tall som teller opp/ned mot målverdi. Best practice for
+ * 'å gjøre dataen levende' — brukes når user-stats oppdateres etter sync.
+ * Respekterer prefers-reduced-motion (bytter til umiddelbar oppdatering).
+ */
+function animateNumber(el, target, opts) {
+  if (!el) return;
+  opts = opts || {};
+  const duration = opts.duration || 700;
+  const formatter = opts.formatter || ((v) => Math.round(v).toLocaleString());
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = formatter(target);
+    return;
+  }
+  const startText = el.textContent || '0';
+  const start = parseFloat(startText.replace(/[^\d.-]/g, '')) || 0;
+  const end = parseFloat(target);
+  if (start === end) return;
+  const startTime = performance.now();
+  el.classList.add('num-animate');
+  el.classList.toggle('flash-up', end > start);
+  el.classList.toggle('flash-down', end < start);
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - t, 3);
+    const value = start + (end - start) * eased;
+    el.textContent = formatter(value);
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = formatter(end);
+      setTimeout(() => {
+        el.classList.remove('flash-up', 'flash-down');
+      }, 600);
+    }
+  }
+  requestAnimationFrame(step);
 }
 
 /** Lag-farget vertikal stripe (4px bred) — for kort, rader, header-akser. */
