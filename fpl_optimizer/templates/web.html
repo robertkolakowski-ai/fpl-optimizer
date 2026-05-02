@@ -2143,11 +2143,26 @@
   .pp-tile:active { cursor: grabbing; }
   .pp-tile.dragging { opacity: 0.4; transform: scale(0.95); }
   .pp-tile.drop-target { border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-tint); }
+  /* Stripen fargelegges med inline lag-farge fra teamColors() — fallback til posisjon hvis ingen */
   .pp-tile .pp-pos-stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r-sm) var(--r-sm) 0 0; }
-  .pp-tile.pos-1 .pp-pos-stripe { background: var(--pos-gk); }
-  .pp-tile.pos-2 .pp-pos-stripe { background: var(--pos-def); }
-  .pp-tile.pos-3 .pp-pos-stripe { background: var(--pos-mid); }
-  .pp-tile.pos-4 .pp-pos-stripe { background: var(--pos-fwd); }
+  .pp-tile.pos-1 .pp-pos-stripe:not([style*=background]) { background: var(--pos-gk); }
+  .pp-tile.pos-2 .pp-pos-stripe:not([style*=background]) { background: var(--pos-def); }
+  .pp-tile.pos-3 .pp-pos-stripe:not([style*=background]) { background: var(--pos-mid); }
+  .pp-tile.pos-4 .pp-pos-stripe:not([style*=background]) { background: var(--pos-fwd); }
+  /* Spillerfoto / kit på pitch-tilen */
+  .pp-tile .pp-photo {
+    width: 36px; height: 44px;
+    object-fit: cover; object-position: top center;
+    border-radius: var(--r-sm);
+    margin: 6px auto 4px;
+    display: block;
+    background: var(--bg-subtle);
+  }
+  .pp-tile .pp-photo.pp-kit {
+    object-fit: contain;
+    background: transparent;
+    height: 36px;
+  }
   .pp-tile .pp-name { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-strong); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
   .pp-tile .pp-pts { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--brand-primary); font-variant-numeric: tabular-nums; line-height: 1.1; }
   .pp-tile .pp-c, .pp-tile .pp-v {
@@ -5562,10 +5577,18 @@ function tileHtml(p, isBench) {
   const cls = `pp-tile pos-${p.position}${isBench?' bench':''}`;
   const cap = p.is_captain ? '<span class="pp-c" title="Captain">C</span>' : (p.is_vice ? '<span class="pp-v" title="Vice">V</span>' : '');
   const news = p.news ? `<span class="pp-news" title="${p.news === true ? 'Doubt' : (p.news+'').replace(/"/g,'&quot;')}">!</span>` : '';
+  // Lag-farge på posisjons-stripen
+  const [primary] = teamColors(p.team);
+  // Spillerfoto eller kit-fallback. photo-feltet kommer fra picks-API hvis tilgjengelig.
+  const photo = p.photo || (p.element_data && p.element_data.photo);
+  const photoHtml = photo
+    ? `<img src="${PHOTO_BASE}${photo}.png" class="pp-photo" alt="" onerror="this.style.display='none'">`
+    : (p.team ? `<img src="${KIT_BASE}${teamCodeMap[p.team]}${p.position === 1 ? '_1' : ''}-110.webp" class="pp-photo pp-kit" alt="" onerror="this.style.display='none'">` : '');
   return `
     <div class="${cls}" draggable="true" data-id="${p.element}" data-pos="${p.position}" data-bench="${isBench?1:0}" onclick="openPlayerExplain(${p.element})">
-      <span class="pp-pos-stripe"></span>
+      <span class="pp-pos-stripe" style="background:${primary};"></span>
       ${cap}${news}
+      ${photoHtml}
       <div class="pp-name">${p.name || ''}</div>
       <div class="pp-pts">${(p.points || 0).toFixed(1)}</div>
     </div>`;
@@ -8915,6 +8938,54 @@ const PHOTO_BASE = 'https://resources.premierleague.com/premierleague/photos/pla
 const KIT_BASE = 'https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_';
 let teamCodeMap = {}; // team id -> team code (for kit URLs)
 
+// Premier League team brand colors — keyed by FPL team `code` (stable across seasons).
+// Each entry: [primary, on-primary-text, secondary]. Used for team-color stripes,
+// player-card accents, fixture-badges. Sentral kilde for all visuell merkebruk.
+const TEAM_COLORS = {
+  3:   ['#EF0107', '#FFFFFF', '#063672'],  // Arsenal
+  7:   ['#670E36', '#FFFFFF', '#95BFE5'],  // Aston Villa
+  91:  ['#DA291C', '#FFFFFF', '#000000'],  // Bournemouth
+  94:  ['#E30613', '#FFFFFF', '#FFCC00'],  // Brentford
+  36:  ['#0057B8', '#FFFFFF', '#FFCD00'],  // Brighton
+  90:  ['#6C1D45', '#FFFFFF', '#99D6EA'],  // Burnley
+  8:   ['#034694', '#FFFFFF', '#DBA111'],  // Chelsea
+  31:  ['#1B458F', '#FFFFFF', '#C4122E'],  // Crystal Palace
+  11:  ['#003399', '#FFFFFF', '#FFFFFF'],  // Everton
+  54:  ['#000000', '#FFFFFF', '#CC0000'],  // Fulham
+  40:  ['#1F3F95', '#FFFFFF', '#DE2027'],  // Ipswich
+  2:   ['#FFCD00', '#1D428A', '#1D428A'],  // Leeds
+  13:  ['#003090', '#FFFFFF', '#FDBE11'],  // Leicester
+  14:  ['#C8102E', '#FFFFFF', '#00B2A9'],  // Liverpool
+  43:  ['#6CABDD', '#FFFFFF', '#1C2C5B'],  // Manchester City
+  1:   ['#DA291C', '#FFFFFF', '#FBE122'],  // Manchester United
+  4:   ['#241F20', '#FFFFFF', '#41B6E6'],  // Newcastle
+  17:  ['#DD0000', '#FFFFFF', '#FFFFFF'],  // Nottingham Forest
+  49:  ['#EE2737', '#FFFFFF', '#000000'],  // Sheffield United
+  20:  ['#D71920', '#FFFFFF', '#130C0E'],  // Southampton
+  56:  ['#FF0000', '#FFFFFF', '#000000'],  // Sunderland
+  6:   ['#132257', '#FFFFFF', '#FFFFFF'],  // Tottenham
+  21:  ['#7A263A', '#FFFFFF', '#1BB1E7'],  // West Ham
+  39:  ['#FDB913', '#231F20', '#231F20'],  // Wolverhampton
+};
+
+function teamColors(teamId) {
+  const code = teamCodeMap[teamId];
+  return TEAM_COLORS[code] || ['#888', '#fff', '#444'];
+}
+
+/** Lag-farget vertikal stripe (4px bred) — for kort, rader, header-akser. */
+function teamStripe(teamId, height) {
+  const [primary] = teamColors(teamId);
+  const h = height || '100%';
+  return `<span style="display:inline-block;width:4px;height:${h};background:${primary};border-radius:2px;flex-shrink:0;"></span>`;
+}
+
+/** Lag-pill — fargelagt navnetag (f.eks. 'ARS' med Arsenal-rødt). */
+function teamPill(teamId, text) {
+  const [primary, fg] = teamColors(teamId);
+  return `<span style="display:inline-block;background:${primary};color:${fg};padding:2px 6px;border-radius:3px;font-size:0.7rem;font-weight:700;letter-spacing:0.02em;font-family:var(--font-mono);">${text}</span>`;
+}
+
 /** Get kit image HTML for a team. isGk: true for goalkeeper kit. */
 function kitImg(teamId, isGk, size) {
   size = size || 20;
@@ -8924,12 +8995,15 @@ function kitImg(teamId, isGk, size) {
   return `<img src="${KIT_BASE}${code}${suffix}" alt="" style="width:${size}px;height:${size}px;vertical-align:middle;" onerror="this.style.display='none'">`;
 }
 
-const TEAM_COLORS = {
+// Mapping fra short_name til primary color — fallback for kall-sites som ikke har team_id.
+// Kaller TEAM_COLORS-mappingen øverst (keyed by code).
+const TEAM_COLORS_BY_SHORT = {
   'ARS': '#EF0107', 'AVL': '#670E36', 'BOU': '#DA291C', 'BRE': '#e30613',
-  'BHA': '#0057B8', 'CHE': '#034694', 'CRY': '#1B458F', 'EVE': '#003399',
-  'FUL': '#000000', 'IPS': '#0044AA', 'LEI': '#003090', 'LIV': '#C8102E',
-  'MCI': '#6CABDD', 'MUN': '#DA291C', 'NEW': '#241F20', 'NFO': '#E53233',
-  'SOU': '#D71920', 'TOT': '#132257', 'WHU': '#7A263A', 'WOL': '#FDB913',
+  'BHA': '#0057B8', 'BUR': '#6C1D45', 'CHE': '#034694', 'CRY': '#1B458F',
+  'EVE': '#003399', 'FUL': '#000000', 'IPS': '#1F3F95', 'LEE': '#FFCD00',
+  'LEI': '#003090', 'LIV': '#C8102E', 'MCI': '#6CABDD', 'MUN': '#DA291C',
+  'NEW': '#241F20', 'NFO': '#DD0000', 'SHU': '#EE2737', 'SOU': '#D71920',
+  'SUN': '#FF0000', 'TOT': '#132257', 'WHU': '#7A263A', 'WOL': '#FDB913',
 };
 
 const VALID_FORMATIONS = ['3-4-3','3-5-2','4-3-3','4-4-2','4-5-1','5-3-2','5-4-1','5-2-3','3-3-4','4-2-4'];
@@ -9260,8 +9334,9 @@ function liveCard(p, isBench, benchOrder) {
     injuryHtml = `<div class="lp-injury ${injuryClass}" title="${tooltip}"></div>`;
   }
 
-  // Team color
-  const teamColor = TEAM_COLORS[p.team_name] || '#333';
+  // Team color (primary). Bruker code-baserte TEAM_COLORS hvis vi har team_id,
+  // ellers short_name-fallback.
+  const teamColor = (p.team && teamColors(p.team)[0]) || TEAM_COLORS_BY_SHORT[p.team_name] || '#333';
 
   // Bench order badge
   const benchBadge = isBench && benchOrder ? `<div class="bench-order">${benchOrder}</div>` : '';
@@ -11529,6 +11604,8 @@ async function openPlayerModal(playerId) {
     const p = data.player;
     const kit = data.team_code ? `<img src="${KIT_BASE}${data.team_code}${p.position === 1 ? '_1' : ''}-110.webp" style="width:48px;" onerror="this.style.display='none'">` : '';
     const photoHtml = p.photo ? `<img src="${PHOTO_BASE}${p.photo}.png" onerror="this.parentElement.innerHTML='&#9917;'">` : '&#9917;';
+    // Lag-farget aksent som kantlinje rundt foto/kit i player-modal
+    const [pmPrimary] = teamColors(p.team);
 
     const fixturesHtml = data.fixture_ticker.map(fx =>
       `<div class="pm-fixture fdr-cell fdr-${fx.difficulty}">
@@ -11588,8 +11665,8 @@ async function openPlayerModal(playerId) {
       </div>` : '';
 
     content.innerHTML = `
-      <div class="pm-header">
-        <div class="pm-photo">${kit || photoHtml}</div>
+      <div class="pm-header" style="border-left:3px solid ${pmPrimary};padding-left:var(--sp-3);">
+        <div class="pm-photo" style="border:2px solid ${pmPrimary};border-radius:var(--r-sm);background:${pmPrimary}11;">${kit || photoHtml}</div>
         <div style="flex:1;min-width:0;">
           <div class="pm-name">${p.name}</div>
           <div class="pm-meta">${data.team_name} &middot; ${p.position_name} &middot; ${p.cost.toFixed(1)}M</div>
