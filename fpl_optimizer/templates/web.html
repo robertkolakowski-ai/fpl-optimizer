@@ -4759,6 +4759,14 @@ async function renderHomeBrief() {
       <div class="chip-narrative" id="chip-narrative">${L.chipNoData}</div>
     </section>
 
+    <section id="hjem-strategy" style="margin-top:var(--sp-4);padding:var(--sp-4);background:linear-gradient(135deg,var(--brand-primary-tint) 0%,var(--brand-accent-tint) 100%);border:1px solid color-mix(in oklab,var(--brand-primary) 18%,transparent);border-radius:var(--r-md);font-size:var(--fs-small);line-height:1.6;display:none;">
+      <div style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-2);display:flex;align-items:center;gap:var(--sp-2);">
+        <span>🎯</span><span>${currentLocale==='no'?'Vinnende strategi nå':'Winning strategy now'}</span>
+      </div>
+      <div id="hjem-strategy-headline" style="font-family:var(--font-display);font-size:var(--fs-h3);font-weight:600;color:var(--text-strong);margin-bottom:var(--sp-2);line-height:1.25;"></div>
+      <div id="hjem-strategy-body" style="color:var(--text-default);"></div>
+    </section>
+
     <section id="hjem-weekly-learning" style="margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);font-size:var(--fs-small);line-height:1.6;display:none;">
       <div style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-1);">
         ${currentLocale==='no'?'Læring fra forrige uke':'Lesson from last week'}
@@ -4899,6 +4907,7 @@ async function renderHomeBrief() {
     renderTeamNews();
     loadLiveBonus();
     loadWeeklyLearning();
+    loadStrategicAdvice();
 
   } catch (e) {
     console.warn('home brief fill failed', e);
@@ -5084,6 +5093,96 @@ async function renderTeamNews() {
     const text = p.news ? `${p.name}: ${p.news}` : `${p.name}: ${c}% ${currentLocale==='no'?'klar':'fit'}`;
     return `<span class="tn-item ${tone}">${text}</span>`;
   }).join('');
+}
+
+// Vinnende strategi — meta-coaching basert på sesongfase, brukerens rang
+// i hovedligaen, chips-status, FT-balanse og kalibrering. Rår om risiko-
+// nivå (safe vs aggressive) og hvilken handling som flytter sluttplasseringen
+// mest. I tråd med DNA: forklaring først, tall som belegg.
+async function loadStrategicAdvice() {
+  const sec = document.getElementById('hjem-strategy');
+  const headlineEl = document.getElementById('hjem-strategy-headline');
+  const bodyEl = document.getElementById('hjem-strategy-body');
+  if (!sec || !headlineEl || !bodyEl) return;
+  const isNo = currentLocale === 'no';
+
+  try {
+    const userData = AppState.userData || {};
+    const gws = (AppState.teamData && AppState.teamData.gameweeks) || [];
+    const currentGw = gws.find(g => g.is_current) || gws.find(g => g.is_next);
+    const currentGwId = currentGw ? currentGw.id : null;
+    const totalGws = gws.length || 38;
+    const finishedGws = gws.filter(g => g.finished).length;
+    const remaining = totalGws - finishedGws;
+
+    // Sesongfase
+    let phase = 'mid';
+    let phaseLabel = isNo?'midt-sesong':'mid-season';
+    if (finishedGws < 10) { phase = 'early'; phaseLabel = isNo?'tidlig sesong':'early season'; }
+    else if (remaining <= 8) { phase = 'late'; phaseLabel = isNo?'sluttspurt':'run-in'; }
+
+    // Chips-status
+    const chips = userData.chips_used || [];
+    const chipsLeft = ['wildcard','bboost','3xc','freehit'].filter(c => !chips.find(u => u.name === c));
+    const ft = userData.free_transfers || 1;
+
+    // Henter rangen i hovedligaen (første ikke-overall)
+    let leagueRank = null, leagueSize = null, leagueName = null;
+    const myLeagues = userData.leagues || [];
+    const main = myLeagues.find(l => l && l.id && l.name && !/overall|global/i.test(l.name));
+    if (main) {
+      leagueRank = main.entry_rank || main.rank;
+      leagueSize = main.entry_total || main.total_entries || main.size;
+      leagueName = main.name;
+    }
+
+    // Bygg overskrift + body basert på faktorene
+    let headline, body;
+
+    if (phase === 'late' && leagueRank && leagueSize) {
+      const pct = (leagueRank / leagueSize) * 100;
+      if (pct <= 15) {
+        // Høyt rangert i ligaen, sluttspurt
+        headline = isNo?'Beskytt ledelsen — match rivalene':'Protect your lead — match the rivals';
+        body = isNo
+          ? `Du står ${leagueRank}. av ${leagueSize} i <strong>${leagueName}</strong> med ${remaining} GW igjen. <strong>Hva som vinner herfra:</strong> ikke ta unødvendig risiko. Når topp-spillerne har klart bedre <em>form og kamper</em> enn alternativene, velg dem og match rivalene over deg. Differensial-gambling kan koste deg posisjonen — bare ta sjanser når du står flere poeng bak en konkret rival.`
+          : `You sit ${leagueRank} of ${leagueSize} in <strong>${leagueName}</strong> with ${remaining} GWs left. <strong>What wins from here:</strong> avoid unnecessary risk. When top players clearly outperform on <em>form and fixtures</em>, pick them and match the rivals above you. Differential gambles can cost you the position — only take risks when you trail a specific rival by several points.`;
+      } else if (pct <= 50) {
+        headline = isNo?'Topp-3 er innen rekkevidde — spiss laget':'Top-3 is within reach — sharpen the squad';
+        body = isNo
+          ? `Du står ${leagueRank}. av ${leagueSize}. Med ${remaining} GW igjen kan du klatre, men det krever at du prioriterer <em>kamper</em> framfor navn. Bygg laget rundt hvilke klubber som har de letteste resterende kampene — ikke rundt globale topp-spillere. Et par smarte differensialer (under 25 % eierskap i ligaen) er bedre enn å kopiere rivalene.`
+          : `You sit ${leagueRank} of ${leagueSize}. With ${remaining} GWs left you can climb, but it takes prioritising <em>fixtures</em> over names. Build the squad around which clubs have the easiest remaining fixtures — not around global top scorers. A couple of smart differentials (under 25 % league ownership) beat copying rivals.`;
+      } else {
+        headline = isNo?'Du må gamble — generiske valg leverer ikke nok':'You have to gamble — generic picks won\'t deliver';
+        body = isNo
+          ? `Du står ${leagueRank}. av ${leagueSize}. Med ${remaining} GW igjen er det matematisk vanskelig å klatre uten å ta klar risiko. <strong>Hva som vinner herfra:</strong> finn 2-3 differensialer med <em>god form</em> og <em>lette kamper</em> som svært få i ligaen din eier. Hvis modellen treffer på ett av dem mens rivalene står stille, henter du flere plasser i én GW. ${chipsLeft.length ? `Du har ${chipsLeft.length} chip(s) igjen — vurder å bruke en aggressivt.` : 'Chips er brukt — alt må komme fra transfers.'}`
+          : `You sit ${leagueRank} of ${leagueSize}. With ${remaining} GWs left it's mathematically hard to climb without clear risk. <strong>What wins:</strong> find 2-3 differentials with <em>good form</em> and <em>easy fixtures</em> that very few in your league own. If the model hits one while rivals stand still, you can climb multiple places in one GW. ${chipsLeft.length ? `You have ${chipsLeft.length} chip(s) left — consider using one aggressively.` : 'Chips are spent — everything has to come from transfers.'}`;
+      }
+    } else if (phase === 'early') {
+      headline = isNo?'Bygg fundamentet — form, ikke historikk':'Build the foundation — form, not reputation';
+      body = isNo
+        ? `Det er tidlig i sesongen (GW${currentGwId || '?'} av ${totalGws}). <strong>Hva som vinner over tid:</strong> velg spillere etter <em>nåværende form</em> og <em>kommende kamper</em>, ikke fjorårets statistikk. Top-eide spillere som starter sesongen tregt blir overpriset — let etter mid-tier-spillere som flyr under radaren. Spar Wildcard til en større fixture-swing midt-sesong; Bench Boost og Triple Captain skal du holde til en dobbel-GW (typisk GW33-37).`
+        : `It's early in the season (GW${currentGwId || '?'} of ${totalGws}). <strong>What wins over time:</strong> pick players by <em>current form</em> and <em>upcoming fixtures</em>, not last year's stats. Top-owned slow starters become overpriced — find mid-tier picks flying under the radar. Save Wildcard for a bigger fixture swing mid-season; hold Bench Boost and Triple Captain for a double GW (typically GW33-37).`;
+    } else {
+      // Mid-season generisk
+      const ftAdvice = ft >= 2
+        ? (isNo?`Du har ${ft} free transfers — du har fleksibilitet til å gjøre to bytter, eller spare opp.`:`You have ${ft} free transfers — flexibility to make two moves or bank further.`)
+        : (isNo?`Du har ${ft} free transfer.`:`You have ${ft} free transfer.`);
+      const chipAdvice = chipsLeft.length
+        ? (isNo?`Chips igjen: ${chipsLeft.map(c=>({wildcard:'Wildcard',bboost:'Bench Boost','3xc':'Triple Captain',freehit:'Free Hit'}[c])).join(', ')}.`:`Chips left: ${chipsLeft.map(c=>({wildcard:'Wildcard',bboost:'Bench Boost','3xc':'Triple Captain',freehit:'Free Hit'}[c])).join(', ')}.`)
+        : (isNo?'Chips er brukt opp.':'All chips spent.');
+      headline = isNo?'Konsolider og se etter swings':'Consolidate and watch for fixture swings';
+      body = isNo
+        ? `Midt-sesong (GW${currentGwId || '?'}/${totalGws}). <strong>Hva som vinner herfra:</strong> de neste 6-8 GW avgjør de fleste mini-ligaer. Hold øye med fixture-swings — klubber som går fra tøffe til lette kamper er gull. Modellen liker spillere med <em>god form og fallende eierskap</em> (rivalene selger, du henter inn). ${ftAdvice} ${chipAdvice}`
+        : `Mid-season (GW${currentGwId || '?'}/${totalGws}). <strong>What wins from here:</strong> the next 6-8 GWs decide most mini-leagues. Watch fixture swings — clubs moving from tough to easy fixtures are gold. The model likes players with <em>good form and falling ownership</em> (rivals sell, you pick up). ${ftAdvice} ${chipAdvice}`;
+    }
+
+    headlineEl.textContent = headline;
+    bodyEl.innerHTML = body;
+    sec.style.display = '';
+  } catch (e) {
+    sec.style.display = 'none';
+  }
 }
 
 // Læring fra forrige uke — DNA-styrt narrativ basert på prediction-log
