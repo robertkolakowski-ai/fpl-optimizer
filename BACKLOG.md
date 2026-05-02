@@ -5,6 +5,93 @@ Hver feature måles mot: *gjør den brukerens FPL-rang bedre, eller gjør den ik
 
 ---
 
+## Gjenstående oppgaver (per 2026-05-02)
+
+Funksjonaliteten er ferdig utviklet — disse punktene er **aktivering og drift**.
+
+### A · Aktiver push-varsler (krever VAPID-keys)
+
+Push-stack (`push_notifications.py` + service worker) er bygget og deployet,
+men trenger VAPID-nøkler for å faktisk sende varsler.
+
+**Steg:**
+
+1. Generer VAPID-nøkkelpar lokalt:
+   ```bash
+   pip install py-vapid
+   vapid --gen
+   # Eller online: https://web-push-codelab.glitch.me/
+   ```
+   Output gir public/private key.
+
+2. I [Render Dashboard](https://dashboard.render.com) → fpl-optimizer →
+   Environment, legg til:
+   - `VAPID_PUBLIC_KEY` — fra steg 1
+   - `VAPID_PRIVATE_KEY` — fra steg 1
+   - `VAPID_SUBJECT` = `mailto:robert@kolakowski.no`
+   - `CRON_TOKEN` — random 32-tegns string (beskytter `/api/push/dispatch`)
+
+3. Render restartet automatisk. Toggle "🔔 Aktiver varsler" i
+   Innstillinger virker da på `https://fpl.kolakowski.no`.
+
+4. Test manuelt: `curl -X POST https://fpl.kolakowski.no/api/push/test/2006459`
+   etter du har subscriba.
+
+**Status:** ikke aktivert. Estimert tid: 15 min.
+
+### B · Sett opp cron-jobber for varsler
+
+Når VAPID er aktivert, må noe trigger `/api/push/dispatch` for å sende
+ekte varsler. Tre cron-jobber bør settes opp:
+
+| Trigger | Schedule | Endepunkt-payload |
+|---------|----------|-------------------|
+| **Deadline-påminnelse** | Fredag 09:00 (24t før kickoff) | `{"kind": "deadline", "team_id": <id>}` |
+| **Skadekontroll** | Hver time | `{"kind": "injury", "team_id": <id>, "body": "Saka flagget — sjekk laget"}` |
+| **Prisendringer** | Daglig 02:00 | `{"kind": "price", "team_id": <id>, "body": "Cherki +0.1M"}` |
+
+**Implementasjons-alternativer:**
+
+- **GitHub Actions** (anbefalt — gratis, allerede etablert mønster):
+  Ny `.github/workflows/push-notifications.yml` som ligner
+  `predictions-snapshot.yml`. Bruker `APP_URL` + `CRON_TOKEN` som secrets.
+  Itererer over alle team-IDs i `data/user_prefs.db` (eller bare ditt eget
+  i starten).
+- **Render Cron Job** ($1/mnd per cron) — Render har egen cron-tjeneste
+  som er mer robust enn GH Actions for tidsfølsomme trigger.
+
+**Status:** ikke utviklet. Estimert tid: 1 dag for å bygge robuste varsler
+med riktig logikk (når er deadline reelt, hvordan detect skader, etc.).
+
+### C · End-to-end-test på mobil + desktop
+
+Etter Render-deploy av siste commit, gjør en grundig testrunde:
+
+- [ ] Hard refresh `https://fpl.kolakowski.no` på desktop (Ctrl+Shift+R)
+- [ ] Hard refresh på mobil (eller installer som PWA)
+- [ ] Gå gjennom alle 5 IA-destinasjoner: Hjem · Plan · Kaptein · Liga · Lag · Arkiv
+- [ ] Test mørk modus toggle (Innstillinger > Utseende)
+- [ ] Test PWA-install (Chrome: ⋮ → "Install app")
+- [ ] Klikk på en spiller — sjekk at lag-DNA + foto + ML-baseline vises
+- [ ] Klikk Liga → Chelsea → sjekk at rang-simulering med narrativ vises
+- [ ] Klikk Lag → bytt mellom Premier League / Bundesliga
+- [ ] Klikk Spiller → sjekk Differensial-radar (4 modus)
+- [ ] Klikk del-knapp på kapteinkort — verifiser tekst-format
+- [ ] Compare 4 spillere (åpne en spiller → Sammenlign → Legg til)
+- [ ] Test fixture-tooltip (hover på kamp i top-bar)
+
+**Status:** krever menneskelig testing. Estimert tid: 30 min.
+
+### D · Feilsøk og polerings basert på testing
+
+Etter punkt C vil vi finne ting som ikke virker som forventet. Eksempler
+fra siste sesjoner: roterende tekst, tomrom mellom sidebar og innhold,
+£0.0 i kort, etc. Disse fixes inkrementelt.
+
+**Status:** alltid pågående. Tidsbruk: avhengig av funn.
+
+---
+
 ## Sesjonslogg 2026-05-01
 
 **Levert i én sesjon:** 10 backlog-punkter (#1-#10) på MVP-nivå →
