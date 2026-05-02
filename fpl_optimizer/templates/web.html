@@ -1,6 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-theme-transition">
 <head>
+<script>
+  // Tema-init MÅ skje før resten av siden rendres for å unngå "flash of wrong theme" (FOUC).
+  // Sjekkrekkefølge: 1) brukerens lagrede valg, 2) system-preferanse.
+  (function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem('fpl_theme'); } catch(e) {}
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+    // Slipp inn theme-transitioner etter første render
+    setTimeout(function() {
+      document.documentElement.classList.remove('no-theme-transition');
+    }, 100);
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FPL Optimizer</title>
@@ -103,6 +118,75 @@
     --sidebar-w: 248px;
     --topbar-h: 56px;
     --bottomnav-h: 64px;          /* mobile bottom nav */
+  }
+
+  /* ==================== DARK MODE (P1, 2026-05) ==================== */
+  /* Filosofi: amber-aksenten beholdes (brand consistency), tekst og surface
+     blir mørkt grønnaktig-grått. Tilstrekkelig kontrast for WCAG AA på
+     all tekst. Aktiveres ved data-theme="dark" på <html> — settes av
+     toggle eller automatisk fra prefers-color-scheme. */
+  html[data-theme="dark"] {
+    --bg-page:        #0F1419;          /* Ink — primær side-bakgrunn */
+    --bg-canvas:      #1A2028;          /* Slate — kort, paneler */
+    --bg-subtle:      #232B36;          /* hover, subtile fyll */
+    --bg-muted:       #2D3744;          /* dividers, muted blokker */
+    --bg-inverse:     #F6F2EB;          /* invertert (tooltips) */
+
+    --border-subtle:  #2D3744;
+    --border-default: #3D4A5C;
+    --border-strong:  #5C6B80;
+
+    --text-strong:    #F4F6F9;          /* primær tekst, store tall */
+    --text-default:   #DCE3ED;          /* body */
+    --text-muted:     #94A3B8;          /* sekundær */
+    --text-subtle:    #6B7A8F;          /* tertiær */
+    --text-faint:     #4A5566;          /* labels, hints */
+
+    --brand-primary-tint: #3D2B0F;      /* mørk amber-tint for hover */
+    --brand-accent-tint:  #4A3520;
+
+    --ok-tint:    #1B3A24;
+    --warn-tint:  --brand-accent-tint;
+    --danger-tint:#3A1F1F;
+    --info-tint:  #1F2A3D;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.5), 0 1px 1px rgba(0,0,0,0.3);
+    --shadow-2: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-3: 0 12px 32px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
+  }
+  /* Auto-mørk-modus hvis brukeren har system-preferanse og ikke har valgt manuelt */
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) {
+      --bg-page:        #0F1419;
+      --bg-canvas:      #1A2028;
+      --bg-subtle:      #232B36;
+      --bg-muted:       #2D3744;
+      --bg-inverse:     #F6F2EB;
+      --border-subtle:  #2D3744;
+      --border-default: #3D4A5C;
+      --border-strong:  #5C6B80;
+      --text-strong:    #F4F6F9;
+      --text-default:   #DCE3ED;
+      --text-muted:     #94A3B8;
+      --text-subtle:    #6B7A8F;
+      --text-faint:     #4A5566;
+      --brand-primary-tint: #3D2B0F;
+      --brand-accent-tint:  #4A3520;
+      --ok-tint:    #1B3A24;
+      --warn-tint:  --brand-accent-tint;
+      --danger-tint:#3A1F1F;
+      --info-tint:  #1F2A3D;
+      --shadow-1: 0 1px 2px rgba(0,0,0,0.5), 0 1px 1px rgba(0,0,0,0.3);
+      --shadow-2: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+      --shadow-3: 0 12px 32px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
+    }
+  }
+  /* Smooth transition mellom tema (men hopp over på første load via .no-theme-transition) */
+  html:not(.no-theme-transition),
+  html:not(.no-theme-transition) *,
+  html:not(.no-theme-transition) *::before,
+  html:not(.no-theme-transition) *::after {
+    transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease;
   }
 
   /* ==================== ANIMATIONS (P1 2026-05) ==================== */
@@ -4342,6 +4426,15 @@
       <div class="nav-panel" id="nav-settings">
         <h2 style="margin-bottom:1rem;font-size:1.2rem;">Innstillinger</h2>
 
+        <!-- Theme toggle -->
+        <div class="user-bar" style="margin-bottom:1rem;">
+          <div class="user-bar-header"><span class="title">Utseende</span></div>
+          <div style="padding:0.5rem 0;display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;">
+            <button onclick="cycleTheme()" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;" data-theme-label>🖥️ Følg system</button>
+            <span style="color:var(--text-muted);font-size:var(--fs-small);max-width:48ch;line-height:1.45;">Klikk for å bytte mellom system-tema, mørk modus og lys modus. Mørk modus reduserer øye-strain på kvelden og sparer batteri på AMOLED-skjermer.</span>
+          </div>
+        </div>
+
         <!-- Stat language toggle -->
         <div class="user-bar" style="margin-bottom:1rem;">
           <div class="user-bar-header"><span class="title">Språk i tabeller</span></div>
@@ -8481,6 +8574,7 @@ function renderRecentUsers() {
   }).join('');
 }
 renderRecentUsers();
+updateThemeToggleLabel();
 
 // ==================== PERSIST USER ID ====================
 (function restoreUser() {
@@ -9032,6 +9126,37 @@ const TEAM_COLORS = {
 function teamColors(teamId) {
   const code = teamCodeMap[teamId];
   return TEAM_COLORS[code] || ['#888', '#fff', '#444'];
+}
+
+/** Theme-toggle: roterer mellom system-default → dark → light → system. */
+function cycleTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('fpl_theme'); } catch(e) {}
+  let next;
+  if (!saved) next = 'dark';
+  else if (saved === 'dark') next = 'light';
+  else next = null;  // tilbake til system
+  try {
+    if (next) localStorage.setItem('fpl_theme', next);
+    else localStorage.removeItem('fpl_theme');
+  } catch(e) {}
+  if (next) document.documentElement.setAttribute('data-theme', next);
+  else document.documentElement.removeAttribute('data-theme');
+  updateThemeToggleLabel();
+}
+function getThemeMode() {
+  try { return localStorage.getItem('fpl_theme') || 'auto'; } catch(e) { return 'auto'; }
+}
+function updateThemeToggleLabel() {
+  const mode = getThemeMode();
+  document.querySelectorAll('[data-theme-label]').forEach(el => {
+    const isNo = currentLocale === 'no';
+    el.textContent = mode === 'dark'
+      ? (isNo ? '🌙 Mørk' : '🌙 Dark')
+      : mode === 'light'
+        ? (isNo ? '☀️ Lys' : '☀️ Light')
+        : (isNo ? '🖥️ Følg system' : '🖥️ System');
+  });
 }
 
 /**
