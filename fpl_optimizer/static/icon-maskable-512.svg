@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable: må fylle 100% bbox med safe zone på ~20% padding på alle kanter -->
+  <rect width="512" height="512" fill="#E5A23B"/>
+  <circle cx="256" cy="256" r="120" fill="none" stroke="#0E1116" stroke-width="20" opacity="0.95"/>
+  <polygon points="256,160 320,240 322,355 218,300 162,232" fill="rgba(14,17,22,0.2)" stroke="#0E1116" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="256" cy="160" r="11" fill="#0E1116"/>
+  <circle cx="320" cy="240" r="11" fill="#0E1116"/>
+  <circle cx="322" cy="355" r="11" fill="#0E1116"/>
+  <circle cx="218" cy="300" r="11" fill="#0E1116"/>
+  <circle cx="162" cy="232" r="11" fill="#0E1116"/>
+</svg>

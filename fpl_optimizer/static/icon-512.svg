@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#F6F2EB"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#E5A23B" stroke-width="26" opacity="0.95"/>
+  <line x1="256" y1="256" x2="256" y2="76" stroke="rgba(229,162,59,0.25)" stroke-width="8"/>
+  <line x1="256" y1="256" x2="429" y2="197" stroke="rgba(229,162,59,0.25)" stroke-width="8"/>
+  <line x1="256" y1="256" x2="362" y2="408" stroke="rgba(229,162,59,0.25)" stroke-width="8"/>
+  <line x1="256" y1="256" x2="150" y2="408" stroke="rgba(229,162,59,0.25)" stroke-width="8"/>
+  <line x1="256" y1="256" x2="83" y2="197" stroke="rgba(229,162,59,0.25)" stroke-width="8"/>
+  <polygon points="256,80 352,200 357,373 202,288 117,189" fill="rgba(0,230,118,0.18)" stroke="#E5A23B" stroke-width="13" stroke-linejoin="round"/>
+  <circle cx="256" cy="80" r="16" fill="#E5A23B"/>
+  <circle cx="352" cy="200" r="16" fill="#E5A23B"/>
+  <circle cx="357" cy="373" r="16" fill="#E5A23B"/>
+  <circle cx="202" cy="288" r="16" fill="#E5A23B"/>
+  <circle cx="117" cy="189" r="16" fill="#E5A23B"/>
+</svg>

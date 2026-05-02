@@ -43,7 +43,23 @@ from .cache import (
 )
 from .transfers import suggest_transfers
 
-app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
+app = Flask(
+    __name__,
+    template_folder=str(Path(__file__).parent / "templates"),
+    static_folder=str(Path(__file__).parent / "static"),
+    static_url_path="/static",
+)
+
+
+# Service worker må serveres fra rot-scope eller med Service-Worker-Allowed-header.
+# Vi serverer den fra /sw.js for å gi den maksimal scope.
+@app.route("/sw.js")
+def service_worker():
+    from flask import send_from_directory
+    response = send_from_directory(app.static_folder, "sw.js", mimetype="application/javascript")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache"  # SW skal alltid sjekkes for endringer
+    return response
 
 # In-memory cache for FPL data (avoids re-fetching on every tab switch)
 _cache: dict = {}

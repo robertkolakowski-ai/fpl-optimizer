@@ -21,6 +21,26 @@
 <title>FPL Optimizer</title>
 <!-- Inline SVG favicon — orange "O" pentagon mark fra logo-monogrammet, samme palett som hero-tinten. Ingen ekstra HTTP-request. -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23FBEFD3' stroke='%23E5A23B' stroke-width='2.5'/%3E%3Cpolygon points='20,6.4 28.4,17.3 28.9,32.3 16.2,25.2 9.4,16.5' fill='none' stroke='%23E5A23B' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- PWA: gjør appen installerbar på Android, iOS og desktop -->
+<link rel="manifest" href="/static/manifest.webmanifest">
+<meta name="theme-color" content="#E5A23B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FPL Optimizer">
+<link rel="apple-touch-icon" href="/static/icon-192.svg">
+<script>
+  // Registrer service worker — kun hvis støttet og vi er på HTTPS (eller localhost).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(reg) {
+        // Sjekk for oppdateringer hver gang siden får fokus tilbake.
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible' && reg.update) reg.update();
+        });
+      }).catch(function() { /* SW failed to register — appen funker fortsatt */ });
+    });
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
