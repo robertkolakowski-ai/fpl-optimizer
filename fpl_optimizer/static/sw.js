@@ -6,7 +6,7 @@
 //
 // Bumpes når vi vil tvinge en ny SW (ny deploy får ny CACHE_VERSION).
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4-push';
 const STATIC_CACHE = `fpl-static-${CACHE_VERSION}`;
 const API_CACHE = `fpl-api-${CACHE_VERSION}`;
 
@@ -35,6 +35,44 @@ self.addEventListener('activate', (event) => {
         keys.filter(k => !k.endsWith(CACHE_VERSION)).map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
+  );
+});
+
+// Web Push: vis notification med tittel + body fra payload, klikk åpner /url
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { title: 'FPL Optimizer', body: event.data ? event.data.text() : '' };
+  }
+  const options = {
+    body: data.body || '',
+    icon: '/static/icon-192.svg',
+    badge: '/static/icon-192.svg',
+    data: { url: data.url || '/' },
+    tag: data.tag || 'fpl-default',
+    renotify: !!data.renotify,
+  };
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'FPL Optimizer', options)
+  );
+});
+
+// Klikk på notification: åpne URL, eller fokuser eksisterende tab
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      for (const c of clients) {
+        if (c.url.includes(self.location.origin) && 'focus' in c) {
+          c.navigate(url);
+          return c.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
   );
 });
 

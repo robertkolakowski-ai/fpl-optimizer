@@ -6,3 +6,5 @@ jinja2
 flask
 python-dotenv
 gunicorn
+pywebpush
+openpyxl

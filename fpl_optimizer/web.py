@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -33,6 +34,7 @@ from . import league_intel
 from . import chip_mc
 from . import ml_baseline
 from . import team_priors as team_priors_mod
+from . import push_notifications as push_mod
 from .cache import (
     etag_for,
     sqlite_cache_get,
@@ -376,6 +378,93 @@ def api_team_priors_fixture():
     if not result:
         return jsonify({"error": "Mangler data for ett av lagene"}), 404
     return jsonify(result)
+
+
+# ------------------------------------------------------------------ #
+# Push notifications — Web Push via VAPID
+# ------------------------------------------------------------------ #
+@app.route("/api/push/public-key")
+def api_push_public_key():
+    """Returnerer VAPID public key. Frontend bruker den ved subscribe."""
+    key = push_mod.get_public_key()
+    return jsonify({"public_key": key, "enabled": push_mod.is_enabled()})
+
+
+@app.route("/api/push/subscribe", methods=["POST"])
+def api_push_subscribe():
+    """Lagrer en push-subscription for en gitt team_id."""
+    try:
+        data = request.get_json(force=True)
+        team_id = int(data["team_id"])
+        subscription = data["subscription"]
+        push_mod.add_subscription(team_id, subscription)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/push/unsubscribe", methods=["POST"])
+def api_push_unsubscribe():
+    """Fjern en push-subscription."""
+    try:
+        data = request.get_json(force=True)
+        team_id = int(data["team_id"])
+        endpoint = data["endpoint"]
+        push_mod.remove_subscription(team_id, endpoint)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/push/test/<int:team_id>", methods=["POST"])
+def api_push_test(team_id):
+    """Send et test-varsel til alle aktive subs for et team."""
+    payload = {
+        "title": "FPL Optimizer",
+        "body": "Test-varsel — push fungerer! 🎯",
+        "url": "/",
+    }
+    result = push_mod.broadcast_to_team(team_id, payload)
+    return jsonify({"ok": True, **result})
+
+
+@app.route("/api/push/dispatch", methods=["POST"])
+def api_push_dispatch():
+    """Trigget av cron — sender deadline-, skade- eller prisendrings-varsler.
+
+    Body: {"kind": "deadline" | "injury" | "price", "team_id": ..., ...}
+    Beskyttet med X-Cron-Token-header (env: CRON_TOKEN).
+    """
+    expected = os.environ.get("CRON_TOKEN")
+    if expected and request.headers.get("X-Cron-Token") != expected:
+        return jsonify({"error": "unauthorized"}), 401
+    data = request.get_json(force=True) or {}
+    kind = data.get("kind")
+    team_id = data.get("team_id")
+    if not team_id:
+        return jsonify({"error": "team_id required"}), 400
+    payloads = {
+        "deadline": {
+            "title": "FPL deadline om 24t ⏰",
+            "body": data.get("body", "Sjekk laget før fredag — kapteinpick, transfers, skader."),
+            "url": "/",
+        },
+        "injury": {
+            "title": data.get("title", "⚠ Skadenytt"),
+            "body": data.get("body", "En spiller på laget ditt er flagget."),
+            "url": "/",
+        },
+        "price": {
+            "title": data.get("title", "💰 Prisendring"),
+            "body": data.get("body", "En spiller du følger har endret pris."),
+            "url": "/",
+        },
+    }
+    payload = payloads.get(kind)
+    if not payload:
+        return jsonify({"error": "unknown kind"}), 400
+    result = push_mod.broadcast_to_team(int(team_id), payload)
+    return jsonify({"ok": True, "kind": kind, **result})
 
 
 # ------------------------------------------------------------------ #

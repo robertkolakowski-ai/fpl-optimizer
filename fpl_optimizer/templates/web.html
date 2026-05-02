@@ -4496,6 +4496,18 @@
       <div class="nav-panel" id="nav-settings">
         <h2 style="margin-bottom:1rem;font-size:1.2rem;">Innstillinger</h2>
 
+        <!-- Push notifications -->
+        <div class="user-bar" style="margin-bottom:1rem;">
+          <div class="user-bar-header"><span class="title">Varsler</span></div>
+          <div style="padding:0.5rem 0;display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;">
+            <button id="push-toggle-btn" onclick="togglePushSubscription()" class="btn btn-secondary" style="font-size:0.85rem;">🔔 Aktiver varsler</button>
+            <span id="push-status" style="color:var(--text-muted);font-size:var(--fs-small);max-width:48ch;line-height:1.45;">
+              Få varsel før FPL-deadline (fredag morgen), når en spiller på laget blir skadet, og når spillere du følger endrer pris.
+              <br><small style="color:var(--text-faint);">Krever team-ID. Du kan slå av når som helst.</small>
+            </span>
+          </div>
+        </div>
+
         <!-- Theme toggle -->
         <div class="user-bar" style="margin-bottom:1rem;">
           <div class="user-bar-header"><span class="title">Utseende</span></div>
@@ -5438,6 +5450,115 @@ async function showFixtureTooltip(el) {
     el.title = `xG forventet: ${home} ${pred.home_xg_expected} - ${pred.away_xg_expected} ${away} (FDR ${pred.home_difficulty} vs ${pred.away_difficulty})`;
   }
 }
+
+// Push notifications — subscribe/unsubscribe via service worker.
+// Best practice: spør om permission KUN ved eksplisitt brukerklikk
+// (browser-policy ellers nekter). Service worker må allerede være
+// registrert (gjøres i <head>-scriptet).
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from(rawData, c => c.charCodeAt(0));
+}
+
+async function getCurrentSubscription() {
+  if (!('serviceWorker' in navigator)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return await reg.pushManager.getSubscription();
+}
+
+async function refreshPushUI() {
+  const btn = document.getElementById('push-toggle-btn');
+  const status = document.getElementById('push-status');
+  if (!btn) return;
+  const isNo = currentLocale === 'no';
+  // Sjekk om push i det hele tatt er støttet
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    btn.disabled = true;
+    btn.textContent = isNo ? 'Ikke støttet i nettleseren' : 'Not supported in browser';
+    return;
+  }
+  // Sjekk om push er konfigurert på server
+  try {
+    const conf = await fetch('/api/push/public-key').then(r => r.json());
+    if (!conf.enabled) {
+      btn.disabled = true;
+      btn.textContent = isNo ? 'Krever VAPID-oppsett' : 'Server VAPID not configured';
+      if (status) status.innerHTML = (isNo
+        ? 'Push-varsler er ikke aktivert på serveren ennå. Når VAPID-nøkler er satt i miljøvariabler, vil knappen fungere.'
+        : 'Push notifications are not enabled on the server yet. Once VAPID keys are set, this will work.');
+      return;
+    }
+  } catch (e) { /* fortsetter — kan være offline */ }
+
+  const sub = await getCurrentSubscription();
+  if (sub && Notification.permission === 'granted') {
+    btn.textContent = isNo ? '🔕 Slå av varsler' : '🔕 Disable notifications';
+    btn.classList.remove('btn-secondary');
+    btn.classList.add('btn');
+  } else {
+    btn.textContent = isNo ? '🔔 Aktiver varsler' : '🔔 Enable notifications';
+    btn.classList.remove('btn');
+    btn.classList.add('btn-secondary');
+  }
+}
+
+async function togglePushSubscription() {
+  const isNo = currentLocale === 'no';
+  if (!AppState.userId) {
+    alert(isNo ? 'Du må koble til FPL-laget først.' : 'Connect your FPL team first.');
+    return;
+  }
+  const existing = await getCurrentSubscription();
+  if (existing && Notification.permission === 'granted') {
+    // Unsubscribe
+    try {
+      await fetch('/api/push/unsubscribe', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ team_id: AppState.userId, endpoint: existing.endpoint }),
+      });
+      await existing.unsubscribe();
+      showToast(isNo ? '🔕 Varsler slått av' : '🔕 Notifications disabled');
+    } catch (e) {}
+    refreshPushUI();
+    return;
+  }
+  // Subscribe
+  if (Notification.permission === 'denied') {
+    alert(isNo
+      ? 'Varsler er blokkert i nettleseren. Aktiver dem i nettleser-innstillingene for denne siden.'
+      : 'Notifications are blocked in browser. Enable them in browser settings for this site.');
+    return;
+  }
+  try {
+    const conf = await fetch('/api/push/public-key').then(r => r.json());
+    if (!conf.public_key) {
+      alert(isNo ? 'Push er ikke konfigurert på serveren.' : 'Push not configured on server.');
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(conf.public_key),
+    });
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ team_id: AppState.userId, subscription: sub.toJSON() }),
+    });
+    showToast(isNo ? '🔔 Varsler aktivert!' : '🔔 Notifications enabled!');
+    refreshPushUI();
+  } catch (e) {
+    showToast(isNo ? `Feil: ${e.message}` : `Error: ${e.message}`);
+  }
+}
+
+// Init UI når man åpner Innstillinger
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(refreshPushUI, 1000);
+});
 
 // Sharing-helpers: bruker Web Share API hvis støttet (mobil), fall tilbake
 // til clipboard. Toast-bekreftelse ved success.
