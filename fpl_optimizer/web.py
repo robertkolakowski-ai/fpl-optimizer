@@ -316,30 +316,50 @@ def health():
 
 
 # ------------------------------------------------------------------ #
-# Team priors — empiriske xG/xGA/CS-tall fra Scraper-output
+# Team priors — empiriske xG/xGA/CS-tall fra Scraper-output (PL + Bundesliga)
 # ------------------------------------------------------------------ #
 @app.route("/api/team-priors")
 def api_team_priors():
-    """Hele datasettet — for visualiseringer (xG vs xGA scatter, lag-DNA)."""
+    """Hele datasettet — alle ligaer."""
     return jsonify(team_priors_mod.get_priors())
 
 
 @app.route("/api/team-priors/table")
 def api_team_priors_table():
-    """Liga-tabell sortert etter net xG."""
-    return jsonify({"teams": team_priors_mod.league_xg_table()})
+    """Liga-tabell sortert etter net xG. ?league=PL (default) eller BL."""
+    league = request.args.get("league", "PL")
+    return jsonify({
+        "league": league,
+        "teams": team_priors_mod.league_xg_table(league),
+    })
 
 
 @app.route("/api/team-priors/<team_name>")
 def api_team_priors_one(team_name):
-    t = team_priors_mod.get_team(team_name)
+    league = request.args.get("league", "PL")
+    t = team_priors_mod.get_team(team_name, league)
     if not t:
         return jsonify({"error": f"Ingen data for {team_name}"}), 404
     return jsonify({
         "team": team_name,
+        "league": league,
         "data": t,
-        "narrative": team_priors_mod.team_dna_narrative(team_name),
+        "narrative": team_priors_mod.team_dna_narrative(team_name, league),
     })
+
+
+@app.route("/api/team-priors/fixture-difficulty")
+def api_team_priors_fixture():
+    """Empirisk fixture-difficulty fra xG. ?home=Arsenal&away=Burnley[&league=PL]"""
+    home = request.args.get("home", "")
+    away = request.args.get("away", "")
+    league = request.args.get("league", "PL")
+    if not home or not away:
+        return jsonify({"error": "home og away kreves"}), 400
+    result = team_priors_mod.fixture_difficulty_from_xg(home, away, league)
+    if not result:
+        return jsonify({"error": "Mangler data for ett av lagene"}), 404
+    return jsonify(result)
 
 
 # ------------------------------------------------------------------ #

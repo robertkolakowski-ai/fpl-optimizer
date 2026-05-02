@@ -1,15 +1,18 @@
 """Loader for empiriske lag-priors fra data/team_priors.json.
 
-Oppdateres 2× per uke via scripts/update_priors.ps1 (Windows Task Scheduler)
-eller manuelt via scripts/build_team_priors.py.
+Format v2: ligaer som key, hver med teams-dict.
+{
+  "version": 2,
+  "leagues": {
+    "PL": {"league_name": "Premier League", "teams": {...}},
+    "BL": {"league_name": "Bundesliga", "teams": {...}}
+  }
+}
 
-Eksponeres via /api/team-priors og brukes i:
-  - predictions.py (Dixon-Coles-priors basert på empirisk xG)
-  - analyzer.py (clean-sheet-rater til defender/GK-scoring)
-  - frontend-narrativer (Hjem, Liga, player-modal)
+Backward compat: hvis data har 'teams' direkte (v1), tolkes det som PL.
 
-Filen reloades dynamisk hvis modtid har endret seg — slik at neste request
-etter update_priors.ps1 har commitet får friske data uten Render-restart.
+Oppdateres 2× per uke via scripts/update_priors.ps1.
+Hot reload basert på filens mtime — ingen Render-restart trengs.
 """
 from __future__ import annotations
 
@@ -45,7 +48,17 @@ def _load_if_changed() -> dict[str, Any] | None:
         with _LOCK:
             if _state["loaded_mtime"] != mtime or _state["data"] is None:
                 with p.open("r", encoding="utf-8") as f:
-                    _state["data"] = json.load(f)
+                    raw = json.load(f)
+                # Normaliser til v2-format
+                if "leagues" in raw:
+                    _state["data"] = raw
+                else:
+                    # v1 backward compat
+                    _state["data"] = {
+                        "version": 1,
+                        "leagues": {"PL": {**raw, "league_name": "Premier League", "league_key": "PL"}},
+                        "generated_at": raw.get("generated_at"),
+                    }
                 _state["loaded_mtime"] = mtime
             return _state["data"]
     except Exception:
@@ -55,20 +68,25 @@ def _load_if_changed() -> dict[str, Any] | None:
 def get_priors() -> dict[str, Any]:
     data = _load_if_changed()
     if not data:
-        return {"version": 0, "teams": {}, "teams_count": 0}
+        return {"version": 0, "leagues": {}}
     return data
 
 
-def get_team(team_name: str) -> dict[str, Any] | None:
-    """Slå opp et lag på navn. Tolerant for små variasjoner."""
+def get_league(league_key: str = "PL") -> dict[str, Any] | None:
     data = _load_if_changed()
-    if not data or "teams" not in data:
+    if not data:
         return None
-    teams = data["teams"]
-    # Prøv eksakt match
+    return data.get("leagues", {}).get(league_key)
+
+
+def get_team(team_name: str, league_key: str = "PL") -> dict[str, Any] | None:
+    """Slå opp et lag på navn, default Premier League."""
+    league = get_league(league_key)
+    if not league:
+        return None
+    teams = league.get("teams", {})
     if team_name in teams:
         return teams[team_name]
-    # Case-insensitive match
     lname = team_name.lower()
     for name, vals in teams.items():
         if name.lower() == lname:
@@ -76,57 +94,13 @@ def get_team(team_name: str) -> dict[str, Any] | None:
     return None
 
 
-def fixture_difficulty_from_xg(home_team: str, away_team: str) -> dict[str, Any] | None:
-    """Beregn empirisk fixture difficulty fra xG.
-
-    Returnerer:
-        {
-          "home_xg_expected": float,    # forventet mål for hjemmelaget
-          "away_xg_expected": float,    # forventet mål for bortelaget
-          "home_difficulty": int (1-5), # vår skala, 1=lett 5=hard
-          "away_difficulty": int (1-5),
-        }
-    Eller None hvis ikke begge lag har xG-data.
-    """
-    h = get_team(home_team)
-    a = get_team(away_team)
-    if not h or not a:
-        return None
-    h_xg = h.get("xg_home")
-    h_xga = h.get("xga_home")
-    a_xg = a.get("xg_away")
-    a_xga = a.get("xga_away")
-    if None in (h_xg, h_xga, a_xg, a_xga):
-        return None
-    # Forventet mål: (lagets attack-xG + motstanders defense-xGA) / 2
-    home_expected = (h_xg + a_xga) / 2
-    away_expected = (a_xg + h_xga) / 2
-    # Skala til 1-5: jo mindre forventet motstand-xG, jo lettere kamp
-    def to_difficulty(opp_expected: float) -> int:
-        if opp_expected < 0.9:
-            return 1
-        if opp_expected < 1.2:
-            return 2
-        if opp_expected < 1.5:
-            return 3
-        if opp_expected < 1.9:
-            return 4
-        return 5
-    return {
-        "home_xg_expected": round(home_expected, 2),
-        "away_xg_expected": round(away_expected, 2),
-        "home_difficulty": to_difficulty(away_expected),
-        "away_difficulty": to_difficulty(home_expected),
-    }
-
-
-def league_xg_table() -> list[dict[str, Any]]:
-    """Returnerer lag sortert etter net xG — fra sterkest til svakest."""
-    data = _load_if_changed()
-    if not data or "teams" not in data:
+def league_xg_table(league_key: str = "PL") -> list[dict[str, Any]]:
+    """Returnerer lag i en liga sortert etter net xG."""
+    league = get_league(league_key)
+    if not league:
         return []
     rows = []
-    for name, vals in data["teams"].items():
+    for name, vals in league.get("teams", {}).items():
         rows.append({
             "team": name,
             "xg_avg": vals.get("xg_avg"),
@@ -141,9 +115,39 @@ def league_xg_table() -> list[dict[str, Any]]:
     return rows
 
 
-def team_dna_narrative(team_name: str) -> str | None:
-    """Kort menneskelig beskrivelse av lagets DNA basert på empiriske tall."""
-    t = get_team(team_name)
+def fixture_difficulty_from_xg(home_team: str, away_team: str, league_key: str = "PL") -> dict[str, Any] | None:
+    """Beregn empirisk fixture difficulty fra xG-data."""
+    h = get_team(home_team, league_key)
+    a = get_team(away_team, league_key)
+    if not h or not a:
+        return None
+    h_xg = h.get("xg_home")
+    h_xga = h.get("xga_home")
+    a_xg = a.get("xg_away")
+    a_xga = a.get("xga_away")
+    if None in (h_xg, h_xga, a_xg, a_xga):
+        return None
+    home_expected = (h_xg + a_xga) / 2
+    away_expected = (a_xg + h_xga) / 2
+
+    def to_difficulty(opp_expected: float) -> int:
+        if opp_expected < 0.9: return 1
+        if opp_expected < 1.2: return 2
+        if opp_expected < 1.5: return 3
+        if opp_expected < 1.9: return 4
+        return 5
+
+    return {
+        "home_xg_expected": round(home_expected, 2),
+        "away_xg_expected": round(away_expected, 2),
+        "home_difficulty": to_difficulty(away_expected),
+        "away_difficulty": to_difficulty(home_expected),
+    }
+
+
+def team_dna_narrative(team_name: str, league_key: str = "PL") -> str | None:
+    """Kort menneskelig DNA-beskrivelse av lag."""
+    t = get_team(team_name, league_key)
     if not t:
         return None
     parts = []
@@ -152,9 +156,9 @@ def team_dna_narrative(team_name: str) -> str | None:
         if net_xg >= 0.5:
             parts.append(f"Sterkt offensivt lag (net xG {net_xg:+.1f})")
         elif net_xg <= -0.3:
-            parts.append(f"Sliter foran og bak (net xG {net_xg:+.1f})")
+            parts.append(f"sliter foran og bak (net xG {net_xg:+.1f})")
         else:
-            parts.append(f"Balansert profil (net xG {net_xg:+.1f})")
+            parts.append(f"balansert profil (net xG {net_xg:+.1f})")
     cs = t.get("cs_pct_overall")
     if cs is not None:
         if cs >= 0.40:

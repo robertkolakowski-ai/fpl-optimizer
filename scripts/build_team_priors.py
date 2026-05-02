@@ -33,16 +33,24 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = REPO_ROOT / "data" / "team_priors.json"
 
 
-def _find_source() -> Path | None:
+# Ligaer vi støtter. Premier League er primær (FPL = PL), men Bundesliga er
+# verdifull tilleggsdata for europeisk kontekst — viser også at appen forstår
+# fotball på tvers av store ligaer.
+SUPPORTED_LEAGUES = [
+    {"key": "PL", "name": "Premier League", "filename": "tsdl_Premier_League.xlsx"},
+    {"key": "BL", "name": "Bundesliga", "filename": "tsdl_Bundesliga.xlsx"},
+]
+
+
+def _find_source(filename: str) -> Path | None:
     env = os.environ.get("TSDL_PL_XLSX")
-    if env:
+    if env and filename == "tsdl_Premier_League.xlsx":
         p = Path(env)
         if p.exists():
             return p
-    # Default: ../Scraper/output relative to this repo
     candidates = [
-        REPO_ROOT.parent / "Scraper" / "output" / "tsdl_Premier_League.xlsx",
-        Path("C:/Users/rober/Claude prosjekter/Scraper/output/tsdl_Premier_League.xlsx"),
+        REPO_ROOT.parent / "Scraper" / "output" / filename,
+        Path(f"C:/Users/rober/Claude prosjekter/Scraper/output/{filename}"),
     ]
     for c in candidates:
         if c.exists():
@@ -289,21 +297,39 @@ def build_priors(source: Path) -> dict:
 
 
 def main() -> int:
-    source = _find_source()
-    if not source:
-        print("Skipping: no Premier League scraper output found. Set TSDL_PL_XLSX to override.")
-        return 0
-    priors = build_priors(source)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    leagues_data = {}
+    total = 0
+
+    for spec in SUPPORTED_LEAGUES:
+        source = _find_source(spec["filename"])
+        if not source:
+            print(f"Skipping {spec['name']}: source not found ({spec['filename']}).")
+            continue
+        priors = build_priors(source)
+        priors["league_key"] = spec["key"]
+        priors["league_name"] = spec["name"]
+        leagues_data[spec["key"]] = priors
+        total += priors.get("teams_count", 0)
+        sample = next(iter(priors["teams"].items()), None)
+        if sample:
+            print(f"  {spec['name']} sample {sample[0]}: net_xg={sample[1].get('net_xg')}")
+
+    if not leagues_data:
+        print("No leagues processed. Exit.")
+        return 0
+
+    output = {
+        "version": 2,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "leagues": leagues_data,
+        "total_teams": total,
+    }
     tmp = OUTPUT_PATH.with_suffix(".json.tmp")
     with tmp.open("w", encoding="utf-8") as f:
-        json.dump(priors, f, ensure_ascii=False, indent=2, sort_keys=True)
+        json.dump(output, f, ensure_ascii=False, indent=2, sort_keys=True)
     tmp.replace(OUTPUT_PATH)
-    print(f"Wrote {OUTPUT_PATH} ({priors['teams_count']} teams)")
-    # Show a sample
-    sample = next(iter(priors["teams"].items()), None)
-    if sample:
-        print(f"Sample {sample[0]}: {json.dumps(sample[1], ensure_ascii=False)}")
+    print(f"Wrote {OUTPUT_PATH} — {total} teams across {len(leagues_data)} leagues")
     return 0
 
 

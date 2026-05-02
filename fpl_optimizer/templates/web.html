@@ -2723,6 +2723,10 @@
         <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg></span>
         <span class="si-label" data-i18n="nav.archive">Arkiv</span>
       </div>
+      <div class="sidebar-item" data-nav="nav-lag-dna" onclick="switchNav('nav-lag-dna')">
+        <span class="si-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+        <span class="si-label">Lag</span>
+      </div>
 
       <div class="sidebar-divider"></div>
 
@@ -4481,6 +4485,51 @@
         <div id="lp-squad" class="hidden"></div>
       </div>
 
+      <!-- ==================== LAG-DNA (sesong-stat per lag) ==================== -->
+      <div class="nav-panel" id="nav-lag-dna">
+        <section class="lag-view">
+          <header style="margin-bottom:var(--sp-4);">
+            <div style="font-size:var(--fs-label);color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">LAG-DNA · SESONGSTATISTIKK</div>
+            <h2 style="font-family:var(--font-display);font-size:var(--fs-h1);font-weight:600;color:var(--text-strong);margin:var(--sp-2) 0;">Hvilke lag scorer — og hvilke sliter?</h2>
+            <p style="color:var(--text-muted);font-size:var(--fs-body-lg);max-width:64ch;line-height:1.5;">Empirisk xG/xGA og clean-sheet-data per lag. Hver fixture-anbefaling i appen er forankret i disse tallene — her ser du dem direkte.</p>
+          </header>
+
+          <!-- Liga-switcher -->
+          <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap;">
+            <button class="lag-league-tab active" data-lkey="PL" onclick="loadLagPage('PL')" style="padding:0.5rem 1rem;border:1px solid var(--border-default);border-radius:var(--r-sm);background:var(--bg-canvas);font-weight:600;cursor:pointer;font-size:var(--fs-small);">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
+            <button class="lag-league-tab" data-lkey="BL" onclick="loadLagPage('BL')" style="padding:0.5rem 1rem;border:1px solid var(--border-default);border-radius:var(--r-sm);background:var(--bg-canvas);font-weight:600;cursor:pointer;font-size:var(--fs-small);">🇩🇪 Bundesliga</button>
+            <span id="lag-updated" style="margin-left:auto;align-self:center;font-size:var(--fs-label);color:var(--text-faint);"></span>
+          </div>
+
+          <div id="lag-empty" style="display:none;padding:var(--sp-8);text-align:center;color:var(--text-muted);background:var(--bg-canvas);border:1px dashed var(--border-default);border-radius:var(--r-md);">
+            Ingen data for denne ligaen ennå. Kommer ved neste oppdatering.
+          </div>
+
+          <div id="lag-content">
+            <!-- Hero: sterkest + svakest lag -->
+            <div id="lag-hero" style="margin-bottom:var(--sp-4);"></div>
+
+            <!-- Scatter -->
+            <article style="background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:var(--sp-5);margin-bottom:var(--sp-4);">
+              <h3 style="font-family:var(--font-display);font-size:var(--fs-h3);font-weight:600;color:var(--text-strong);margin-bottom:var(--sp-1);">Angrep ↔ forsvar</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-small);margin-bottom:var(--sp-3);">Topp-høyre er elite (mye xG, lite xGA). Bunn-venstre sliter. Hover for tall.</p>
+              <div id="lag-scatter" style="height:380px;"></div>
+              <div style="display:flex;justify-content:space-between;font-size:var(--fs-label);color:var(--text-muted);margin-top:var(--sp-1);">
+                <span>← Bedre forsvar (lavere xGA)</span>
+                <span>Bedre angrep (høyere xG) →</span>
+              </div>
+            </article>
+
+            <!-- Tabell -->
+            <article style="background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:var(--sp-5);">
+              <h3 style="font-family:var(--font-display);font-size:var(--fs-h3);font-weight:600;color:var(--text-strong);margin-bottom:var(--sp-1);">Sortert etter net xG</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-small);margin-bottom:var(--sp-3);">Net xG = mål-skapelse minus mål-tillatelse. Positivt = lag som skaper mer enn de slipper inn.</p>
+              <div id="lag-table"></div>
+            </article>
+          </div>
+        </section>
+      </div>
+
       <!-- ==================== SEASON HISTORY ==================== -->
       <div class="nav-panel" id="nav-season-history">
 
@@ -4783,6 +4832,15 @@ async function renderHomeBrief() {
       <div class="chip-narrative" id="chip-narrative">${L.chipNoData}</div>
     </section>
 
+    <!-- Sesong-form: top-3 / bunn-3 lag basert på empirisk xG -->
+    <section id="hjem-team-strength" style="margin-top:var(--sp-4);background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);flex-wrap:wrap;gap:var(--sp-2);">
+        <div style="font-size:var(--fs-label);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">${currentLocale==='no'?'Sesongform · Premier League':'Season form · Premier League'}</div>
+        <a href="#" onclick="switchNav('nav-lag-dna');return false;" style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-decoration:none;">${currentLocale==='no'?'Se alle 20 lag →':'See all 20 teams →'}</a>
+      </div>
+      <div id="hjem-team-strength-body" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);font-size:var(--fs-small);"></div>
+    </section>
+
     <section id="hjem-strategy" style="margin-top:var(--sp-4);padding:var(--sp-4);background:linear-gradient(135deg,var(--brand-primary-tint) 0%,var(--brand-accent-tint) 100%);border:1px solid color-mix(in oklab,var(--brand-primary) 18%,transparent);border-radius:var(--r-md);font-size:var(--fs-small);line-height:1.6;display:none;">
       <div style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-2);display:flex;align-items:center;gap:var(--sp-2);">
         <span>🎯</span><span>${currentLocale==='no'?'Vinnende strategi nå':'Winning strategy now'}</span>
@@ -4932,6 +4990,7 @@ async function renderHomeBrief() {
     loadLiveBonus();
     loadWeeklyLearning();
     loadStrategicAdvice();
+    loadHjemTeamStrength();
 
   } catch (e) {
     console.warn('home brief fill failed', e);
@@ -5117,6 +5176,53 @@ async function renderTeamNews() {
     const text = p.news ? `${p.name}: ${p.news}` : `${p.name}: ${c}% ${currentLocale==='no'?'klar':'fit'}`;
     return `<span class="tn-item ${tone}">${text}</span>`;
   }).join('');
+}
+
+// Fixture-tooltip: empirisk xG-prediksjon ved hover på ticker-item
+const _fixturePredCache = {};
+async function showFixtureTooltip(el) {
+  const home = el.dataset.home, away = el.dataset.away;
+  if (!home || !away) return;
+  const key = `${home}|${away}`;
+  if (el.title && el.title.includes('xG forventet')) return;  // already loaded
+  if (_fixturePredCache[key] === undefined) {
+    _fixturePredCache[key] = null;  // mark as fetching
+    try {
+      const data = await fetch(`/api/team-priors/fixture-difficulty?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`).then(r => r.ok ? r.json() : null);
+      _fixturePredCache[key] = data;
+    } catch (e) { _fixturePredCache[key] = null; }
+  }
+  const pred = _fixturePredCache[key];
+  if (pred && pred.home_xg_expected != null) {
+    el.title = `xG forventet: ${home} ${pred.home_xg_expected} - ${pred.away_xg_expected} ${away} (FDR ${pred.home_difficulty} vs ${pred.away_difficulty})`;
+  }
+}
+
+// Top-3 / Bunn-3-kort på Hjem: viser de tre sterkeste og svakeste PL-lagene
+async function loadHjemTeamStrength() {
+  const sec = document.getElementById('hjem-team-strength');
+  const body = document.getElementById('hjem-team-strength-body');
+  if (!sec || !body) return;
+  try {
+    const data = await fetch('/api/team-priors/table?league=PL').then(r => r.json());
+    const teams = (data && data.teams) || [];
+    if (teams.length < 6) { sec.style.display = 'none'; return; }
+    const top3 = teams.slice(0, 3);
+    const bottom3 = teams.slice(-3).reverse();
+    const isNo = currentLocale === 'no';
+    const renderBlock = (label, list, color, sign) => `
+      <div>
+        <div style="font-size:0.7rem;color:${color};text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:var(--sp-1);">${label}</div>
+        ${list.map(t => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+            <span style="font-weight:600;">${t.team}</span>
+            <span style="font-family:var(--font-mono);color:${color};font-weight:600;">${sign}${t.net_xg}</span>
+          </div>`).join('')}
+      </div>`;
+    body.innerHTML = renderBlock(isNo?'Sterkest 3':'Top 3', top3, 'var(--ok)', '+')
+                  + renderBlock(isNo?'Svakest 3':'Bottom 3', bottom3, 'var(--danger)', '');
+    sec.style.display = '';
+  } catch (e) { sec.style.display = 'none'; }
 }
 
 // Vinnende strategi — meta-coaching basert på sesongfase, brukerens rang
@@ -6312,17 +6418,19 @@ async function renderLigaTrendChart() {
     <span class="lcl-item"><span class="lcl-swatch" style="background:var(--text-muted);opacity:0.55"></span>${currentLocale==='no'?'Topp 4 rivaler (positiv = leder)':'Top 4 rivals (positive = ahead)'}</span>`;
 }
 
-// Lag-DNA scatter + tabell — viser empiriske xG/xGA/CS per lag
-async function loadLigaDna() {
+// Lag-DNA scatter + tabell — viser empiriske xG/xGA/CS per lag.
+// Støtter ?league=PL (default) eller BL (Bundesliga).
+let _activeDnaLeague = 'PL';
+async function loadLigaDna(leagueKey) {
+  if (leagueKey) _activeDnaLeague = leagueKey;
   try {
-    const data = await fetch('/api/team-priors/table').then(r => r.json());
+    const data = await fetch(`/api/team-priors/table?league=${_activeDnaLeague}`).then(r => r.json());
     const teams = (data && data.teams) || [];
     if (!teams.length) {
       const card = document.querySelector('.liga-dna-card');
       if (card) card.style.display = 'none';
       return;
     }
-    // Generated_at-stempel
     const meta = await fetch('/api/team-priors').then(r => r.json()).catch(() => null);
     if (meta && meta.generated_at) {
       const d = new Date(meta.generated_at);
@@ -6330,16 +6438,67 @@ async function loadLigaDna() {
       const updEl = document.getElementById('liga-dna-updated');
       if (updEl) updEl.textContent = ago === 0 ? 'Oppdatert i dag' : `Oppdatert for ${ago} ${ago === 1 ? 'dag' : 'dager'} siden`;
     }
-    renderDnaScatter(teams);
-    renderDnaTable(teams);
+    renderDnaScatter(teams, 'liga-dna-scatter');
+    renderDnaTable(teams, 'liga-dna-table');
   } catch (e) {
     const card = document.querySelector('.liga-dna-card');
     if (card) card.style.display = 'none';
   }
 }
 
-function renderDnaScatter(teams) {
-  const wrap = document.getElementById('liga-dna-scatter');
+// Standalone "Lag"-side med league-switcher
+async function loadLagPage(leagueKey) {
+  const lk = leagueKey || (localStorage.getItem('fpl_dna_league') || 'PL');
+  localStorage.setItem('fpl_dna_league', lk);
+  try {
+    const data = await fetch(`/api/team-priors/table?league=${lk}`).then(r => r.json());
+    const teams = (data && data.teams) || [];
+    document.querySelectorAll('.lag-league-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.lkey === lk);
+    });
+    if (!teams.length) {
+      document.getElementById('lag-empty').style.display = '';
+      document.getElementById('lag-content').style.display = 'none';
+      return;
+    }
+    document.getElementById('lag-empty').style.display = 'none';
+    document.getElementById('lag-content').style.display = '';
+    const meta = await fetch('/api/team-priors').then(r => r.json()).catch(() => null);
+    if (meta && meta.generated_at) {
+      const d = new Date(meta.generated_at);
+      const ago = Math.round((Date.now() - d.getTime()) / 86400000);
+      const upd = document.getElementById('lag-updated');
+      if (upd) upd.textContent = ago === 0 ? 'Oppdatert i dag' : `Oppdatert for ${ago} ${ago === 1 ? 'dag' : 'dager'} siden`;
+    }
+    renderDnaScatter(teams, 'lag-scatter');
+    renderDnaTable(teams, 'lag-table');
+    // Quick stats hero
+    const top = teams[0];
+    const bottom = teams[teams.length - 1];
+    const heroEl = document.getElementById('lag-hero');
+    if (heroEl && top && bottom) {
+      heroEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          <div style="background:rgba(81,207,102,0.08);border:1px solid rgba(81,207,102,0.25);border-radius:var(--r-sm);padding:var(--sp-3);">
+            <div style="font-size:var(--fs-label);color:var(--ok);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:var(--sp-1);">Sterkest</div>
+            <div style="font-size:var(--fs-h3);font-weight:700;color:var(--text-strong);">${top.team}</div>
+            <div style="font-size:var(--fs-small);color:var(--text-muted);margin-top:2px;">net xG <strong style="color:var(--ok);">+${top.net_xg}</strong> · xG ${top.xg_avg} · xGA ${top.xga_avg}</div>
+          </div>
+          <div style="background:rgba(178,58,58,0.06);border:1px solid rgba(178,58,58,0.2);border-radius:var(--r-sm);padding:var(--sp-3);">
+            <div style="font-size:var(--fs-label);color:var(--danger);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:var(--sp-1);">Svakest</div>
+            <div style="font-size:var(--fs-h3);font-weight:700;color:var(--text-strong);">${bottom.team}</div>
+            <div style="font-size:var(--fs-small);color:var(--text-muted);margin-top:2px;">net xG <strong style="color:var(--danger);">${bottom.net_xg}</strong> · xG ${bottom.xg_avg} · xGA ${bottom.xga_avg}</div>
+          </div>
+        </div>`;
+    }
+  } catch (e) {
+    document.getElementById('lag-empty').style.display = '';
+    document.getElementById('lag-content').style.display = 'none';
+  }
+}
+
+function renderDnaScatter(teams, targetId) {
+  const wrap = document.getElementById(targetId || 'liga-dna-scatter');
   if (!wrap) return;
   const W = wrap.clientWidth || 600;
   const H = 300;
@@ -6392,8 +6551,8 @@ function renderDnaScatter(teams) {
   wrap.innerHTML = svg;
 }
 
-function renderDnaTable(teams) {
-  const wrap = document.getElementById('liga-dna-table');
+function renderDnaTable(teams, targetId) {
+  const wrap = document.getElementById(targetId || 'liga-dna-table');
   if (!wrap) return;
   const rows = teams.map((t, i) => {
     const netColor = t.net_xg >= 0.4 ? 'var(--ok)' : t.net_xg <= -0.4 ? 'var(--danger)' : 'var(--text-default)';
@@ -7048,6 +7207,9 @@ switchNav = function(panelId) {
     // feilet stille har vi ingen chips. Kort timeout slik at sidebar-rendering
     // ikke blokker.
     setTimeout(loadLigaView, 50);
+  }
+  if (panelId === 'nav-lag-dna') {
+    setTimeout(() => loadLagPage(), 50);
   }
   if (panelId === 'nav-season-history' && AppState.userId && !ArkivState.history) {
     setTimeout(loadArkivView, 100);
@@ -8393,7 +8555,7 @@ async function loadTicker() {
       } else {
         middle = `<span class="kickoff">TBC</span>`;
       }
-      html += `<div class="ticker-item"><span class="team-abbr">${f.home_team_name}</span>${middle}<span class="team-abbr">${f.away_team_name}</span></div>`;
+      html += `<div class="ticker-item" data-home="${f.home_team_name}" data-away="${f.away_team_name}" onmouseenter="showFixtureTooltip(this)"><span class="team-abbr">${f.home_team_name}</span>${middle}<span class="team-abbr">${f.away_team_name}</span></div>`;
     });
     track.innerHTML = html;
   } catch (e) {
@@ -11487,9 +11649,56 @@ async function openPlayerModal(playerId) {
       </div>
     `;
     loadScoreExplanation(playerId);
+    loadTeamDna(data.team_name, playerId);
   } catch(e) {
     content.innerHTML = `<div class="error-msg">${e.message}</div>`;
   }
+}
+
+// Mini-DNA i player-modal: viser hvordan spillerens lag presterer
+async function loadTeamDna(teamName, playerId) {
+  if (!teamName) return;
+  try {
+    const data = await fetch(`/api/team-priors/${encodeURIComponent(teamName)}`).then(r => r.ok ? r.json() : null);
+    if (!data || !data.data) return;
+    const t = data.data;
+    const breakdownEl = document.querySelector('#pm-tab-breakdown');
+    if (!breakdownEl) return;
+    const isNo = currentLocale === 'no';
+    const netXg = t.net_xg;
+    const netColor = netXg >= 0.4 ? 'var(--ok)' : netXg <= -0.4 ? 'var(--danger)' : 'var(--brand-primary)';
+    const csOverall = t.cs_pct_overall;
+    const second = t.goals_second_half_pct;
+    const first = t.goals_first_half_pct;
+
+    const dnaCard = `
+      <div style="margin-top:var(--sp-3);padding:var(--sp-3);background:var(--bg-subtle);border-left:3px solid ${netColor};border-radius:var(--r-sm);">
+        <div style="font-size:var(--fs-label);color:var(--text-muted);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:var(--sp-2);">${isNo?'Lagets DNA':'Team DNA'} · ${teamName}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2);font-size:var(--fs-small);">
+          <div>
+            <div style="color:var(--text-muted);font-size:0.7rem;">${isNo?'Net xG':'Net xG'}</div>
+            <div style="font-family:var(--font-mono);font-weight:700;color:${netColor};font-size:var(--fs-body-lg);">${netXg != null ? (netXg >= 0 ? '+' : '') + netXg : '—'}</div>
+          </div>
+          <div>
+            <div style="color:var(--text-muted);font-size:0.7rem;">Clean sheet</div>
+            <div style="font-family:var(--font-mono);font-weight:700;font-size:var(--fs-body-lg);">${csOverall != null ? Math.round(csOverall*100) + '%' : '—'}</div>
+          </div>
+          <div>
+            <div style="color:var(--text-muted);font-size:0.7rem;">${isNo?'2. omg-andel':'2nd half %'}</div>
+            <div style="font-family:var(--font-mono);font-weight:700;font-size:var(--fs-body-lg);">${second != null ? Math.round(second*100) + '%' : '—'}</div>
+          </div>
+        </div>
+        ${data.narrative ? `<div style="margin-top:var(--sp-2);font-size:0.78rem;color:var(--text-default);line-height:1.5;">${data.narrative}</div>` : ''}
+      </div>`;
+
+    // Append etter score-breakdown
+    const existing = breakdownEl.querySelector('.pm-team-dna');
+    if (existing) existing.remove();
+    const wrap = document.createElement('div');
+    wrap.className = 'pm-team-dna';
+    wrap.innerHTML = dnaCard;
+    breakdownEl.appendChild(wrap);
+  } catch (e) { /* silent */ }
 }
 
 // V5 (2026-05): Lucide-style inline SVG icons for UI chrome.
