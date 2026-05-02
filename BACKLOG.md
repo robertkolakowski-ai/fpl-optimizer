@@ -139,6 +139,73 @@ Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinte
 
 ## Park / Deferred
 
+### Sesjonslogg 2026-05-02 (kveld) — Lag-DNA + forklarbar-DNA-løft
+
+**Forklarbar-DNA på 7 flater** — alle bruker form/kamper/eierskap/risiko-
+vokabular i klartekst og leder til konkret handling:
+- Liga rang-simulering: narrativ analyse (median, 80%-intervall, P(seier),
+  konkret handling basert på posisjon)
+- Chip-strategi: per-chip 'hvorfor GW X' + risiko-advarsel
+- Spiller-modal 'Hvorfor denne spilleren': åpningssetning, gradert rotasjons-
+  advarsel, fixture-letthet i klartekst, dødball-oppside
+- Arkiv 'Hvor er modellen svak?': ærlig selvkritikk basert på siste 6 GW
+  backtest med konkrete bom-eksempler
+- Hjem 'Læring fra forrige uke': syntetisert fra prediction-log + backtest
+- Kapteinkort FORDI: form gradert, eierskap som differensial-vink, risiko-flagg
+- Liga catch-up: eierskap i klartekst + form-evaluering + handling
+- Hjem 'Vinnende strategi nå': meta-coaching med 4 sesongfase-scenarioer
+
+**Lag-DNA-pipeline (helt nytt):**
+
+Utnytter `C:\Users\rober\Claude prosjekter\Scraper\output` (147 ark per liga)
+til å berike appen med empirisk xG/xGA/CS-data per lag.
+
+- `scripts/build_team_priors.py`: leser tsdl_Premier_League.xlsx +
+  tsdl_Bundesliga.xlsx, henter xG/xGA hjemme/borte, CS%, 1./2. omgangs-split,
+  BTTS. Output: `data/team_priors.json` (multi-liga v2-format).
+- `scripts/update_priors.ps1`: Windows Task Scheduler-script (kjører mandag +
+  torsdag 06:30), bygger fresh JSON, committer + pusher hvis endret. Render
+  auto-deployer.
+- `fpl_optimizer/team_priors.py`: backend-loader med mtime-watching (hot
+  reload uten Render-restart), get_league/get_team/league_xg_table/
+  team_dna_narrative/fixture_difficulty_from_xg.
+- 4 nye API-endepunkter: `/api/team-priors`, `/table?league=PL|BL`,
+  `/<team_name>?league=...`, `/fixture-difficulty?home=...&away=...`.
+
+**4 visuelle plasseringer:**
+
+1. Egen **"Lag"-fane** i sidebar (mellom Arkiv og Spiller). Liga-switcher
+   PL/Bundesliga, Sterkest+Svakest-hero, full scatter-plot (380px), tabell
+   sortert etter net xG.
+2. **Mini-DNA i player-modal**: 3 nøkkeltall (Net xG, CS%, 2.-omg-andel) +
+   narrativ for spillerens lag.
+3. **Top-3/Bunn-3 på Hjem**: kompakt blokk med tre sterkeste og tre svakeste
+   PL-lag, lenker til Lag-fanen.
+4. **Fixture-tooltip**: hover på top-bar-fixtures gir empirisk xG-prediksjon
+   ('Arsenal 2.4 - 0.8 Burnley · FDR 1 vs 5').
+
+**Tall fra dataen (status 2026-05-02):**
+- Arsenal: net xG +0.91, CS 47% (sterkest i PL)
+- Bayern: net xG +1.81 (sterkest i Bundesliga, mer dominant enn Arsenal)
+- Burnley: net xG -1.17 (svakest i PL)
+
+**Endringslogg-tekstene** for 2026-05-01-leveransen omskrevet fra teknisk
+jargong til folkelig 'hva fikk du, og hvorfor er det bra'-stil med bullet-
+lister.
+
+**Bug-fixes underveis:**
+- Liga 'Koble til'-melding viste seg selv om bruker var koblet til
+  (`display:flex` overstyrte `[hidden]`-attributtet) — fikset med global
+  `[hidden] { display: none !important }`
+- Plan-sidens 'Avansert: kjør optimizer fra bunn'-summary roterte teksten
+  90° (en CSS-regel i wizardens 'Vis meg hvordan' lekket til alle
+  `<details>`-elementer) — scopet til `.wiz-howto`
+- Transfer-kort viste £0.0 fordi backend returnerer `cost`, frontend leste
+  `price` — fikset med fallback
+- PowerShell-script update_priors.ps1 feilet pga em-dashes + 2>&1-redirect
+  i PS 5.1 — omskrevet til ASCII-only + & call-operator
+- skeleton-state på Liga-leagues-bar (var blank ved cold load)
+
 ### Feilsøking 2026-05-02 — pågående
 
 `fpl.kolakowski.no` er live, team-tilkobling fungerer (Nicholas 2006459 lastet
