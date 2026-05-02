@@ -5039,6 +5039,12 @@ async function renderHomeBrief() {
           <span class="cb-text" id="hcc-conf-text">—</span>
         </div>
         <div class="hcc-vc"><span class="vc-mark">V</span>${L.vc}: <strong id="hcc-vc">—</strong></div>
+        <button onclick="event.stopPropagation();shareCaptain();" title="${currentLocale==='no'?'Del kaptein-valget':'Share captain pick'}" style="position:absolute;top:var(--sp-3);right:var(--sp-3);background:rgba(255,255,255,0.6);border:1px solid var(--border-default);border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--duration-fast),background var(--duration-fast);" onmouseover="this.style.background='var(--bg-canvas)'" onmouseout="this.style.background='rgba(255,255,255,0.6)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
       </article>
 
       <div class="hjem-side-stack">
@@ -5431,6 +5437,81 @@ async function showFixtureTooltip(el) {
   if (pred && pred.home_xg_expected != null) {
     el.title = `xG forventet: ${home} ${pred.home_xg_expected} - ${pred.away_xg_expected} ${away} (FDR ${pred.home_difficulty} vs ${pred.away_difficulty})`;
   }
+}
+
+// Sharing-helpers: bruker Web Share API hvis støttet (mobil), fall tilbake
+// til clipboard. Toast-bekreftelse ved success.
+async function shareOrCopy(text, title) {
+  const isNo = currentLocale === 'no';
+  // 1. Prøv Web Share API (mobil + noen desktop-nettlesere)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: title || 'FPL Optimizer', text });
+      return true;
+    } catch (e) {
+      // Bruker avbrøt — ikke fall tilbake hvis det var avbryt-error
+      if (e.name === 'AbortError') return false;
+    }
+  }
+  // 2. Fall tilbake til clipboard
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(isNo ? '📋 Kopiert til utklippstavle' : '📋 Copied to clipboard');
+    return true;
+  } catch (e) {
+    // 3. Siste fallback: vis tekst i prompt
+    prompt(isNo ? 'Kopier teksten:' : 'Copy this text:', text);
+    return true;
+  }
+}
+
+function showToast(msg, ms) {
+  let toast = document.getElementById('fpl-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'fpl-toast';
+    toast.style.cssText = `
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--bg-inverse); color: var(--bg-page);
+      padding: 10px 18px; border-radius: 24px; font-size: 0.9rem; font-weight: 600;
+      box-shadow: var(--shadow-3); z-index: 10000; opacity: 0;
+      transition: transform 240ms var(--ease-out), opacity 240ms;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    toast.style.opacity = '1';
+  });
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => {
+    toast.style.transform = 'translateX(-50%) translateY(100px)';
+    toast.style.opacity = '0';
+  }, ms || 2500);
+}
+
+// Generer del-tekst for kapteinpick
+function shareCaptain() {
+  const isNo = currentLocale === 'no';
+  const name = document.getElementById('hcc-name')?.textContent;
+  const meta = document.getElementById('hcc-meta')?.textContent;
+  const pts = document.getElementById('hcc-pts')?.textContent;
+  const because = document.getElementById('hcc-because-text')?.textContent;
+  const vc = document.getElementById('hcc-vc')?.textContent;
+  if (!name || name === '—') return;
+  const lines = [
+    isNo ? `🎯 Min FPL-kaptein: ${name}` : `🎯 My FPL captain: ${name}`,
+    meta ? `   ${meta}` : '',
+    pts !== '—' ? (isNo ? `   Forventet: ${pts} pts m/ kapteinsbinde` : `   Projected: ${pts} pts with armband`) : '',
+    vc && vc !== '—' ? (isNo ? `   Visekaptein: ${vc}` : `   Vice: ${vc}`) : '',
+    '',
+    because ? (isNo ? `📊 ${because}` : `📊 ${because}`) : '',
+    '',
+    `— fpl.kolakowski.no`,
+  ].filter(Boolean);
+  shareOrCopy(lines.join('\n'), isNo ? 'Min FPL-kaptein' : 'My FPL captain');
 }
 
 // Differential-leaderboard på Spiller-siden — fire filter-modus.
