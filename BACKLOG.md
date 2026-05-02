@@ -139,6 +139,81 @@ Etter ekstern designvurdering: utvidet plan med visuelle V-punkter inn i sprinte
 
 ## Park / Deferred
 
+### Sesjonslogg 2026-05-02 (sen kveld) — 10 best-in-class-løft
+
+Komplett implementasjon av "10 viktigste løft for å nå best-in-class".
+Alle 10 levert med best-practice-tilnærming (UX, visuell design, kvalitativ
+informasjon).
+
+**Visuell foundation (#5, #4, #6):**
+
+- **#5 Lag-farger + foto:** TEAM_COLORS-mapping (keyed by FPL team code)
+  med [primary, on-primary, secondary] per Premier League-klubb. Helpere
+  `teamColors(teamId)`, `teamStripe()`, `teamPill()`. Plan-pitchen har nå
+  foto + lag-farget posisjons-stripe på toppen av hver tile. Player-modal-
+  header med 3px venstre-stripe + foto-ramme i lagets primærfarge.
+- **#4 Animasjoner:** CSS-tokens for ease-funksjoner og varigheter.
+  page-fade ved nav-endring (240ms ease-out + 6px translateY), hover-lift
+  på interaktive kort, knappe-press scale 0.97, captain-armbånd puls (2.4s
+  loop). `animateNumber()`-helper teller opp/ned med ease-out-cubic over
+  700ms, flash-fargen grønn/rød underveis. `prefers-reduced-motion`
+  respektert globalt.
+- **#6 Mørk modus:** Token-overrides under `html[data-theme="dark"]` med
+  Ink-Slate-palett, AA-kontrast på all tekst. Auto-respekt for
+  `prefers-color-scheme: dark`. FOUC-prevention via inline-script i
+  `<head>`. Toggle i Innstillinger > Utseende cycler System / Mørk / Lys,
+  lagrer i localStorage.
+
+**Plattform (#3):**
+
+- **#3 PWA installability:** `manifest.webmanifest` med navn, theme-color
+  amber, three icon-størrelser (192, 512, maskable-512). SVG-ikoner med
+  logo-monogrammet (sirkel + femkant). Service worker (`/sw.js`) med tre
+  strategier: stale-while-revalidate for statiske, network-first for
+  `/api/*` med offline-fallback, passthrough for `/health` og predictions.
+  Apple touch-icon + meta-tags for iOS "Add to Home Screen".
+
+**Onboarding & innholdsdypde (#9, #8, #10):**
+
+- **#9 Onboarding-tour:** Erstatter gammel 11-stegs engelsk tour med 7
+  norske steg ankret i de 5 IA-destinasjonene + Lag-DNA. Auto-trigget
+  1.5s etter første `loadUser()`-success (markert i localStorage).
+  Tour-tooltip-knapper oversatt basert på currentLocale.
+- **#8 Differensial-radar:** Øverst på Spiller-siden, før søk. 4 filter-
+  modus: Differensial (form>=5, eierskap<10%, lette kamper), Toppform
+  (form>=6), Verdi (poeng-per-million), Stigende pris. Topp 10 per modus
+  med foto, navn, lag, form, eierskap, pris, total-poeng. Lag-farget
+  venstre-stripe per rad.
+- **#10 Sharing/eksport:** `shareOrCopy()`-helper med Web Share API
+  (mobil) → clipboard (desktop) → prompt-fallback. `showToast()` for
+  bekreftelser. `shareCaptain()` genererer kuratert tekst med kapteinpick
+  + meta + 'fordi'-tekst + visekaptein. Del-knapp øverst-høyre på
+  hjem-kapteinkortet.
+
+**Backend-tunge funksjoner (#1, #2):**
+
+- **#1 Push-varsler (Web Push via VAPID):** `push_notifications.py` med
+  SQLite-store for subscriptions. 5 nye API-endepunkter:
+  `/api/push/{public-key, subscribe, unsubscribe, test, dispatch}`. SW
+  har `push`-event handler + `notificationclick` for å åpne URL.
+  Innstillinger har "🔔 Aktiver varsler"-toggle med detection av
+  ikke-støtte / ikke-konfigurert. Tre planlagte varsel-typer (deadline,
+  injury, price). **Aktivering krever VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY, VAPID_SUBJECT, CRON_TOKEN i Render env-vars.**
+  pywebpush + openpyxl lagt til requirements.
+- **#2 Live match-day:** Mini-liga battle på Hjem (over BPS-strippen).
+  Synlig kun under match-day, auto-poll hver 30. sek. Viser dine GW-
+  poeng + 4 toppe rivaler med live delta ('Per +12 leder' grønnt,
+  '-7 taper' rødt). Animert rød live-prikk øverst.
+
+**Power-tool (#7):**
+
+- **#7 4-spiller compare:** `CompareState` refaktorert fra `{aId, bId}`
+  til `{ids: [...]}`. `openCompareModal(...args)` tar opptil 4 ids
+  variadic. Tabell-layout med 1 stat-rad per metrikk × N kolonner.
+  Vinner-verdi per rad fargelagt grønn. Add-picker med "Legg til
+  spiller (N/4)". Horizontal scroll på små skjermer.
+
 ### Sesjonslogg 2026-05-02 (kveld) — Lag-DNA + forklarbar-DNA-løft
 
 **Forklarbar-DNA på 7 flater** — alle bruker form/kamper/eierskap/risiko-
