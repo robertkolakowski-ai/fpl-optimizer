@@ -1,58 +1,60 @@
 # update_priors.ps1
 #
-# Kjør 2× per uke (mandag + torsdag) via Windows Task Scheduler.
+# Kjor 2x per uke (mandag + torsdag) via Windows Task Scheduler.
 # Steg:
 #   1. Bygg ferskt data/team_priors.json fra Scraper-output
-#   2. Hvis filen har endret seg — git commit + push (Render auto-deployer)
+#   2. Hvis filen har endret seg, git commit + push (Render auto-deployer)
 #   3. Logg resultat
 #
-# Hvis Scraper-filen ikke er oppdatert siden sist kjøring, gjør scriptet
-# ingenting (rask exit).
+# Hvis Scraper-filen ikke er oppdatert siden sist kjoring, exit'er scriptet
+# raskt uten aa committe noe.
 #
-# Sett opp i Task Scheduler:
-#   schtasks /create /tn "FPL Update Priors" /tr "powershell -File 'C:\Users\rober\Claude prosjekter\fpl-optimizer\scripts\update_priors.ps1'" /sc weekly /d MON,THU /st 06:30
-#
+# Sett opp i Task Scheduler (PowerShell som Administrator):
+#   schtasks /create /tn "FPL Update Priors" /tr "powershell.exe -ExecutionPolicy Bypass -File 'C:\Users\rober\Claude prosjekter\fpl-optimizer\scripts\update_priors.ps1'" /sc weekly /d MON,THU /st 06:30 /rl HIGHEST
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $LogPath = Join-Path $RepoRoot "data\update_priors.log"
 
-function Log-Line {
-    param([string]$msg)
+function Write-LogLine {
+    param([string]$Message)
     $stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$stamp  $msg" | Out-File -FilePath $LogPath -Append -Encoding utf8
-    Write-Host "$stamp  $msg"
+    $line = "$stamp  $Message"
+    $line | Out-File -FilePath $LogPath -Append -Encoding utf8
+    Write-Host $line
 }
 
-Log-Line "=== Start update_priors ==="
+Write-LogLine "=== Start update_priors ==="
 
 try {
     Set-Location $RepoRoot
 
     # 1. Generer ny JSON
-    Log-Line "Running build_team_priors.py ..."
-    $pythonOutput = python "scripts/build_team_priors.py" 2>&1
-    Log-Line ($pythonOutput | Out-String).Trim()
+    Write-LogLine "Running build_team_priors.py"
+    $pythonOutput = & python "scripts/build_team_priors.py"
+    $joined = ($pythonOutput | Out-String).Trim()
+    if ($joined) { Write-LogLine $joined }
 
     # 2. Sjekk om filen er endret
-    $status = git status --porcelain "data/team_priors.json"
+    $status = & git status --porcelain "data/team_priors.json"
     if (-not $status) {
-        Log-Line "No changes to team_priors.json — exit."
+        Write-LogLine "No changes to team_priors.json. Exit."
         exit 0
     }
 
     # 3. Commit + push
-    Log-Line "Changes detected, committing ..."
-    git add "data/team_priors.json"
+    Write-LogLine "Changes detected, committing"
+    & git add "data/team_priors.json"
     $today = Get-Date -Format "yyyy-MM-dd"
-    git commit -m "Auto-update: team_priors $today"
-    Log-Line "Pushing to origin ..."
-    git push origin master 2>&1 | Out-Null
-    Log-Line "OK — pushed. Render will redeploy automatically."
-
-} catch {
-    Log-Line ("ERROR: " + $_.Exception.Message)
+    & git commit -m "Auto-update: team_priors $today"
+    Write-LogLine "Pushing to origin"
+    & git push origin master | Out-Null
+    Write-LogLine "OK pushed. Render will redeploy automatically."
+}
+catch {
+    $errMsg = "ERROR: " + $_.Exception.Message
+    Write-LogLine $errMsg
     exit 1
 }
 
-Log-Line "=== End update_priors ==="
+Write-LogLine "=== End update_priors ==="
