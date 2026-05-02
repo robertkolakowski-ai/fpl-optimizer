@@ -8792,6 +8792,15 @@ async function loadUser() {
     // Connected — reveal stat cards / fixture ticker / page head
     document.body.classList.remove('not-connected');
     syncUserPrefs(); // Pull saved prefs (risk mode, watched players) from server
+    // Auto-trigge tour første gang en ny bruker er koblet til
+    try {
+      if (!localStorage.getItem('fpl_tour_seen') && !AppState.isDemoMode) {
+        setTimeout(() => {
+          if (typeof tourStart === 'function') tourStart();
+          localStorage.setItem('fpl_tour_seen', '1');
+        }, 1500);  // gi dashboardet tid til å rendre først
+      }
+    } catch (e) { /* silent */ }
     if (!AppState.isDemoMode) {
       localStorage.setItem('fpl_user_id', String(uid));
       saveRecentUser(uid, data.manager_name, data.team_name);
@@ -14647,60 +14656,44 @@ function exportCanvasToImage(canvasId, filename) {
 }
 
 // ==================== GUIDED TOUR ====================
+// 5-stegs tour, norsk, anchored i de 5 IA-destinasjonene + dna-en.
+// Auto-trigget f\u00f8rste gang en bruker faktisk er koblet til (etter loadUser-success).
 const TOUR_STEPS = [
   {
     target: null, position: 'center',
-    title: 'Welcome to FPL Optimizer',
-    text: 'This tool helps you make smarter FPL decisions using data, xG models, and fixture analysis. Let us show you around \u2014 it takes about 30 seconds.'
+    title: 'Velkommen til FPL Optimizer',
+    text: 'Vi viser deg HVORFOR \u2014 ikke bare hva. Hver anbefaling kommer med en menneskelig forklaring forankret i form, kamper, eierskap og risiko. La oss vise deg de 5 stedene du trenger.'
   },
   {
-    target: '#dash-entry-cards', position: 'bottom',
-    title: 'Your Dashboard',
-    text: 'This is your home base. Once you connect your FPL team, you\'ll see live points, captain performance, overall rank, and a mini pitch view \u2014 all in one place.',
+    target: '.sidebar-item[data-nav="nav-dashboard"]', position: 'right',
+    title: 'Hjem \u00b7 Ukens beslutning',
+    text: '\u00c9n tydelig anbefaling \u00f8verst hver uke: bytt en spesifikk spiller, eller behold laget. Under finner du kapteinsforslag med risiko-modus, lag-form og \u00e6rlig modell-evaluering.',
     onEnter: () => switchNav('nav-dashboard')
   },
   {
-    target: '.wizard-card', position: 'top',
-    title: 'Connect Your Team',
-    text: 'Enter your FPL ID or paste your profile URL here. Find it at fantasy.premierleague.com under Points or My Team \u2014 the number in the URL is your ID. Or try demo data first!'
-  },
-  {
-    target: '.sidebar-item[data-nav="nav-team-live"]', position: 'right',
-    title: 'Live Gameweek',
-    text: 'Track your team\'s live points as matches are played. See who\'s on the pitch, bonus projections, and auto-sub activity in real time.'
+    target: '.sidebar-item[data-nav="nav-transfers-optimizer"]', position: 'right',
+    title: 'Plan \u00b7 Pitchen og bytter',
+    text: 'Se laget ditt p\u00e5 banen, dra spillere for \u00e5 bytte plass, klikk en spiller for hvorfor han er rangert. Optimizer kj\u00f8rer line\u00e6r programmering for \u00e5 finne det beste squad-et innenfor budsjettet.'
   },
   {
     target: '.sidebar-item[data-nav="nav-news-captain"]', position: 'right',
-    title: 'Captain Picks',
-    text: 'Data-driven captain recommendations ranked by composite score \u2014 combining xG, form, fixture difficulty, and expected points. Updated every gameweek.'
+    title: 'Kaptein \u00b7 Risikomodus',
+    text: 'Tre risikoprofiler: Trygg (lavt fall-down), Balansert (default), Offensiv (h\u00f8y ceiling). Klikk for \u00e5 se hvordan listen endrer seg \u2014 og p10/p50/p90-intervaller per kandidat.'
   },
   {
-    target: '.sidebar-item[data-nav="nav-transfers-planner"]', position: 'right',
-    title: 'Transfer Planner',
-    text: 'View your full squad with composite scores and get AI-powered transfer suggestions ranked by expected points gain versus hit cost.'
+    target: '.sidebar-item[data-nav="nav-leagues-standings"]', position: 'right',
+    title: 'Liga \u00b7 Differensial-strategi',
+    text: 'Mini-ligaen er der det avgj\u00f8res. Vi simulerer 200 sesongavslutninger og forteller deg P(seier), P(topp 3), og hvilke transfers som faktisk flytter rangen din.'
   },
   {
-    target: '#sub-analysis', position: 'right',
-    title: 'Player & Fixture Analysis',
-    text: 'Dive deep: search all 700+ players with advanced filters, compare players side by side, explore the FDR heatmap, and analyse fixture swings for rotation planning.',
-    onEnter: () => { const el = document.querySelector('[onclick*="sub-analysis"]'); if (el) toggleSidebarSub('sub-analysis', el); }
-  },
-  {
-    target: '#sub-planning', position: 'right',
-    title: 'Strategy & Planning',
-    text: 'Power tools: Squad Optimizer uses linear programming to build the mathematically best 15-man squad. Multi-GW Planner maps transfers across weeks. Chip Strategy tells you when to play each chip.',
-    onEnter: () => { const el = document.querySelector('[onclick*="sub-planning"]'); if (el) toggleSidebarSub('sub-planning', el); }
-  },
-  {
-    target: '#sub-match-analysis', position: 'right',
-    title: 'Match Centre',
-    text: 'Poisson-based match predictions with scoreline probabilities, expected cards, corners, shots, penalties, HT/FT, and more. Every match, every gameweek.',
-    onEnter: () => { const el = document.querySelector('[onclick*="sub-match-analysis"]'); if (el) toggleSidebarSub('sub-match-analysis', el); }
+    target: '.sidebar-item[data-nav="nav-lag-dna"]', position: 'right',
+    title: 'Lag \u00b7 Hvem har best xG',
+    text: 'Empirisk sesongdata for Premier League og Bundesliga: scatter-plot angrep vs forsvar, clean-sheet-rater, m\u00e5l-fordeling 1./2. omgang. Oppdateres 2\u00d7 per uke.'
   },
   {
     target: null, position: 'center',
-    title: 'You\'re all set!',
-    text: 'Start by connecting your FPL team on the dashboard, or explore with demo data. You can replay this tour anytime from the "Guide" button in the sidebar.'
+    title: 'Du er klar!',
+    text: 'Klikk deg rundt \u2014 alt er forklart underveis. Du kan starte denne touren igjen fra "Guide"-knappen i sidebar n\u00e5r du vil.'
   },
 ];
 
@@ -14737,11 +14730,13 @@ function tourShowStep(idx) {
   // Update content
   $('tour-title').textContent = step.title;
   $('tour-text').textContent = step.text;
-  $('tour-progress').textContent = (idx + 1) + ' of ' + TOUR_STEPS.length;
+  const isNo = currentLocale === 'no';
+  $('tour-progress').textContent = (idx + 1) + (isNo ? ' av ' : ' of ') + TOUR_STEPS.length;
 
   // Update buttons
   const isLast = idx === TOUR_STEPS.length - 1;
-  $('tour-next-btn').textContent = isLast ? 'Get Started' : 'Next';
+  $('tour-next-btn').textContent = isLast ? (isNo?'Kom i gang':'Get Started') : (isNo?'Neste':'Next');
+  $('tour-skip-btn').textContent = isNo ? 'Hopp over' : 'Skip';
   $('tour-skip-btn').style.display = isLast ? 'none' : '';
 
   // Reset tooltip position
