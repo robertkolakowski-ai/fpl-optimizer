@@ -3711,6 +3711,30 @@
               <p style="color:var(--text-muted);font-size:var(--fs-small);" data-i18n="liga.catchup.help">Differensialer du kan plukke for å hente inn de over deg — lav eierskap, høy upside, ikke i rivalenes lag.</p>
               <div class="liga-catchup-list" id="liga-catchup-list"></div>
             </article>
+
+            <!-- Empirisk Lag-DNA — basert på sesong-xG/xGA/CS-data -->
+            <article class="liga-dna-card" style="grid-column: 1 / -1; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:var(--r-md); padding:var(--sp-5);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:var(--sp-2);">
+                <div>
+                  <h3 class="plan-section-title plan-section-title--sub" style="margin:0;">Lag-DNA <span style="color:var(--text-muted);font-weight:400;font-size:var(--fs-small);">· sesongstatistikk</span></h3>
+                  <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-1);">Hvert lag i Premier League — angrep, forsvar, og når de scorer. Basert på ekte xG-data, oppdatert 2× per uke.</p>
+                </div>
+                <span id="liga-dna-updated" style="font-size:var(--fs-label);color:var(--text-faint);"></span>
+              </div>
+
+              <!-- xG vs xGA scatter — angrep vs forsvar -->
+              <div style="background:var(--bg-subtle);border-radius:var(--r-sm);padding:var(--sp-3);margin-bottom:var(--sp-3);">
+                <div style="font-size:var(--fs-label);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:var(--sp-2);">Angrep ↔ forsvar</div>
+                <div id="liga-dna-scatter" style="position:relative;height:300px;"></div>
+                <div style="display:flex;justify-content:space-between;font-size:var(--fs-label);color:var(--text-muted);margin-top:var(--sp-1);">
+                  <span>← Bedre forsvar</span>
+                  <span>Bedre angrep →</span>
+                </div>
+              </div>
+
+              <!-- Tabell sortert etter net xG -->
+              <div id="liga-dna-table"></div>
+            </article>
           </div>
         </section>
 
@@ -6097,6 +6121,7 @@ async function selectLiga(leagueId) {
     renderLigaRivals();
     renderLigaTrendChart();
     loadLigaCatchupPicks();
+    loadLigaDna();
   } catch (e) {
     console.warn('selectLiga failed', e);
   }
@@ -6285,6 +6310,124 @@ async function renderLigaTrendChart() {
   legend.innerHTML = `
     <span class="lcl-item"><span class="lcl-swatch" style="background:var(--brand-primary)"></span>${currentLocale==='no'?'Du':'You'}</span>
     <span class="lcl-item"><span class="lcl-swatch" style="background:var(--text-muted);opacity:0.55"></span>${currentLocale==='no'?'Topp 4 rivaler (positiv = leder)':'Top 4 rivals (positive = ahead)'}</span>`;
+}
+
+// Lag-DNA scatter + tabell — viser empiriske xG/xGA/CS per lag
+async function loadLigaDna() {
+  try {
+    const data = await fetch('/api/team-priors/table').then(r => r.json());
+    const teams = (data && data.teams) || [];
+    if (!teams.length) {
+      const card = document.querySelector('.liga-dna-card');
+      if (card) card.style.display = 'none';
+      return;
+    }
+    // Generated_at-stempel
+    const meta = await fetch('/api/team-priors').then(r => r.json()).catch(() => null);
+    if (meta && meta.generated_at) {
+      const d = new Date(meta.generated_at);
+      const ago = Math.round((Date.now() - d.getTime()) / 86400000);
+      const updEl = document.getElementById('liga-dna-updated');
+      if (updEl) updEl.textContent = ago === 0 ? 'Oppdatert i dag' : `Oppdatert for ${ago} ${ago === 1 ? 'dag' : 'dager'} siden`;
+    }
+    renderDnaScatter(teams);
+    renderDnaTable(teams);
+  } catch (e) {
+    const card = document.querySelector('.liga-dna-card');
+    if (card) card.style.display = 'none';
+  }
+}
+
+function renderDnaScatter(teams) {
+  const wrap = document.getElementById('liga-dna-scatter');
+  if (!wrap) return;
+  const W = wrap.clientWidth || 600;
+  const H = 300;
+  const padL = 40, padR = 20, padT = 20, padB = 30;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  // Domener
+  const xgVals = teams.map(t => t.xg_avg).filter(v => v != null);
+  const xgaVals = teams.map(t => t.xga_avg).filter(v => v != null);
+  const xMin = Math.min(...xgVals) - 0.1;
+  const xMax = Math.max(...xgVals) + 0.1;
+  const yMin = Math.min(...xgaVals) - 0.1;
+  const yMax = Math.max(...xgaVals) + 0.1;
+  const xS = (v) => padL + ((v - xMin) / (xMax - xMin)) * innerW;
+  // Y er invertert: lavere xGA = bedre forsvar = topp
+  const yS = (v) => padT + ((v - yMin) / (yMax - yMin)) * innerH;
+
+  // Quadrant-bakgrunner: topp-høyre = sterkest (høy xG, lav xGA)
+  const xMid = xS((xMin + xMax) / 2);
+  const yMid = yS((yMin + yMax) / 2);
+
+  // Aksen
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px;">`;
+  // Quadrant tinted bg
+  svg += `<rect x="${xMid}" y="${padT}" width="${W - padR - xMid}" height="${yMid - padT}" fill="rgba(81,207,102,0.08)" />`;  // top-right = elite
+  svg += `<rect x="${padL}" y="${yMid}" width="${xMid - padL}" height="${H - padB - yMid}" fill="rgba(255,82,82,0.07)" />`;  // bottom-left = struggle
+  // Cross gridlines
+  svg += `<line x1="${xMid}" y1="${padT}" x2="${xMid}" y2="${H - padB}" stroke="var(--border-subtle)" stroke-dasharray="3 3"/>`;
+  svg += `<line x1="${padL}" y1="${yMid}" x2="${W - padR}" y2="${yMid}" stroke="var(--border-subtle)" stroke-dasharray="3 3"/>`;
+  // Axes
+  svg += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="var(--border-default)" stroke-width="1"/>`;
+  svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" stroke="var(--border-default)" stroke-width="1"/>`;
+  // Y-akse-labels (xGA — invert)
+  svg += `<text x="8" y="${padT + 12}" font-size="10" fill="var(--text-muted)">xGA ${yMin.toFixed(1)}</text>`;
+  svg += `<text x="8" y="${H - padB}" font-size="10" fill="var(--text-muted)">xGA ${yMax.toFixed(1)}</text>`;
+  // X-akse-labels (xG)
+  svg += `<text x="${padL}" y="${H - 8}" font-size="10" fill="var(--text-muted)">xG ${xMin.toFixed(1)}</text>`;
+  svg += `<text x="${W - padR}" y="${H - 8}" text-anchor="end" font-size="10" fill="var(--text-muted)">xG ${xMax.toFixed(1)}</text>`;
+
+  // Punkter
+  teams.forEach(t => {
+    if (t.xg_avg == null || t.xga_avg == null) return;
+    const cx = xS(t.xg_avg);
+    const cy = yS(t.xga_avg);
+    const netColor = t.net_xg >= 0.4 ? 'var(--ok)' : t.net_xg <= -0.4 ? 'var(--danger)' : 'var(--brand-primary)';
+    svg += `<g><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6" fill="${netColor}" opacity="0.8" stroke="var(--bg-canvas)" stroke-width="1.5"><title>${t.team}: ${t.xg_avg} xG / ${t.xga_avg} xGA (net ${t.net_xg >= 0 ? '+' : ''}${t.net_xg})</title></circle>`;
+    svg += `<text x="${(cx + 9).toFixed(1)}" y="${(cy + 3).toFixed(1)}" font-size="10" font-weight="600" fill="var(--text-strong)" pointer-events="none">${t.team}</text></g>`;
+  });
+  svg += `</svg>`;
+  wrap.innerHTML = svg;
+}
+
+function renderDnaTable(teams) {
+  const wrap = document.getElementById('liga-dna-table');
+  if (!wrap) return;
+  const rows = teams.map((t, i) => {
+    const netColor = t.net_xg >= 0.4 ? 'var(--ok)' : t.net_xg <= -0.4 ? 'var(--danger)' : 'var(--text-default)';
+    const csPct = t.cs_pct_overall != null ? Math.round(t.cs_pct_overall * 100) : null;
+    const csBar = csPct != null ? `<div style="display:inline-block;width:60px;height:8px;background:var(--bg-muted);border-radius:4px;vertical-align:middle;overflow:hidden;"><div style="width:${csPct}%;height:100%;background:${csPct >= 35 ? 'var(--ok)' : csPct >= 20 ? 'var(--brand-primary)' : 'var(--danger)'};"></div></div> ${csPct}%` : '—';
+    const halfFirst = t.goals_first_half_pct != null ? Math.round(t.goals_first_half_pct * 100) : null;
+    const halfSecond = t.goals_second_half_pct != null ? Math.round(t.goals_second_half_pct * 100) : null;
+    const halfSplit = halfFirst != null && halfSecond != null
+      ? `<span style="font-family:var(--font-mono);">${halfFirst}/${halfSecond}</span>`
+      : '—';
+    return `<tr style="border-bottom:1px solid var(--border-subtle);">
+      <td style="padding:6px 8px;color:var(--text-muted);">${i + 1}</td>
+      <td style="padding:6px 8px;font-weight:600;">${t.team}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--font-mono);">${t.xg_avg ?? '—'}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--font-mono);color:var(--text-muted);">${t.xga_avg ?? '—'}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--font-mono);color:${netColor};font-weight:600;">${t.net_xg != null ? (t.net_xg >= 0 ? '+' : '') + t.net_xg : '—'}</td>
+      <td style="padding:6px 8px;font-size:0.78rem;">${csBar}</td>
+      <td style="padding:6px 8px;text-align:right;font-size:0.78rem;color:var(--text-muted);">${halfSplit}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+    <thead>
+      <tr style="border-bottom:2px solid var(--border-default);">
+        <th style="padding:8px;text-align:left;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">#</th>
+        <th style="padding:8px;text-align:left;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Lag</th>
+        <th style="padding:8px;text-align:right;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;" title="Forventede mål per kamp">xG</th>
+        <th style="padding:8px;text-align:right;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;" title="Forventede baklengs-mål per kamp">xGA</th>
+        <th style="padding:8px;text-align:right;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;" title="Net xG = angrep minus forsvar">Net</th>
+        <th style="padding:8px;text-align:left;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;" title="Andel kamper med clean sheet">CS%</th>
+        <th style="padding:8px;text-align:right;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;" title="Mål-fordeling 1./2. omgang">1.½ / 2.½</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 async function loadLigaCatchupPicks() {

@@ -32,6 +32,7 @@ from . import live_bonus
 from . import league_intel
 from . import chip_mc
 from . import ml_baseline
+from . import team_priors as team_priors_mod
 from .cache import (
     etag_for,
     sqlite_cache_get,
@@ -312,6 +313,33 @@ def index():
 @app.route("/health")
 def health():
     return {"ok": True}, 200
+
+
+# ------------------------------------------------------------------ #
+# Team priors — empiriske xG/xGA/CS-tall fra Scraper-output
+# ------------------------------------------------------------------ #
+@app.route("/api/team-priors")
+def api_team_priors():
+    """Hele datasettet — for visualiseringer (xG vs xGA scatter, lag-DNA)."""
+    return jsonify(team_priors_mod.get_priors())
+
+
+@app.route("/api/team-priors/table")
+def api_team_priors_table():
+    """Liga-tabell sortert etter net xG."""
+    return jsonify({"teams": team_priors_mod.league_xg_table()})
+
+
+@app.route("/api/team-priors/<team_name>")
+def api_team_priors_one(team_name):
+    t = team_priors_mod.get_team(team_name)
+    if not t:
+        return jsonify({"error": f"Ingen data for {team_name}"}), 404
+    return jsonify({
+        "team": team_name,
+        "data": t,
+        "narrative": team_priors_mod.team_dna_narrative(team_name),
+    })
 
 
 # ------------------------------------------------------------------ #
