@@ -12,7 +12,7 @@ Funksjonaliteten er ferdig utviklet — disse punktene er **aktivering og drift*
 ### A · Aktiver push-varsler (krever VAPID-keys)
 
 Push-stack (`push_notifications.py` + service worker) er bygget og deployet,
-men trenger VAPID-nøkler for å faktisk sende varsler.
+men trenger VAPID-nøkler for å faktisk sende varsler. Se [Avhengighet AA](#aa--miljøvariabler-som-må-konfigureres) for full env-var-tabell.
 
 **Steg:**
 
@@ -24,12 +24,7 @@ men trenger VAPID-nøkler for å faktisk sende varsler.
    ```
    Output gir public/private key.
 
-2. I [Render Dashboard](https://dashboard.render.com) → fpl-optimizer →
-   Environment, legg til:
-   - `VAPID_PUBLIC_KEY` — fra steg 1
-   - `VAPID_PRIVATE_KEY` — fra steg 1
-   - `VAPID_SUBJECT` = `mailto:robert@kolakowski.no`
-   - `CRON_TOKEN` — random 32-tegns string (beskytter `/api/push/dispatch`)
+2. Legg de fire env-varene i Render (se tabell AA under).
 
 3. Render restartet automatisk. Toggle "🔔 Aktiver varsler" i
    Innstillinger virker da på `https://fpl.kolakowski.no`.
@@ -38,6 +33,38 @@ men trenger VAPID-nøkler for å faktisk sende varsler.
    etter du har subscriba.
 
 **Status:** ikke aktivert. Estimert tid: 15 min.
+
+### AA · Miljøvariabler som må konfigureres
+
+Komplett oversikt over alle env-vars koden bruker. Sett dem i
+[Render Dashboard](https://dashboard.render.com) → fpl-optimizer →
+Environment, og som GitHub Actions secrets der det trengs for cron.
+
+| Navn | Status | Hvor satt | Verdi / format | Brukes i |
+|------|--------|-----------|----------------|----------|
+| `APP_URL` | ✅ satt | GH Actions secret | `https://fpl.kolakowski.no` | predictions-snapshot cron |
+| `VAPID_PUBLIC_KEY` | ❌ mangler | Render env | base64-streng (~88 tegn) | push subscribe + send |
+| `VAPID_PRIVATE_KEY` | ❌ mangler | Render env | base64-streng (~44 tegn) | push send |
+| `VAPID_SUBJECT` | ❌ mangler | Render env | `mailto:robert@kolakowski.no` | push send (kontakt-info) |
+| `CRON_TOKEN` | ❌ mangler | Render env + GH secret | random 32-tegns string | beskytter `/api/push/dispatch` |
+| `FOOTBALL_DATA_API_KEY` | ❌ mangler (valgfri) | Render env | API-token fra football-data.org | dommerstatistikk i predictions |
+| `FPL_DATA_DIR` | ✅ default | (ikke satt) | sti til data/-mappen | overstyrer default `<repo>/data` — sett kun hvis volume mountes andre steder |
+| `TSDL_PL_XLSX` | ✅ default | (ikke satt) | full sti til xlsx-fil | overstyrer default Scraper-output-sti for `build_team_priors.py` lokal kjøring |
+| `PYTHON_VERSION` | ✅ satt | render.yaml | `3.11` | Render build runtime |
+
+**Generering av CRON_TOKEN** (random 32-byte hex):
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+**Verifisering** etter alle env-vars er satt:
+```bash
+curl https://fpl.kolakowski.no/api/push/public-key
+# Skal returnere: {"public_key": "...", "enabled": true}
+```
+
+Hvis `enabled: false` mangler enten `VAPID_PUBLIC_KEY` eller
+`VAPID_PRIVATE_KEY`. Hvis `public_key: null` er begge tomme.
 
 ### B · Sett opp cron-jobber for varsler
 
