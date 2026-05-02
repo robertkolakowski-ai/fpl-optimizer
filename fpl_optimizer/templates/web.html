@@ -5538,9 +5538,9 @@ function renderSuggestCard(t, idx, marginal) {
         <span class="ps-gain ${gain<0?'neg':''}" title="${isNo?'Forventet poenggevinst over horisonten':'Expected points gain over horizon'}">${gain>=0?'+':''}${Number(gain).toFixed(1)} pts</span>
       </div>
       <div class="ps-swap">
-        <span>${out.name || '—'}<span class="ps-price">£${outPrice.toFixed(1)}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;">${playerThumb(out)}${out.name || '—'}<span class="ps-price">£${outPrice.toFixed(1)}</span></span>
         <span class="arr">→</span>
-        <span>${inn.name || '—'}<span class="ps-price">£${innPrice.toFixed(1)}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;">${playerThumb(inn)}${inn.name || '—'}<span class="ps-price">£${innPrice.toFixed(1)}</span></span>
       </div>
       <div class="ps-rationale">
         <div class="ps-rationale-label">${isNo?'Hva endringen gir':'What this change delivers'}</div>
@@ -6102,7 +6102,7 @@ async function loadLigaCatchupPicks() {
     const top = items.slice(0, 6);
     wrap.innerHTML = top.map(p => `
       <article class="catchup-card" onclick="openCatchupPick(${p.id || p.element || 0})">
-        <div class="cc-name">${p.name || p.web_name || '—'}</div>
+        <div class="cc-name" style="display:flex;align-items:center;gap:6px;">${playerThumb(p)}<span>${p.name || p.web_name || '—'}</span></div>
         <div class="cc-meta">${p.team || p.team_short || ''} · ${p.position_name || ''} · £${Number(p.price || (p.now_cost?p.now_cost/10:0)).toFixed(1)}m</div>
         <div class="cc-stats">
           <span class="cc-stat"><span class="v">${p.expected_points ? p.expected_points.toFixed(1) : (p.score?p.score.toFixed(1):'—')}</span><span class="l">xPts</span></span>
