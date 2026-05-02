@@ -529,6 +529,39 @@
   .chip-badge.available { background: rgba(229,162,59,0.12); color: var(--brand-primary); border: 1px solid rgba(229,162,59,0.3); }
   .chip-badge.used { background: rgba(136,136,136,0.12); color: var(--text-subtle); border: 1px solid var(--border-default); text-decoration: line-through; }
 
+  /* Differential-radar filter-buttons (P2 2026-05) */
+  .diff-filter-btn {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    padding: 4px 10px;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+  }
+  .diff-filter-btn:hover { background: var(--bg-subtle); color: var(--text-default); }
+  .diff-filter-btn.active {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--text-on-brand);
+  }
+  .diff-row {
+    display: grid;
+    grid-template-columns: 28px 36px 1fr 70px 70px 70px 60px;
+    gap: var(--sp-2);
+    align-items: center;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--fs-small);
+    cursor: pointer;
+    transition: background var(--duration-fast);
+  }
+  .diff-row:hover { background: var(--bg-subtle); }
+  .diff-row .dr-name { font-weight: 600; }
+  .diff-row .dr-meta { color: var(--text-muted); font-size: var(--fs-label); }
+
   /* Empty-state cleanup (2026-05): when no team is connected, hide widgets that
      would otherwise show "—" or empty values. Keeps onboarding focused. */
   body.not-connected #dash-stats { display: none !important; }
@@ -4036,6 +4069,23 @@
 
       <!-- ==================== PLAYER STATS: TABLE ==================== -->
       <div class="nav-panel" id="nav-playerstats-table">
+        <!-- Differential-leaderboard: god form, lavt eierskap, lette kamper -->
+        <article id="diff-leaderboard" style="background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:var(--sp-4);margin-bottom:var(--sp-4);">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-2);">
+            <div>
+              <h3 style="font-family:var(--font-display);font-size:var(--fs-h3);font-weight:600;color:var(--text-strong);margin:0;">Differensial-radar</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:2px;">Spillere med god form og lette kamper som svært få eier — der du kan klatre i ligaen.</p>
+            </div>
+            <div style="display:flex;gap:var(--sp-1);font-size:var(--fs-label);">
+              <button class="diff-filter-btn active" data-filter="differential" onclick="setDiffFilter('differential')">Differensial</button>
+              <button class="diff-filter-btn" data-filter="form" onclick="setDiffFilter('form')">Toppform</button>
+              <button class="diff-filter-btn" data-filter="value" onclick="setDiffFilter('value')">Verdi</button>
+              <button class="diff-filter-btn" data-filter="rising" onclick="setDiffFilter('rising')">Stigende pris</button>
+            </div>
+          </div>
+          <div id="diff-leaderboard-body"></div>
+        </article>
+
         <div class="section">
           <div class="player-search-hero">
             <span class="player-search-icon" aria-hidden="true">&#128269;</span>
@@ -5380,6 +5430,95 @@ async function showFixtureTooltip(el) {
   const pred = _fixturePredCache[key];
   if (pred && pred.home_xg_expected != null) {
     el.title = `xG forventet: ${home} ${pred.home_xg_expected} - ${pred.away_xg_expected} ${away} (FDR ${pred.home_difficulty} vs ${pred.away_difficulty})`;
+  }
+}
+
+// Differential-leaderboard på Spiller-siden — fire filter-modus.
+// Viser umiddelbart 'hvem skal jeg se på' uten å scrolle gjennom 700 rader.
+let _diffActiveFilter = 'differential';
+let _diffPlayersCache = null;
+async function setDiffFilter(mode) {
+  _diffActiveFilter = mode;
+  document.querySelectorAll('.diff-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === mode);
+  });
+  await renderDiffLeaderboard();
+}
+async function renderDiffLeaderboard() {
+  const body = document.getElementById('diff-leaderboard-body');
+  if (!body) return;
+  body.innerHTML = `<div style="padding:var(--sp-3);color:var(--text-muted);font-size:var(--fs-small);">Henter …</div>`;
+  try {
+    if (!_diffPlayersCache) {
+      const r = await fetch('/api/players').then(r => r.ok ? r.json() : null);
+      _diffPlayersCache = (r && (r.players || r)) || [];
+    }
+    const players = _diffPlayersCache;
+    const isNo = currentLocale === 'no';
+    let filtered = [];
+    let scoreFn = null;
+
+    if (_diffActiveFilter === 'differential') {
+      // Lavt eierskap (<10%), god form (>=5), lette kamper foran (FDR<=3 snitt)
+      filtered = players.filter(p =>
+        parseFloat(p.selected_by_percent) < 10 &&
+        parseFloat(p.form) >= 5 &&
+        (p.fixture_difficulty != null ? p.fixture_difficulty >= 0.4 : true)
+      );
+      scoreFn = p => parseFloat(p.form) * 0.5 + (p.expected_points || p.composite_score || 0) * 5;
+    } else if (_diffActiveFilter === 'form') {
+      // Topp-form, uavhengig av eierskap
+      filtered = players.filter(p => parseFloat(p.form) >= 6);
+      scoreFn = p => parseFloat(p.form);
+    } else if (_diffActiveFilter === 'value') {
+      // Beste poeng-per-million
+      filtered = players.filter(p => p.total_points > 30 && p.cost > 0);
+      scoreFn = p => p.total_points / p.cost;
+    } else if (_diffActiveFilter === 'rising') {
+      // Stigende pris denne uka (price up = god form / mange transfers in)
+      filtered = players.filter(p => p.cost_change_event > 0);
+      scoreFn = p => p.cost_change_event;
+    }
+
+    filtered.sort((a, b) => scoreFn(b) - scoreFn(a));
+    const top = filtered.slice(0, 10);
+
+    if (!top.length) {
+      body.innerHTML = `<div style="padding:var(--sp-3);color:var(--text-muted);font-size:var(--fs-small);">${isNo?'Ingen treff for dette filteret akkurat nå.':'No matches for this filter right now.'}</div>`;
+      return;
+    }
+
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:28px 36px 1fr 70px 70px 70px 60px;gap:var(--sp-2);padding:6px;font-size:var(--fs-label);color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid var(--border-default);">
+        <div>#</div>
+        <div></div>
+        <div>${isNo?'Spiller':'Player'}</div>
+        <div style="text-align:right;">Form</div>
+        <div style="text-align:right;">Own%</div>
+        <div style="text-align:right;">${isNo?'Pris':'Price'}</div>
+        <div style="text-align:right;">Pts</div>
+      </div>
+      ${top.map((p, i) => {
+        const [primary] = teamColors(p.team);
+        const photo = p.photo
+          ? `<img src="${PHOTO_BASE}${p.photo}.png" style="width:30px;height:38px;border-radius:3px;object-fit:cover;object-position:top;" onerror="this.style.display='none'">`
+          : '<span style="font-size:1.3rem;">⚽</span>';
+        return `<div class="diff-row" onclick="openPlayerModal(${p.id})" style="border-left:3px solid ${primary};padding-left:8px;">
+          <div style="color:var(--text-muted);font-weight:600;">${i + 1}</div>
+          <div>${photo}</div>
+          <div>
+            <div class="dr-name">${p.name}</div>
+            <div class="dr-meta">${p.team_short || ''} · ${p.position_name}</div>
+          </div>
+          <div style="text-align:right;font-family:var(--font-mono);">${p.form}</div>
+          <div style="text-align:right;font-family:var(--font-mono);color:var(--text-muted);">${parseFloat(p.selected_by_percent).toFixed(1)}%</div>
+          <div style="text-align:right;font-family:var(--font-mono);">£${p.cost.toFixed(1)}</div>
+          <div style="text-align:right;font-family:var(--font-mono);font-weight:600;">${p.total_points}</div>
+        </div>`;
+      }).join('')}
+    `;
+  } catch (e) {
+    body.innerHTML = `<div style="padding:var(--sp-3);color:var(--danger);font-size:var(--fs-small);">${currentLocale==='no'?'Kunne ikke laste differensialer.':'Could not load differentials.'}</div>`;
   }
 }
 
@@ -7403,6 +7542,9 @@ switchNav = function(panelId) {
   }
   if (panelId === 'nav-lag-dna') {
     setTimeout(() => loadLagPage(), 50);
+  }
+  if (panelId === 'nav-playerstats-table') {
+    setTimeout(() => renderDiffLeaderboard(), 50);
   }
   if (panelId === 'nav-season-history' && AppState.userId && !ArkivState.history) {
     setTimeout(loadArkivView, 100);
