@@ -4759,6 +4759,13 @@ async function renderHomeBrief() {
       <div class="chip-narrative" id="chip-narrative">${L.chipNoData}</div>
     </section>
 
+    <section id="hjem-weekly-learning" style="margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);background:var(--bg-canvas);border:1px solid var(--border-subtle);border-radius:var(--r-md);font-size:var(--fs-small);line-height:1.6;display:none;">
+      <div style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-1);">
+        ${currentLocale==='no'?'Læring fra forrige uke':'Lesson from last week'}
+      </div>
+      <div id="hjem-weekly-learning-text" style="color:var(--text-default);"></div>
+    </section>
+
     <footer class="model-footer">
       <span class="mf-stat">${L.modelLastWeek}: <strong id="mf-lastweek">—</strong></span>
       <span class="mf-stat">${L.captainHit}: <strong id="mf-cap-hit">—</strong></span>
@@ -4891,6 +4898,7 @@ async function renderHomeBrief() {
     // ---- Team news strip — only show if we have news or it's Thu-Sat ----
     renderTeamNews();
     loadLiveBonus();
+    loadWeeklyLearning();
 
   } catch (e) {
     console.warn('home brief fill failed', e);
@@ -5076,6 +5084,60 @@ async function renderTeamNews() {
     const text = p.news ? `${p.name}: ${p.news}` : `${p.name}: ${c}% ${currentLocale==='no'?'klar':'fit'}`;
     return `<span class="tn-item ${tone}">${text}</span>`;
   }).join('');
+}
+
+// Læring fra forrige uke — DNA-styrt narrativ basert på prediction-log
+// + backtest. Viser konkret hva modellen anbefalte, hva som faktisk
+// skjedde, og hva vi lærte. Bygger tillit over tid (i tråd med Arkiv).
+async function loadWeeklyLearning() {
+  const sec = document.getElementById('hjem-weekly-learning');
+  const txt = document.getElementById('hjem-weekly-learning-text');
+  if (!sec || !txt) return;
+  const isNo = currentLocale === 'no';
+  try {
+    const [hitRate, backtest] = await Promise.all([
+      fetch('/api/predictions/hit-rate').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/backtest/captain?max_gws=1').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+
+    let lesson = null;
+
+    // Ferskeste GW-resultat fra backtest
+    if (backtest && backtest.gameweeks && backtest.gameweeks.length) {
+      const last = backtest.gameweeks[backtest.gameweeks.length - 1];
+      if (last.delta_vs_best === 0) {
+        lesson = isNo
+          ? `Forrige uke: vi traff perfekt på kaptein — anbefalte <strong>${last.model_pick}</strong> som ble ukens beste valg med ${last.model_actual} pts. Når <em>form</em> og <em>kamper</em> peker på samme spiller, lytter vi.`
+          : `Last week: we nailed the captain — picked <strong>${last.model_pick}</strong>, the week's best with ${last.model_actual} pts. When <em>form</em> and <em>fixtures</em> point at the same player, listen up.`;
+      } else if (last.delta_vs_best <= -10) {
+        lesson = isNo
+          ? `Forrige uke bommet vi: anbefalte <strong>${last.model_pick}</strong> (${last.model_actual} pts), men <strong>${last.best_player}</strong> ga ${last.best_possible} pts. Lærdom: når en mid-tier spiller plutselig får en haul, er det ofte en differensial vi ikke fanget — modellen vekter <em>form</em> tungt, men de uventet store ukene kommer fra spillere som plutselig får <em>lett kamp</em> hjemme.`
+          : `Last week we missed: suggested <strong>${last.model_pick}</strong> (${last.model_actual} pts), but <strong>${last.best_player}</strong> hauled ${last.best_possible} pts. Lesson: when a mid-tier player explodes, it's often a differential we didn't catch — the model weights <em>form</em> heavily, but the surprise weeks come from players suddenly facing <em>easy fixtures at home</em>.`;
+      } else {
+        lesson = isNo
+          ? `Forrige uke: <strong>${last.model_pick}</strong> ga ${last.model_actual} pts (vs ${last.best_possible} for det beste alternativet). Solid uke, men ikke perfekt — vi savnet et par poeng på kaptein.`
+          : `Last week: <strong>${last.model_pick}</strong> scored ${last.model_actual} pts (vs ${last.best_possible} for the best alternative). Solid week, not perfect — we missed a couple captain points.`;
+      }
+    }
+
+    // Fallback: bruk hit-rate-aggregat
+    if (!lesson && hitRate && hitRate.fpl_recommendations && hitRate.fpl_recommendations.captains_settled) {
+      const r = hitRate.fpl_recommendations;
+      lesson = isNo
+        ? `Captain-snitt over ${r.captains_settled} GW: <strong>${r.captain_actual_avg} pts</strong> (forventet ${r.captain_expected_avg}). Modellen er kalibrert ${(r.captain_actual_avg >= r.captain_expected_avg) ? 'godt' : 'litt for optimistisk'} — vi justerer fra og med neste runde.`
+        : `Captain avg over ${r.captains_settled} GWs: <strong>${r.captain_actual_avg} pts</strong> (expected ${r.captain_expected_avg}). Model is calibrated ${(r.captain_actual_avg >= r.captain_expected_avg) ? 'well' : 'slightly optimistic'} — we adjust from next round.`;
+    }
+
+    if (!lesson) {
+      sec.style.display = 'none';
+      return;
+    }
+
+    txt.innerHTML = lesson;
+    sec.style.display = '';
+  } catch (e) {
+    sec.style.display = 'none';
+  }
 }
 
 // Live BPS bonus strip — polls every 60s while matches are in progress
@@ -6156,11 +6218,33 @@ async function loadLigaCatchupPicks() {
 }
 
 function catchupRationale(p) {
+  // DNA-styrt: form, kamper, eierskap, risiko i klartekst.
+  const isNo = currentLocale === 'no';
   const eo = parseFloat(p.selected_by_percent || p.ownership || 0);
-  if (currentLocale==='no') {
-    return `<strong>${eo.toFixed(1)}% EO</strong> — lite eierskap blant rivalene. ${p.form && parseFloat(p.form) >= 5 ? `Form <strong>${p.form}</strong> indikerer at upsiden er reell.` : ''} Plukk for å skille deg ut.`;
-  }
-  return `<strong>${eo.toFixed(1)}% EO</strong> — low rival ownership. ${p.form && parseFloat(p.form) >= 5 ? `Form <strong>${p.form}</strong> says the upside is real.` : ''} Take it to differentiate.`;
+  const form = parseFloat(p.form || 0);
+  const formStrong = form >= 6;
+  const formOk = form >= 4;
+
+  // Eierskap-narrativ — er han ekte differensial?
+  let ownership = '';
+  if (eo < 5) ownership = isNo?`<strong>Veldig få (${eo.toFixed(1)}%)</strong> eier ham`:`<strong>Very few (${eo.toFixed(1)}%)</strong> own him`;
+  else if (eo < 15) ownership = isNo?`<strong>Lavt eierskap (${eo.toFixed(1)}%)</strong> i ligaen din`:`<strong>Low ownership (${eo.toFixed(1)}%)</strong> in your league`;
+  else if (eo < 30) ownership = isNo?`Mid-tier eierskap (${eo.toFixed(1)}%) — fortsatt en differensial`:`Mid-tier ownership (${eo.toFixed(1)}%) — still a differential`;
+  else ownership = isNo?`Høyt eierskap (${eo.toFixed(1)}%) — neppe differensial mer`:`High ownership (${eo.toFixed(1)}%) — no longer a differential`;
+
+  // Form-evaluering
+  const formNote = formStrong
+    ? (isNo?`form <strong>${p.form}</strong> bekrefter at upsiden er reell`:`form <strong>${p.form}</strong> confirms upside is real`)
+    : formOk
+      ? (isNo?`form <strong>${p.form}</strong> er OK, ikke skinnende`:`form <strong>${p.form}</strong> is OK, not glowing`)
+      : (isNo?`<span style="color:var(--warn);">form bare ${p.form || '—'}</span> — risikabelt valg`:`<span style="color:var(--warn);">form just ${p.form || '—'}</span> — risky pick`);
+
+  // Konkret handling
+  const action = formStrong
+    ? (isNo?`Plukk for å hente inn rivalene som ikke har ham.`:`Pick him to close the gap on rivals who don't.`)
+    : (isNo?`Vurder forsiktig — vent en god uke til før du satser.`:`Consider carefully — wait one good week before committing.`);
+
+  return `${ownership}, ${formNote}. ${action}`;
 }
 
 function openCatchupPick(playerId) {
@@ -6757,13 +6841,68 @@ function explainTransfer(out, inn, ctx) {
   return `${inn.name || 'New'} has ${inForm || 'strong form'} and ${fixHint}. ${out.name || 'The old one'} has ${outForm || 'weaker form'} and tougher fixtures. Expected gain: <strong>+${(ctx && ctx.points_gain ? ctx.points_gain.toFixed(1) : '2.5')} pts</strong>.`;
 }
 function explainCaptain(p) {
-  const f = p.form ? `form ${p.form}` : 'sterk form';
-  const xg = p.xg_per_90 ? `xG ${p.xg_per_90.toFixed(2)}/90` : 'høy xG';
+  // DNA-styrt forklaring: form, kamper, eierskap, risiko — i klartekst
+  const isNo = currentLocale === 'no';
+  const parts = [];
+
+  // Form i klartekst
+  const formNum = parseFloat(p.form || 0);
+  if (formNum >= 7) parts.push(isNo?`<strong>Toppform</strong> (${p.form})`:`<strong>Top form</strong> (${p.form})`);
+  else if (formNum >= 5) parts.push(isNo?`<strong>God form</strong> (${p.form})`:`<strong>Good form</strong> (${p.form})`);
+  else if (formNum > 0) parts.push(isNo?`Form ${p.form} — middels`:`Form ${p.form} — average`);
+
+  // Kamp i klartekst
   const opp = p.next_opponent || (p.fixtures && p.fixtures[0] && p.fixtures[0].opponent) || '';
-  if (currentLocale === 'no') {
-    return `${f}, ${xg}${opp ? `, hjemme mot ${opp}` : ''}. Forventet poeng: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'}</strong>. Eierskap topp 10k: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
+  if (opp) {
+    const isHome = p.is_home !== false;
+    parts.push(isNo
+      ? `${isHome?'hjemme':'borte'} mot <strong>${opp}</strong>`
+      : `${isHome?'home':'away'} vs <strong>${opp}</strong>`);
   }
-  return `${f}, ${xg}${opp ? `, home vs ${opp}` : ''}. Expected: <strong>${p.expected_points ? p.expected_points.toFixed(1) : '7.5'} pts</strong>. Top 10k EO: <strong>${p.eo_top10k || p.selected_by_percent || '—'}%</strong>.`;
+
+  // xG / xA hvis tilgjengelig — anker for "kamp-kvalitet"
+  if (p.xg_per_90 && p.xg_per_90 > 0.5) {
+    parts.push(isNo
+      ? `${p.xg_per_90.toFixed(2)} forventede mål per 90 min`
+      : `${p.xg_per_90.toFixed(2)} expected goals per 90`);
+  }
+
+  // Forventet poeng — det handlingsbare tallet
+  const ep = p.expected_points || p.captain_ev || (p.ep_next ? p.ep_next : null);
+  const epStr = ep ? `<strong>${Number(ep).toFixed(1)}</strong>` : '<strong>—</strong>';
+
+  // Eierskap som differensial-vink
+  const eo = p.eo_top10k || p.selected_by_percent;
+  let eoNarrative = '';
+  if (eo != null) {
+    const eoNum = parseFloat(eo);
+    if (eoNum >= 50) {
+      eoNarrative = isNo
+        ? ` <em>${eoNum}% eierskap</em> — alle har ham, så ingen differensial-effekt.`
+        : ` <em>${eoNum}% ownership</em> — everyone owns him, so no differential edge.`;
+    } else if (eoNum < 15) {
+      eoNarrative = isNo
+        ? ` Bare <em>${eoNum}%</em> eier ham — stor differensial hvis han leverer.`
+        : ` Only <em>${eoNum}%</em> own him — big differential if he delivers.`;
+    } else {
+      eoNarrative = isNo ? ` ${eoNum}% eierskap.` : ` ${eoNum}% owned.`;
+    }
+  }
+
+  // Risiko-flagg
+  let riskNote = '';
+  if (p.rotation_risk && p.rotation_risk > 0.4) {
+    riskNote = isNo
+      ? ` <span style="color:var(--warn);">⚠ Rotasjonsrisiko — sjekk laguttak fredag.</span>`
+      : ` <span style="color:var(--warn);">⚠ Rotation risk — check Friday lineup.</span>`;
+  } else if (p.news) {
+    riskNote = isNo ? ` <span style="color:var(--warn);">⚠ ${p.news}</span>` : ` <span style="color:var(--warn);">⚠ ${p.news}</span>`;
+  }
+
+  const lead = parts.join(', ');
+  return isNo
+    ? `${lead}. Forventet poeng denne uka: ${epStr}.${eoNarrative}${riskNote}`
+    : `${lead}. Expected this week: ${epStr}.${eoNarrative}${riskNote}`;
 }
 function findCostingPlayer(picks) {
   // Heuristic: starter with bad form or high rotation risk
