@@ -5003,14 +5003,40 @@ async function loadChipMonteCarlo(remainingChips, usedChips) {
         <line x1="22" y1="${H - 18}" x2="${W}" y2="${H - 18}" stroke="var(--border-subtle)"/>
         ${bars}
       </svg>`;
+      // Narrativ i tråd med DNA: forklart i klartekst med form/kamper/risiko-anker.
+      const reason = (() => {
+        if (chipName === '3xc') {
+          return isNo
+            ? `Triple Captain dobler kapteinens poeng en gang ekstra. <strong>Hvorfor GW${best.gw}:</strong> det er da topp-spilleren din har best kombinasjon av <em>form</em> og <em>lett kamp</em> — størst sjanse for en stor pott. <strong>Risiko:</strong> én skade eller benkning ødelegger uka, så vurder bare en sikker starter med >85 % spilletid.`
+            : `Triple Captain doubles your captain's points one extra time. <strong>Why GW${best.gw}:</strong> that's when your top scorer has the best mix of <em>form</em> and <em>easy fixture</em> — biggest chance of a haul. <strong>Risk:</strong> one injury or rotation ruins the week, so only consider a guaranteed starter with >85 % playing time.`;
+        }
+        if (chipName === 'bboost') {
+          return isNo
+            ? `Bench Boost lar de 4 benkspillerne dine score poeng denne uka. <strong>Hvorfor GW${best.gw}:</strong> alle på benken har <em>lette kamper</em> samtidig — sjelden situasjon, høy forventet gevinst. <strong>Risiko:</strong> hvis noen på benken ikke spiller blir gevinsten halvert, så sjekk laguttakene fredag.`
+            : `Bench Boost lets all 4 bench players score this week. <strong>Why GW${best.gw}:</strong> the bench has <em>easy fixtures</em> aligned — rare alignment, high expected gain. <strong>Risk:</strong> if any benchwarmer doesn't play, the gain halves — check Friday lineups.`;
+        }
+        if (chipName === 'wildcard') {
+          return isNo
+            ? `Wildcard lar deg bygge laget på nytt uten transfer-hits. <strong>Hvorfor GW${best.gw}:</strong> det starter en stretch hvor squaden din er svak — flere spillere har <em>tøffe kamper</em> eller <em>dårlig form</em> samtidig. Et nytt lag her gir mest verdi. <strong>Risiko:</strong> bruker du den nå mister du fleksibiliteten ved blanke/dobbel-GW senere.`
+            : `Wildcard lets you rebuild your team without transfer hits. <strong>Why GW${best.gw}:</strong> a stretch starts where your squad weakens — multiple players hit <em>tough fixtures</em> or <em>dropping form</em> at once. A reset here gives the most value. <strong>Risk:</strong> using it now means losing flexibility for later blank/double GWs.`;
+        }
+        if (chipName === 'freehit') {
+          return isNo
+            ? `Free Hit gir deg én uke med optimalt lag — etterpå går du tilbake til laget ditt. <strong>Hvorfor GW${best.gw}:</strong> typisk en blank-GW der vanlige spillere ikke har kamp, eller en dobbel-GW der noen lag spiller to ganger. Du henter inn poeng du ellers hadde tapt. <strong>Risiko:</strong> bortkastet hvis du bare bytter til populære spillere — bruk den til å fange dobbel-GW eller skadeflagg-erstatninger.`
+            : `Free Hit gives you one week of optimal team — then back to your normal squad. <strong>Why GW${best.gw}:</strong> typically a blank GW where regulars don't play, or a double GW where some teams play twice. You bank points you'd otherwise lose. <strong>Risk:</strong> wasted if you just swap to popular picks — use it to catch double GWs or injury replacements.`;
+        }
+        return '';
+      })();
+
       return `
-        <div style="padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
+        <div style="padding:var(--sp-3) 0;border-bottom:1px solid var(--border-subtle);">
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;margin-bottom:2px;">
             <strong>${labels[chipName]}</strong>
             <span style="font-family:var(--font-mono);">GW${best.gw} <span style="color:var(--ok);">${best.prob}%</span></span>
           </div>
           ${chart}
           ${best.gain ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">${isNo?'Snitt-gevinst på beste GW':'Avg gain at best GW'}: +${best.gain.toFixed(1)} pts</div>` : ''}
+          ${reason ? `<div style="font-size:0.72rem;color:var(--text-default);margin-top:var(--sp-2);line-height:1.5;padding-left:var(--sp-2);border-left:2px solid var(--brand-primary-tint);">${reason}</div>` : ''}
         </div>`;
     }).join('');
     mcEl.innerHTML = `
@@ -6334,6 +6360,71 @@ async function renderModelAccuracy(hist) {
     <div class="ma-grid" style="margin-top:var(--sp-3);">${blocks.join('')}</div>
     <div id="backtest-card" style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);"></div>`;
   renderBacktestCard();
+  renderModelSelfCritique();
+}
+
+// Modell-selvkritikk — ærlig narrativ om hvor modellen er svak. I tråd med
+// DNA: vi viser deg hvorfor — også når vi tar feil. Bygger tillit over tid.
+async function renderModelSelfCritique() {
+  const card = document.querySelector('.model-accuracy');
+  if (!card) return;
+  const isNo = currentLocale === 'no';
+  let critEl = document.getElementById('model-self-critique');
+  if (!critEl) {
+    critEl = document.createElement('div');
+    critEl.id = 'model-self-critique';
+    critEl.style.cssText = 'margin-top:var(--sp-4);padding:var(--sp-3);background:var(--bg-subtle);border-left:3px solid var(--text-muted);border-radius:var(--r-sm);font-size:var(--fs-small);line-height:1.6;';
+    card.appendChild(critEl);
+  }
+  try {
+    // Prøv å hente backtest for last 6 GWs for å lage en ærlig vurdering
+    const data = await fetch('/api/backtest/captain?max_gws=6').then(r => r.json());
+    if (!data || !data.summary || !data.summary.gws_evaluated) {
+      critEl.style.display = 'none';
+      return;
+    }
+    const s = data.summary;
+    const cap = s.model_capture_rate || 0;
+    const avg = s.model_avg_pts || 0;
+    const best = s.best_possible_avg || 0;
+    const lost = best - avg;
+
+    let critique = '';
+    if (cap >= 0.7) {
+      critique = isNo
+        ? `Modellen treffer godt på kaptein de siste GW-ene — fanger ${(cap*100).toFixed(0)} % av maksimalt mulig. Stol på den når formdataen er fersk og laguttakene er klare.`
+        : `Model is hitting captains well lately — capturing ${(cap*100).toFixed(0)} % of best possible. Trust it when form data is fresh and lineups are confirmed.`;
+    } else if (cap >= 0.5) {
+      critique = isNo
+        ? `Modellen treffer middels (${(cap*100).toFixed(0)} % capture). Du mister i snitt <strong>${lost.toFixed(1)} poeng per uke</strong> ved å følge anbefalingen blindt mot det beste mulige valget. Mest sannsynlig fordi modellen overvurderer <em>form</em> for spillere som har gunstige kamper, men ikke ser <em>rotasjonsrisiko</em>.`
+        : `Model is hitting mid-tier (${(cap*100).toFixed(0)} % capture). You lose on average <strong>${lost.toFixed(1)} points per week</strong> following the call vs the best possible pick. Most likely because the model overweights <em>form</em> on players with favourable fixtures, missing <em>rotation risk</em>.`;
+    } else {
+      critique = isNo
+        ? `<strong>Modellen sliter den siste tiden</strong> (${(cap*100).toFixed(0)} % capture, <strong>${lost.toFixed(1)} poeng tapt per uke</strong>). De siste GW-ene har vært dominert av differensial-spillere modellen ikke fanget — typisk når en mid-tier spiller plutselig får en haul. Vurder å bruke modellen som veiledning, ikke fasit, denne perioden.`
+        : `<strong>Model is struggling lately</strong> (${(cap*100).toFixed(0)} % capture, <strong>${lost.toFixed(1)} points lost per week</strong>). Recent GWs have been dominated by differentials the model didn't catch — typical when a mid-tier player suddenly hauls. Consider treating the model as guidance, not gospel, this period.`;
+    }
+
+    // Konkret feil-pattern fra siste GW-er hvis tilgjengelig
+    const recentMisses = (data.gameweeks || []).filter(g => g.delta_vs_best < -10);
+    if (recentMisses.length >= 2) {
+      const examples = recentMisses.slice(0, 2).map(g =>
+        `GW${g.gw}: foreslo ${g.model_pick} (${g.model_actual} pts), beste var ${g.best_player} (${g.best_possible} pts)`
+      ).join(' · ');
+      critique += isNo
+        ? ` <br><br><strong>Konkrete bom siste GW-er:</strong> ${examples}.`
+        : ` <br><br><strong>Recent concrete misses:</strong> ${examples}.`;
+    }
+
+    critEl.innerHTML = `
+      <div style="font-size:var(--fs-label);color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-1);">
+        ${isNo?'Hvor er modellen svak?':'Where the model struggles'}
+      </div>
+      ${critique}
+    `;
+    critEl.style.display = '';
+  } catch (e) {
+    critEl.style.display = 'none';
+  }
 }
 
 async function renderBacktestCard() {
@@ -8179,6 +8270,54 @@ async function loadRankSimulation(leagueId) {
       return;
     }
     const winColor = sim.win_probability >= 30 ? 'var(--ok)' : sim.win_probability >= 10 ? 'var(--warn)' : 'var(--text-muted)';
+    // Narrativ analyse i tråd med DNA: form, kamper, eierskap, risiko —
+    // forklart i klartekst, med konkret handlingsanbefaling.
+    const narrative = (() => {
+      const median = sim.median_rank;
+      const win = sim.win_probability;
+      const top3 = sim.top3_probability;
+      const spread = sim.p90_rank - sim.p10_rank;
+      const parts = [];
+
+      // Hvor står du, i klartekst
+      if (median === 1) {
+        parts.push(isNo
+          ? `Du leder ligaen og holder den posisjonen i ${win} av 100 mulige sesongavslutninger.`
+          : `You lead and keep that spot in ${win} of 100 possible season finishes.`);
+      } else if (median <= 3) {
+        parts.push(isNo
+          ? `Du er på vei mot topp-3 — ${top3} av 100 simuleringer setter deg der.`
+          : `You're heading for top-3 — ${top3} of 100 simulations land you there.`);
+      } else {
+        parts.push(isNo
+          ? `Du står an til å lande på rang ${median}. For å nå topp-3 må noe endres.`
+          : `You're projected to land at rank ${median}. To reach top-3, something has to change.`);
+      }
+
+      // Risiko-bilde i klartekst
+      if (spread >= 4) {
+        parts.push(isNo
+          ? `Det er <strong>høy risiko</strong> i sesongen — sluttplasseringen din spenner fra ${sim.p10_rank} til ${sim.p90_rank}. En enkelt god kaptein eller skadefri uke kan utgjøre stor forskjell.`
+          : `<strong>High risk</strong> ahead — your final position spans rank ${sim.p10_rank} to ${sim.p90_rank}. One good captain pick or injury-free week can swing it.`);
+      } else {
+        parts.push(isNo
+          ? `<strong>Lav risiko</strong> — sluttplasseringen din ligger trygt mellom ${sim.p10_rank} og ${sim.p90_rank}.`
+          : `<strong>Low risk</strong> — your finish stays between rank ${sim.p10_rank} and ${sim.p90_rank}.`);
+      }
+
+      // Konkret handling, anchored i de fire dimensjonene
+      if (median > 3 && win < 5) {
+        parts.push(isNo
+          ? `<strong>Hva du bør gjøre:</strong> Velg spillere som har <em>god form</em> og <em>lette kamper</em> foran seg, men som de fleste i ligaen din <em>ikke eier</em>. Populære valg gir samme poeng som rivalene dine — det flytter deg ikke opp. Let etter spillere under 25 % eierskap i ligaen.`
+          : `<strong>What to do:</strong> Pick players with <em>good form</em> and <em>easy fixtures</em> ahead, but whom most of your league <em>doesn't own</em>. Popular picks score the same as your rivals — that won't move you up. Look for players under 25 % league ownership.`);
+      } else if (median <= 3) {
+        parts.push(isNo
+          ? `<strong>Hva du bør gjøre:</strong> Hold deg til trygge valg. Når topp-spillerne har <em>klart bedre form og kamper</em> enn alternativene, match rivalene — ikke gamble bort en god posisjon på en differensial.`
+          : `<strong>What to do:</strong> Stick with safe picks. When top players have <em>clearly better form and fixtures</em> than alternatives, match rivals — don't gamble away a good position on a differential.`);
+      }
+      return parts.join(' ');
+    })();
+
     panel.innerHTML = `
       <h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering for resten av sesongen':'Rank simulation for rest of season'}</h3>
       <p style="color:var(--text-muted);font-size:var(--fs-small);margin-top:var(--sp-2);line-height:1.5;">
@@ -8191,6 +8330,10 @@ async function loadRankSimulation(leagueId) {
         <div class="ma-stat"><div class="v" style="color:var(--text-muted);">${sim.p10_rank} – ${sim.p90_rank}</div><div class="l">${isNo?'80% intervall':'80% interval'}</div></div>
         <div class="ma-stat"><div class="v" style="color:${winColor};">${sim.win_probability}%</div><div class="l">${isNo?'P(seier)':'P(win)'}</div></div>
         <div class="ma-stat"><div class="v">${sim.top3_probability}%</div><div class="l">${isNo?'P(topp 3)':'P(top 3)'}</div></div>
+      </div>
+      <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--brand-primary-tint);border-left:3px solid var(--brand-primary);border-radius:var(--r-sm);font-size:var(--fs-small);line-height:1.6;color:var(--text-default);">
+        <div style="font-size:var(--fs-label);color:var(--brand-primary);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-1);">${isNo?'Hva tallene betyr':'What the numbers mean'}</div>
+        ${narrative}
       </div>`;
   } catch (e) {
     panel.innerHTML = `<h3 class="plan-section-title plan-section-title--sub">${isNo?'Rang-simulering':'Rank simulation'}</h3>
@@ -11097,19 +11240,54 @@ async function loadScoreExplanation(playerId) {
     if (sp.freekicks === 1) spParts.push(currentLocale==='no'?'1.-valg frispark':'1st-choice freekicks');
     if (sp.corners === 1) spParts.push(currentLocale==='no'?'1.-valg hjørne':'1st-choice corners');
 
+    // DNA-styrt narrativ: form, kamper, eierskap, risiko forklart i klartekst
+    const isNo = currentLocale === 'no';
+
+    // Bygg en åpningssetning som syntetiserer det viktigste
+    const topLabel = top[0] ? top[0].label.toLowerCase() : '';
+    const opening = (() => {
+      if (top[0] && top[0].pct_of_score >= 35) {
+        return isNo
+          ? `Modellen rangerer ${data.name} høyt fordi <strong>${topLabel}</strong> alene driver ${top[0].pct_of_score.toFixed(0)} % av scoren. De andre faktorene støtter, men dette er hovedgrunnen.`
+          : `The model ranks ${data.name} high because <strong>${topLabel}</strong> alone drives ${top[0].pct_of_score.toFixed(0)} % of the score. Other factors support it, but this is the main reason.`;
+      }
+      return isNo
+        ? `Modellen rangerer ${data.name} høyt på grunn av en balansert profil — ingen enkelt faktor dominerer.`
+        : `The model ranks ${data.name} high due to a balanced profile — no single factor dominates.`;
+    })();
+
     const lines = top.map(c => {
       const pct = c.pct_of_score.toFixed(0);
-      return `<li style="margin:0.15rem 0;"><strong>${c.label}</strong> (${pct}% av score) — råverdi ${c.raw}</li>`;
+      return `<li style="margin:0.2rem 0;"><strong>${c.label}</strong> (${pct} % av score) — råverdi ${c.raw}</li>`;
     }).join('');
 
-    const extras = [];
-    extras.push(`${currentLocale==='no'?'Kampprogram-letthet':'Fixture ease'}: ${fdrPct}%`);
-    if (rotPct >= 30) extras.push(`<span style="color:var(--danger);">${currentLocale==='no'?'Rotasjonsrisiko':'Rotation risk'}: ${rotPct}%</span>`);
-    if (spParts.length) extras.push(spParts.join(' · '));
+    // Risk-narrativ
+    const riskParts = [];
+    if (rotPct >= 40) {
+      riskParts.push(isNo
+        ? `<span style="color:var(--danger);">⚠ <strong>Rotasjonsrisiko ${rotPct} %</strong></span> — modellen tror han kan benkes denne uka. Sjekk laguttak fredag før du satser.`
+        : `<span style="color:var(--danger);">⚠ <strong>Rotation risk ${rotPct} %</strong></span> — model thinks he could be benched this week. Check lineup Friday before committing.`);
+    } else if (rotPct >= 25) {
+      riskParts.push(isNo
+        ? `<span style="color:var(--warn);">Mild rotasjonsrisiko (${rotPct} %)</span> — sannsynligvis starter, men ikke garantert.`
+        : `<span style="color:var(--warn);">Mild rotation risk (${rotPct} %)</span> — likely starts, not guaranteed.`);
+    }
+    if (ctx.fixture_difficulty != null) {
+      const fdrText = fdrPct >= 70
+        ? (isNo?`<strong>Lette kamper</strong> de neste 5 GW (${fdrPct} % letthet)`:`<strong>Easy fixtures</strong> next 5 GWs (${fdrPct} % ease)`)
+        : fdrPct >= 50
+          ? (isNo?`Middels kampprogram (${fdrPct} % letthet)`:`Mid-tier fixtures (${fdrPct} % ease)`)
+          : (isNo?`<span style="color:var(--warn);">Tøffe kamper foran seg (${fdrPct} % letthet)</span>`:`<span style="color:var(--warn);">Tough fixtures ahead (${fdrPct} % ease)</span>`);
+      riskParts.push(fdrText);
+    }
+    if (spParts.length) {
+      riskParts.push(isNo?`Spilte dødballer: ${spParts.join(', ')} — ekstra oppside`:`Set pieces: ${spParts.join(', ')} — extra upside`);
+    }
 
     target.innerHTML = `
-      <ul style="margin:0;padding-left:1.1rem;font-size:0.78rem;line-height:1.5;">${lines}</ul>
-      <div style="margin-top:0.4rem;font-size:0.72rem;color:var(--text-muted);">${extras.join(' · ')}</div>
+      <p style="margin:0 0 0.4rem;font-size:0.82rem;line-height:1.5;color:var(--text-default);">${opening}</p>
+      <ul style="margin:0 0 0.4rem;padding-left:1.1rem;font-size:0.78rem;line-height:1.5;">${lines}</ul>
+      ${riskParts.length ? `<div style="font-size:0.74rem;color:var(--text-muted);line-height:1.55;border-top:1px solid var(--border-subtle);padding-top:0.4rem;">${riskParts.join('<br>')}</div>` : ''}
       <div id="pm-ml-${playerId}" style="margin-top:0.4rem;font-size:0.72rem;color:var(--text-muted);"></div>
     `;
     loadMlComparison(playerId);
