@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-11T04:30:04.922048+00:00",
+  "generated_at": "2026-07-02T04:30:04.175638+00:00",
   "leagues": {
     "BL": {
-      "generated_at": "2026-06-11T04:30:04.922048+00:00",
+      "generated_at": "2026-07-02T04:30:04.175638+00:00",
       "league_key": "BL",
       "league_name": "Bundesliga",
       "source": "tsdl_Bundesliga.xlsx",
@@ -282,7 +282,7 @@
       "version": 1
     },
     "PL": {
-      "generated_at": "2026-06-11T04:30:04.716263+00:00",
+      "generated_at": "2026-07-02T04:30:03.957702+00:00",
       "league_key": "PL",
       "league_name": "Premier League",
       "source": "tsdl_Premier_League.xlsx",
