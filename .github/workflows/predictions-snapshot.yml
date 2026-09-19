@@ -17,9 +17,12 @@ concurrency:
 
 jobs:
   # GitHub disables scheduled workflows after 60 days without repository
-  # activity, and commits pushed by Actions itself do not reset that timer —
-  # so a repo that is only kept alive by this cron eventually goes silent.
-  # Re-enabling the workflow through the API on every run resets the countdown.
+  # activity. The snapshot job below is supposed to supply that activity by
+  # committing the log, but it stays silent whenever there is nothing new to
+  # commit — and it committed nothing at all until the bug in the commit step
+  # was fixed, which is what triggered the disable warning in September 2026.
+  # Re-enabling the workflow through the API on every run resets the countdown
+  # regardless of whether anything was committed.
   keepalive:
     runs-on: ubuntu-latest
     permissions:
