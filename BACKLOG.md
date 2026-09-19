@@ -454,6 +454,47 @@ Hikker underveis (lærdom for fremtiden):
   `.hjem-page-head` til team-ID er koblet. Hero-card sentrert med 720px max-width
   for å matche wizardens akse.
 
+### Cron keepalive — hindrer at GH Actions deaktiveres (2026-09-19)
+
+**Problemet:** GitHub deaktiverer planlagte workflows i *offentlige* repoer når
+repoet har vært uten aktivitet i 60 dager. Workflow-kjøringer teller ikke som
+aktivitet — bare ekte push. `predictions-snapshot` skulle levere den aktiviteten
+ved å committe loggen, men committet aldri noe (feilen er rettet i #2: `git diff`
+ser ikke utrackede filer). Siste push var 2026-07-27, så cron-en ville blitt
+slått av ~2026-09-25.
+
+**Allerede på master (#2, #3):** en `keepalive`-jobb i `predictions-snapshot.yml`
+som kaller `PUT .../workflows/predictions-snapshot.yml/enable` på hver kjøring,
+commit-feilen rettet, og JSON-validering av nedlastet logg før commit. Med
+commit-feilen borte er den ordinære mekanismen — loggen committes, pushen er
+aktivitet — tilbake i funksjon. Det er hovedforsvaret.
+
+**Dette tillegget** (`.github/workflows/keepalive.yml`, mandager 05:17 UTC +
+`workflow_dispatch`, ingen nye secrets) dekker hullene som står igjen når
+loggen *ikke* endrer seg — typisk utenom sesong, som er nøyaktig situasjonen som
+utløste problemet:
+
+1. **Fornying** — `disable` → `enable` på hver workflow, ikke bare `enable`.
+   Et `enable`-kall på en workflow som allerede er `active` er et no-op, og det
+   er uavklart om det i det hele tatt teller som aktivitet; en faktisk
+   tilstandsendring gjør det. Deaktiverte workflows slås på igjen, så løsningen
+   reparerer seg selv. Keepalive hopper over seg selv: blir jobben avbrutt
+   mellom `disable` og `enable`, ville den ellers stått igjen permanent av.
+2. **Heartbeat-commit** — har repoet vært uten push i ≥ 21 dager, skrives ny
+   tidsstempel til `.github/keepalive-heartbeat.txt` og pushes. En ekte push
+   nullstiller klokken garantert, uavhengig av hvordan GitHub teller API-kall.
+   Er repoet aktivt, hoppes steget over — maks ~12 støy-commits i året.
+3. **Vaktbikkje** — feiler jobben (→ e-post fra GitHub) hvis
+   `predictions-snapshot` ikke har kjørt på 14 dager. Tirsdag + fredag betyr at
+   14 dagers stillhet er en reell feil, ikke en rolig uke.
+
+Et `if: always()`-steg til slutt slår på igjen alt som ikke står som `active`,
+slik at en avbrutt kjøring aldri kan etterlate en deaktivert workflow.
+
+Eneste endring i `predictions-snapshot.yml`: `git pull --rebase --autostash` før
+push, siden keepalive nå også kan pushe til `master`. Uten det ville en kollisjon
+gitt non-fast-forward-feil og et tapt snapshot. Resten av filen er som på master.
+
 ### Web Push (server-side)
 Send faktisk varsel mandag morgen via cron + Push-API. Bare opt-in-flow
 finnes nå (browser-permission, lokal flag). Trenger backend-job.

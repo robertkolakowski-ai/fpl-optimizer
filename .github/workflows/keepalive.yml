@@ -1,0 +1,112 @@
+name: Keepalive
+
+# GitHub deaktiverer planlagte workflows i offentlige repoer når repoet har vært
+# uten aktivitet i 60 dager. Workflow-kjøringer teller IKKE som aktivitet — bare
+# ekte repo-aktivitet (push o.l.) gjør det. predictions-snapshot committer bare
+# når data/predictions_log.json faktisk endrer seg, så en rolig periode i
+# sesongen slår ut hele cron-kjeden uten forvarsel.
+#
+# Denne jobben holder 60-dagersklokken i gang med to uavhengige mekanismer:
+#   1. Fornyer alle planlagte workflows via Actions-API-et (disable -> enable),
+#      og slår på igjen alt som allerede er deaktivert (self-healing).
+#   2. Pusher en heartbeat-commit hvis repoet ikke har hatt en push på
+#      HEARTBEAT_MAX_AGE_DAYS dager. En ekte push nullstiller klokken garantert.
+# Til slutt varsler den — rød kjøring gir e-post fra GitHub — hvis
+# predictions-snapshot ikke har kjørt på SNAPSHOT_MAX_AGE_DAYS dager.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'   # mandag 05:17 UTC (unna snapshot-cronene tir/fre)
+  workflow_dispatch:        # kan alltid kjøres manuelt fra Actions-fanen
+
+permissions:
+  contents: write           # heartbeat-commit
+  actions: write            # disable/enable av workflows
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+env:
+  # Push senest hver 3. uke => god margin til GitHubs 60-dagersgrense.
+  HEARTBEAT_MAX_AGE_DAYS: '21'
+  # Tirsdag + fredag betyr at >14 dager uten kjøring er en reell feil.
+  SNAPSHOT_MAX_AGE_DAYS: '14'
+  HEARTBEAT_FILE: .github/keepalive-heartbeat.txt
+  SELF_PATH: .github/workflows/keepalive.yml
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Forny planlagte workflows
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows" --paginate \
+            --jq '.workflows[] | [.path, .state] | @tsv' > /tmp/workflows.tsv
+          while IFS=$'\t' read -r path state; do
+            if [ "$path" = "$SELF_PATH" ]; then
+              # Aldri deaktiver jobben som kjører nå — blir den avbrutt mellom
+              # disable og enable, står den igjen som permanent deaktivert.
+              echo "Hopper over $path (denne jobben)"
+              continue
+            fi
+            if [ "$state" = "active" ]; then
+              echo "Fornyer $path"
+              gh workflow disable "$path"
+              sleep 5
+            else
+              echo "::warning::$path var deaktivert (state=$state) — slår den på igjen"
+            fi
+            gh workflow enable "$path"
+          done < /tmp/workflows.tsv
+
+      - name: Heartbeat-commit hvis repoet har vært stille
+        run: |
+          set -euo pipefail
+          pushed_at="$(gh api "repos/$GITHUB_REPOSITORY" --jq '.pushed_at')"
+          age=$(( ( $(date -u +%s) - $(date -u -d "$pushed_at" +%s) ) / 86400 ))
+          echo "Siste push: $pushed_at ($age dager siden)"
+          if [ "$age" -lt "$HEARTBEAT_MAX_AGE_DAYS" ]; then
+            echo "Repoet er aktivt nok — ingen heartbeat nødvendig."
+            exit 0
+          fi
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > "$HEARTBEAT_FILE"
+          git config user.name "fpl-bot"
+          git config user.email "fpl-bot@users.noreply.github.com"
+          git add "$HEARTBEAT_FILE"
+          git commit -m "chore(ci): keepalive heartbeat etter $age dager uten push"
+          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
+
+      - name: Varsle hvis predictions-snapshot har gått stille
+        run: |
+          set -euo pipefail
+          last="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/predictions-snapshot.yml/runs?per_page=1" \
+            --jq '.workflow_runs[0].created_at // empty')"
+          if [ -z "$last" ]; then
+            echo "::error::predictions-snapshot har ingen kjøringer i historikken."
+            exit 1
+          fi
+          age=$(( ( $(date -u +%s) - $(date -u -d "$last" +%s) ) / 86400 ))
+          echo "Siste predictions-snapshot-kjøring: $last ($age dager siden)"
+          if [ "$age" -gt "$SNAPSHOT_MAX_AGE_DAYS" ]; then
+            echo "::error::predictions-snapshot har ikke kjørt på $age dager — sjekk Actions-fanen."
+            exit 1
+          fi
+
+      - name: Sikkerhetsnett — alt skal stå igjen aktivert
+        if: always()
+        run: |
+          set -uo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows" --paginate \
+            --jq '.workflows[] | select(.state != "active") | .path' |
+          while read -r path; do
+            echo "::warning::$path er ikke aktiv — slår den på"
+            gh workflow enable "$path" || true
+          done

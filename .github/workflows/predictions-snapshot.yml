@@ -88,4 +88,7 @@ jobs:
           git config user.email "fpl-bot@users.noreply.github.com"
           git add data/predictions_log.json
           git commit -m "chore(predictions): ${{ steps.action.outputs.kind }} $(date -u +%Y-%m-%dT%H:%MZ)"
+          # keepalive.yml can push a heartbeat to the same branch, so rebase
+          # first rather than losing a snapshot to a non-fast-forward reject.
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
