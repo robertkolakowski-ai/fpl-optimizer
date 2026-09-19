@@ -454,6 +454,48 @@ Hikker underveis (lærdom for fremtiden):
   `.hjem-page-head` til team-ID er koblet. Hero-card sentrert med 720px max-width
   for å matche wizardens akse.
 
+### Cron keepalive — hindrer at GH Actions deaktiveres (2026-09-19)
+
+**Problemet:** GitHub deaktiverer planlagte workflows i *offentlige* repoer når
+repoet har vært uten aktivitet i 60 dager. Workflow-kjøringer teller ikke som
+aktivitet — bare ekte push. `predictions-snapshot` committer kun når
+`data/predictions_log.json` faktisk endrer seg, og siste push til repoet var
+2026-07-27. Uten tiltak ville cron-en blitt slått av ~2026-09-25, og både
+predictions-loggen og den planlagte persisteringen stoppet uten forvarsel.
+
+**Løsningen:** `.github/workflows/keepalive.yml`, mandager 05:17 UTC
+(+ `workflow_dispatch`). Krever ingen nye secrets — bruker `github.token` med
+`contents: write` og `actions: write`. Tre lag:
+
+1. **Fornying** — lister alle workflows via Actions-API-et og kjører
+   disable → enable på hver (unntatt seg selv, som aldri deaktiveres: blir
+   jobben avbrutt midt i, ville den stått igjen permanent av). Workflows som
+   allerede er deaktiverte blir slått på igjen, så løsningen er self-healing
+   hvis noe først rekker å bli deaktivert.
+2. **Heartbeat-commit** — leser `pushed_at` fra repo-API-et. Har repoet vært
+   uten push i ≥ 21 dager, skrives ny tidsstempel til
+   `.github/keepalive-heartbeat.txt` og pushes. En ekte push nullstiller
+   60-dagersklokken garantert, uavhengig av hvordan GitHub teller API-kall.
+   Er repoet aktivt, hoppes steget over — maks ~12 støy-commits i året.
+3. **Vaktbikkje** — feiler jobben (→ e-post fra GitHub) hvis
+   `predictions-snapshot` ikke har kjørt på 14 dager. Tirsdag + fredag betyr at
+   14 dagers stillhet er en reell feil, ikke en rolig uke.
+
+Et siste steg med `if: always()` slår på igjen alt som ikke står som `active`,
+slik at en avbrutt kjøring aldri kan etterlate en deaktivert workflow.
+
+**Samtidig herdet `predictions-snapshot.yml`:**
+- `retry` med 15/30/45s backoff på alle tre curl-kallene — Render free-tier kan
+  være treg eller kortvarig utilgjengelig, og en tapt kjøring er et hull i
+  loggen som ikke kan hentes inn igjen.
+- `git pull --rebase --autostash` før push, siden keepalive nå også kan pushe
+  til `master` (uten dette ville en kollisjon gitt non-fast-forward-feil).
+- `concurrency`-gruppe på begge workflows.
+- `set -euo pipefail` i alle steg.
+
+**Merk:** selve mergen av denne endringen er en push og nullstiller klokken.
+Første heartbeat er derfor tidligst 21 dager etter siste ordinære push.
+
 ### Web Push (server-side)
 Send faktisk varsel mandag morgen via cron + Push-API. Bare opt-in-flow
 finnes nå (browser-permission, lokal flag). Trenger backend-job.
