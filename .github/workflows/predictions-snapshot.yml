@@ -4,10 +4,6 @@ name: Predictions snapshot
 # - Friday 17:00 UTC : snapshot model recommendations before the typical
 #                       Saturday 11:30 UTC deadline
 # - Commits the resulting JSON back to the repo so data survives Render redeploys.
-#
-# Merk: kjøringene her teller ikke som repo-aktivitet hos GitHub, og commit
-# skjer bare når JSON-en endrer seg. Det er keepalive.yml som hindrer at denne
-# workflowen blir auto-deaktivert etter 60 dager uten push.
 
 on:
   schedule:
@@ -20,12 +16,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # GitHub disables scheduled workflows after 60 days without repository
+  # activity. The snapshot job below is supposed to supply that activity by
+  # committing the log, but it stays silent whenever there is nothing new to
+  # commit — and it committed nothing at all until the bug in the commit step
+  # was fixed, which is what triggered the disable warning in September 2026.
+  # Re-enabling the workflow through the API on every run resets the countdown
+  # regardless of whether anything was committed.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Reset the 60-day scheduled-workflow disable timer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            "repos/$REPO/actions/workflows/predictions-snapshot.yml/enable"
+          echo "Scheduled-workflow timer reset."
+
   snapshot:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Determine action from schedule
         id: action
@@ -40,41 +58,29 @@ jobs:
         env:
           APP_URL: ${{ secrets.APP_URL }}   # e.g. https://fpl.kolakowski.no
         run: |
-          set -euo pipefail
-          if [ -z "${APP_URL:-}" ]; then
+          set -e
+          if [ -z "$APP_URL" ]; then
             echo "::error::APP_URL secret not set — configure repo secret to enable snapshot"
             exit 1
           fi
-          # Render free-tier kan være kald eller midlertidig utilgjengelig:
-          # prøv på nytt med økende pause før vi gir opp.
-          retry() {
-            local attempt=1
-            until "$@"; do
-              if [ "$attempt" -ge 4 ]; then
-                echo "::error::Ga opp etter $attempt forsøk: $*"
-                return 1
-              fi
-              echo "Forsøk $attempt feilet — prøver igjen om $(( attempt * 15 ))s"
-              sleep $(( attempt * 15 ))
-              attempt=$(( attempt + 1 ))
-            done
-          }
           if [ "${{ steps.action.outputs.kind }}" = "refresh" ]; then
-            retry curl -fsS --max-time 120 -X POST "$APP_URL/api/predictions/refresh-actuals" \
-              -H 'Content-Type: application/json' -d '{}'
+            curl -fsS -X POST "$APP_URL/api/predictions/refresh-actuals" -H 'Content-Type: application/json' -d '{}'
           else
-            retry curl -fsS --max-time 120 -X POST "$APP_URL/api/predictions/snapshot" \
-              -H 'Content-Type: application/json' -d '{}'
+            curl -fsS -X POST "$APP_URL/api/predictions/snapshot" -H 'Content-Type: application/json' -d '{}'
           fi
           echo
           # Pull the full log to commit
           mkdir -p data
-          retry curl -fsS --max-time 120 "$APP_URL/api/predictions/log" -o data/predictions_log.json
+          curl -fsS "$APP_URL/api/predictions/log" -o data/predictions_log.json
+          # Never commit a truncated or error response over a good log
+          python3 -c "import json,sys; json.load(open('data/predictions_log.json'))"
 
       - name: Commit updated log
         run: |
-          set -euo pipefail
-          if git diff --quiet data/predictions_log.json 2>/dev/null; then
+          set -e
+          # git diff ignores untracked files, so check the working tree instead —
+          # otherwise the very first snapshot looks unchanged and is never committed.
+          if [ -z "$(git status --porcelain -- data/predictions_log.json)" ]; then
             echo "No changes to commit."
             exit 0
           fi
@@ -82,6 +88,7 @@ jobs:
           git config user.email "fpl-bot@users.noreply.github.com"
           git add data/predictions_log.json
           git commit -m "chore(predictions): ${{ steps.action.outputs.kind }} $(date -u +%Y-%m-%dT%H:%MZ)"
-          # keepalive.yml kan ha pushet en heartbeat i mellomtiden.
-          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
-          git push origin "HEAD:$GITHUB_REF_NAME"
+          # keepalive.yml can push a heartbeat to the same branch, so rebase
+          # first rather than losing a snapshot to a non-fast-forward reject.
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
