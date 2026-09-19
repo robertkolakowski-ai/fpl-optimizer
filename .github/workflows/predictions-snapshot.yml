@@ -11,13 +11,36 @@ on:
     - cron: '0 17 * * 5'   # Fri 17:00 UTC — snapshot upcoming-GW recommendations
   workflow_dispatch:        # also runnable on demand from the Actions tab
 
+concurrency:
+  group: predictions-snapshot
+  cancel-in-progress: false
+
 jobs:
+  # GitHub disables scheduled workflows after 60 days without repository
+  # activity, and commits pushed by Actions itself do not reset that timer —
+  # so a repo that is only kept alive by this cron eventually goes silent.
+  # Re-enabling the workflow through the API on every run resets the countdown.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Reset the 60-day scheduled-workflow disable timer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            "repos/$REPO/actions/workflows/predictions-snapshot.yml/enable"
+          echo "Scheduled-workflow timer reset."
+
   snapshot:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Determine action from schedule
         id: action
@@ -46,10 +69,15 @@ jobs:
           # Pull the full log to commit
           mkdir -p data
           curl -fsS "$APP_URL/api/predictions/log" -o data/predictions_log.json
+          # Never commit a truncated or error response over a good log
+          python3 -c "import json,sys; json.load(open('data/predictions_log.json'))"
 
       - name: Commit updated log
         run: |
-          if git diff --quiet data/predictions_log.json 2>/dev/null; then
+          set -e
+          # git diff ignores untracked files, so check the working tree instead —
+          # otherwise the very first snapshot looks unchanged and is never committed.
+          if [ -z "$(git status --porcelain -- data/predictions_log.json)" ]; then
             echo "No changes to commit."
             exit 0
           fi
@@ -57,4 +85,4 @@ jobs:
           git config user.email "fpl-bot@users.noreply.github.com"
           git add data/predictions_log.json
           git commit -m "chore(predictions): ${{ steps.action.outputs.kind }} $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          git push origin "HEAD:${GITHUB_REF_NAME}"
