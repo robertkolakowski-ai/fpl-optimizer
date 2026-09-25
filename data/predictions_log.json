@@ -1,1 +1,1 @@
-{"fixtures":[],"fpl_recommendations":[],"version":1}
+{"fixtures":[],"fpl_recommendations":[{"captain_actual":null,"captain_expected":0.92,"captain_id":411,"captain_name":"Haaland","differential_actual":null,"differential_pick_id":330,"differential_pick_name":"Bogle","gameweek":6,"optimal_squad_ids":[572,1,330,229,115,391,173,12,124,427,68,268,411,165,552],"snapshot_at":"2026-09-25T20:12:52.680200+00:00","top_transfer":null,"transfer_actual_delta":null}],"version":1}
